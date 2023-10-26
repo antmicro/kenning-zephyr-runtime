@@ -1,0 +1,28 @@
+# Copyright (c) 2023 Antmicro <www.antmicro.com>
+#
+# SPDX-License-Identifier: Apache-2.0
+
+config KENNING_INFERENCE_LIB
+        bool "kenning_inference_lib Support"
+        help
+          This option enables the kenning_inference_lib library
+
+module = CALLBACKS
+module-str = callbacks
+source "subsys/logging/Kconfig.template.log_config"
+
+module = INFERENCE_SERVER
+module-str = inference_server
+source "subsys/logging/Kconfig.template.log_config"
+
+module = KENNING_PROTOCOL
+module-str = kenning_protocol
+source "subsys/logging/Kconfig.template.log_config"
+
+module = MODEL
+module-str = model
+source "subsys/logging/Kconfig.template.log_config"
+
+module = UART
+module-str = uart
+source "subsys/logging/Kconfig.template.log_config"

@@ -1,0 +1,36 @@
+image: $CI_IMAGE
+
+.ace: &ace
+    tags: ['ace-x86_64']
+
+.common_only: &common_only
+    only:
+        - main
+        - merge_requests
+
+variables:
+    GIT_STRATEGY: clone
+
+stages:
+    - lint
+    - build
+
+pre-commit:
+    <<: *ace
+    <<: *common_only
+    stage: lint
+    script:
+        - pre-commit run --all-files
+
+build:
+    <<: *ace
+    <<: *common_only
+    stage: build
+    before_script:
+        - scripts/prepare_zephyr_env.sh
+    script:
+        - west build -p always -b nrf52840dk_nrf52840 app
+    artifacts:
+        paths:
+            - build/zephyr/zephyr.elf
+        when: always

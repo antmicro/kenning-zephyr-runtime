@@ -1,0 +1,69 @@
+/*
+ * Copyright (c) 2023 Antmicro <www.antmicro.com>
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+#ifndef KENNING_INFERENCE_LIB_CORE_CALLBACKS_H_
+#define KENNING_INFERENCE_LIB_CORE_CALLBACKS_H_
+
+#include "kenning_inference_lib/core/kenning_protocol.h"
+#include "kenning_inference_lib/core/utils.h"
+
+/**
+ * Runtime custom error codes
+ */
+#define CALLBACKS_STATUSES(STATUS) STATUS(CALLBACKS_STATUS_INV_MSG_TYPE)
+
+GENERATE_MODULE_STATUSES(CALLBACKS);
+
+#define VALIDATE_REQUEST(callback_message_type, request)           \
+    do                                                             \
+    {                                                              \
+        if (!IS_VALID_POINTER(request))                            \
+        {                                                          \
+            return CALLBACKS_STATUS_INV_PTR;                       \
+        }                                                          \
+        if ((callback_message_type) != (*(request))->message_type) \
+        {                                                          \
+            return CALLBACKS_STATUS_INV_MSG_TYPE;                  \
+        }                                                          \
+    } while (0);
+
+#define CHECK_STATUS_LOG(status, response, log_format, log_args...)     \
+    do                                                                  \
+    {                                                                   \
+        if (STATUS_OK != status)                                        \
+        {                                                               \
+            LOG_ERR(log_format, ##log_args);                            \
+            status_t resp_status = protocol_prepare_fail_resp(request); \
+            RETURN_ON_ERROR(resp_status, resp_status);                  \
+            return status;                                              \
+        }                                                               \
+        LOG_DBG(log_format, ##log_args);                                \
+    } while (0);
+
+/**
+ * Type of callback function
+ */
+typedef status_t (*callback_ptr_t)(message_t **);
+
+/**
+ * List of callbacks for each message type
+ */
+#define CALLBACKS_TABLE(ENTRY)                    \
+    /*    MessageType      Callback_function */   \
+    ENTRY(MESSAGE_TYPE_OK, ok_callback)           \
+    ENTRY(MESSAGE_TYPE_ERROR, error_callback)     \
+    ENTRY(MESSAGE_TYPE_DATA, data_callback)       \
+    ENTRY(MESSAGE_TYPE_MODEL, model_callback)     \
+    ENTRY(MESSAGE_TYPE_PROCESS, process_callback) \
+    ENTRY(MESSAGE_TYPE_OUTPUT, output_callback)   \
+    ENTRY(MESSAGE_TYPE_STATS, stats_callback)     \
+    ENTRY(MESSAGE_TYPE_IOSPEC, iospec_callback)
+
+#define ENTRY(msg_type, callback_func) status_t callback_func(message_t **);
+CALLBACKS_TABLE(ENTRY)
+#undef ENTRY
+
+#endif // KENNING_INFERENCE_LIB_CORE_CALLBACKS_H_

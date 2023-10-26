@@ -1,0 +1,17 @@
+BasedOnStyle: LLVM
+Language: Cpp
+
+IndentWidth: '4'
+TabWidth: '4'
+
+AccessModifierOffset: -4
+AlignAfterOpenBracket: Align
+AlignConsecutiveAssignments: false
+AlignConsecutiveDeclarations: false
+AlignEscapedNewlines: Left
+
+BreakBeforeBraces: Allman
+AlwaysBreakAfterReturnType: None
+
+PenaltyBreakComment: 0
+ColumnLimit: 120
