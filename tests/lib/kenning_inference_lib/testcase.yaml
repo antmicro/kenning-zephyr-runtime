@@ -1,0 +1,32 @@
+# Copyright (c) 2023 Antmicro <www.antmicro.com>
+#
+# SPDX-License-Identifier: Apache-2.0
+
+common:
+  tags:
+    - test_framework
+  platform_allow:
+    - nrf52840dk_nrf52840
+    - qemu_x86
+    - unit_testing
+
+tests:
+  testing.kenning_inference_lib.test_model:
+    type: unit
+    extra_args: TESTED_MODULE=MODEL
+
+  testing.kenning_inference_lib.test_uart:
+    type: unit
+    extra_args: TESTED_MODULE=UART
+
+  testing.kenning_inference_lib.test_kenning_protocol:
+    type: unit
+    extra_args: TESTED_MODULE=KENNING_PROTOCOL
+
+  testing.kenning_inference_lib.test_callbacks:
+    type: unit
+    extra_args: TESTED_MODULE=CALLBACKS
+
+  testing.kenning_inference_lib.test_inference_server:
+    type: unit
+    extra_args: TESTED_MODULE=INFERENCE_SERVER
