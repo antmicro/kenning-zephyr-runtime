@@ -2,3 +2,5 @@
 .venv
 build
 renode/log
+twister-out
+twister-out.*
