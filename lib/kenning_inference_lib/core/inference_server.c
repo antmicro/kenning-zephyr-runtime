@@ -7,7 +7,12 @@
 #include "kenning_inference_lib/core/inference_server.h"
 #include "kenning_inference_lib/core/callbacks.h"
 #include "kenning_inference_lib/core/protocol.h"
+
+#ifndef __UNIT_TEST__
 #include <zephyr/logging/log.h>
+#else // __UNIT_TEST__
+#include "mocks/log.h"
+#endif
 
 LOG_MODULE_REGISTER(inference_server, CONFIG_INFERENCE_SERVER_LOG_LEVEL);
 
