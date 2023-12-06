@@ -8,7 +8,6 @@
 #define KENNING_INFERENCE_LIB_CORE_PROTOCOL_H_
 
 #include "kenning_inference_lib/core/utils.h"
-#include <stdbool.h>
 
 /**
  * UART custom error codes
