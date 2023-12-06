@@ -8,17 +8,30 @@
 #include "uart_config.h"
 #include <stdbool.h>
 #include <string.h>
+
+#ifndef __UNIT_TEST__
 #include <zephyr/drivers/uart.h>
 #include <zephyr/kernel.h>
 #include <zephyr/logging/log.h>
+#else // __UNIT_TEST__
+#include "mocks/kernel.h"
+#include "mocks/log.h"
+#include "mocks/uart.h"
+#endif
 
 LOG_MODULE_REGISTER(uart, CONFIG_UART_LOG_LEVEL);
 
 GENERATE_MODULE_STATUSES_STR(PROTOCOL);
 
-static const struct device *const G_UART_DEV = DEVICE_DT_GET(UART_DEVICE_NODE);
+ut_static const struct device *const G_UART_DEV = DEVICE_DT_GET(UART_DEVICE_NODE);
 
 ut_static bool g_uart_initialized = false;
+
+#ifdef __UNIT_TEST__
+extern int64_t g_ticks;
+
+static int64_t k_uptime_get() { return g_ticks++; }
+#endif // __UNIT_TEST__
 
 status_t protocol_init()
 {
