@@ -6,7 +6,12 @@
 
 #include "kenning_inference_lib/core/model.h"
 #include <string.h>
+
+#ifndef __UNIT_TEST__
 #include <zephyr/logging/log.h>
+#else // __UNIT_TEST__
+#include "mocks/log.h"
+#endif
 
 LOG_MODULE_REGISTER(model, CONFIG_MODEL_LOG_LEVEL);
 
