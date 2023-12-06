@@ -6,7 +6,12 @@
 
 #include "kenning_inference_lib/core/callbacks.h"
 #include "kenning_inference_lib/core/model.h"
+
+#ifndef __UNIT_TEST__
 #include <zephyr/logging/log.h>
+#else // __UNIT_TEST__
+#include "mocks/log.h"
+#endif
 
 LOG_MODULE_REGISTER(callbacks, CONFIG_CALLBACKS_LOG_LEVEL);
 
