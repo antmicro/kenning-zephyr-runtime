@@ -76,7 +76,12 @@ status_t protocol_read_data(uint8_t *data, size_t data_length)
     {
         uint8_t c = 0;
         rx_status = uart_poll_in(G_UART_DEV, &c);
-        k_sleep(K_TICKS(1)); // temporary solution for UART missing some data
+#ifdef CONFIG_NRF_UART_SLEEP_AFTER_POLL_WORKAROUND
+        if (0 == data_read % 128)
+        {
+            k_sleep(K_TICKS(1));
+        }
+#endif // CONFIG_NRF_UART_SLEEP_AFTER_POLL_WORKAROUND
         if (0 == rx_status)
         {
             data[data_read++] = c;
