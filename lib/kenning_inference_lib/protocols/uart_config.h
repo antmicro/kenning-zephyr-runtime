@@ -8,6 +8,6 @@
 #define KENNING_RUNTIME_PROTOCOLS_UART_CONFIG_H_
 
 #define UART_DEVICE_NODE DT_NODELABEL(uart1)
-#define UART_TIMEOUT_S (0.1F) /* UART read timeout (100 ms) */
+#define UART_TIMEOUT_S (0.5F) /* UART read timeout (500 ms) */
 
 #endif // KENNING_RUNTIME_PROTOCOLS_UART_CONFIG_H_
