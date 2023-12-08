@@ -7,6 +7,14 @@ config KENNING_INFERENCE_LIB
         help
           This option enables the kenning_inference_lib library
 
+config NRF_UART_SLEEP_AFTER_POLL_WORKAROUND
+        bool "workaround for UART reading on NRF"
+        depends on KENNING_INFERENCE_LIB
+        default 0
+        help
+          This option adds 1 tick sleep after uart_poll_in. This is a temporary
+		  solution for UART missing some data when reading.
+
 module = CALLBACKS
 module-str = callbacks
 source "subsys/logging/Kconfig.template.log_config"
