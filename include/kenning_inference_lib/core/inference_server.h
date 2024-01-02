@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef KENNING_INFERENCE_LIB_INFERENCE_SERVER_H_
-#define KENNING_INFERENCE_LIB_INFERENCE_SERVER_H_
+#ifndef KENNING_INFERENCE_LIB_CORE_INFERENCE_SERVER_H_
+#define KENNING_INFERENCE_LIB_CORE_INFERENCE_SERVER_H_
 
 #include "kenning_inference_lib/core/kenning_protocol.h"
 #include "kenning_inference_lib/core/utils.h"
@@ -53,4 +53,4 @@ status_t wait_for_message(message_t **msg);
  */
 status_t handle_message(message_t *msg);
 
-#endif // KENNING_INFERENCE_LIB_INFERENCE_SERVER_H_
+#endif // KENNING_INFERENCE_LIB_CORE_INFERENCE_SERVER_H_
