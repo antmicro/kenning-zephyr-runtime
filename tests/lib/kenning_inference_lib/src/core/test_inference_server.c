@@ -11,9 +11,11 @@
 #include <kenning_inference_lib/core/callbacks.h>
 #include <kenning_inference_lib/core/inference_server.h>
 #include <kenning_inference_lib/core/kenning_protocol.h>
+#include <kenning_inference_lib/core/model.h>
 
 #include "utils.h"
 
+static uint8_t g_message_buffer[MAX_MESSAGE_SIZE_BYTES];
 message_t *gp_message = NULL;
 message_t *gp_message_sent = NULL;
 message_t *gp_message_to_receive = NULL;
@@ -33,6 +35,7 @@ DEFINE_FFF_GLOBALS;
 #define MOCKS(MOCK)                                      \
     MOCK(const char *, get_status_str, status_t)         \
     MOCK(status_t, protocol_init)                        \
+    MOCK(status_t, model_init)                           \
     MOCK(status_t, protocol_recv_msg, message_t **)      \
     MOCK(status_t, protocol_send_msg, const message_t *) \
     MOCK(status_t, ok_callback, message_t **)            \
@@ -104,28 +107,19 @@ void prepare_message(message_type_t msg_type, uint8_t *payload, size_t payload_s
 // setup
 // ========================================================
 
-static void inference_server_tests_setup_f()
-{
-    MOCKS(RESET_MOCK);
+static void inference_server_tests_setup_f() { MOCKS(RESET_MOCK); }
 
-    if (IS_VALID_POINTER(gp_message))
-    {
-        free(gp_message);
-        gp_message = NULL;
-    }
+static void inference_server_tests_teardown_f()
+{
     if (IS_VALID_POINTER(gp_message_sent))
     {
         free(gp_message_sent);
         gp_message_sent = NULL;
     }
-    if (IS_VALID_POINTER(gp_message_to_receive))
-    {
-        free(gp_message_to_receive);
-        gp_message_to_receive = NULL;
-    }
 }
 
-ZTEST_SUITE(kenning_inference_lib_test_inference_server, NULL, NULL, inference_server_tests_setup_f, NULL, NULL);
+ZTEST_SUITE(kenning_inference_lib_test_inference_server, NULL, NULL, inference_server_tests_setup_f,
+            inference_server_tests_teardown_f, NULL);
 
 // ========================================================
 // init_server
@@ -157,6 +151,20 @@ ZTEST(kenning_inference_lib_test_inference_server, test_init_server_protocol_err
     status = init_server();
 
     zassert_equal(PROTOCOL_STATUS_ERROR, status);
+}
+
+/**
+ * Tests if init server fails when model init fails
+ */
+ZTEST(kenning_inference_lib_test_inference_server, test_init_server_model_error)
+{
+    status_t status = STATUS_OK;
+
+    model_init_fake.return_val = MODEL_STATUS_ERROR;
+
+    status = init_server();
+
+    zassert_equal(MODEL_STATUS_ERROR, status);
 }
 
 // ========================================================
@@ -366,6 +374,11 @@ status_t protocol_recv_msg_mock(message_t **msg)
 
 status_t protocol_send_msg_mock(const message_t *msg)
 {
+    if (IS_VALID_POINTER(gp_message_sent))
+    {
+        free(gp_message_sent);
+        gp_message_sent = NULL;
+    }
     gp_message_sent = malloc(sizeof(message_size_t) + msg->message_size);
     memcpy(gp_message_sent, msg, sizeof(message_size_t) + msg->message_size);
 
@@ -422,12 +435,7 @@ status_t callback_error_mock(message_t **request)
 
 void prepare_message(message_type_t msg_type, uint8_t *payload, size_t payload_size, message_t **msg)
 {
-    if (IS_VALID_POINTER(*msg))
-    {
-        free(*msg);
-        *msg = NULL;
-    }
-    *msg = malloc(sizeof(message_size_t) + payload_size);
+    *msg = (message_t *)&g_message_buffer;
     (*msg)->message_size = sizeof(message_type_t) + payload_size;
     (*msg)->message_type = msg_type;
     if (payload_size > 0)
