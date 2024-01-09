@@ -1,0 +1,4 @@
+name: dlpack
+build:
+  cmake-ext: True
+  kconfig-ext: True
