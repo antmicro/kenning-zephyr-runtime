@@ -13,7 +13,37 @@ config NRF_UART_SLEEP_AFTER_POLL_WORKAROUND
         default 0
         help
           This option adds 1 tick sleep after uart_poll_in. This is a temporary
-		  solution for UART missing some data when reading.
+          solution for UART missing some data when reading.
+
+config PROTOCOL
+        string "Protocol to be used to communicate with Kenning"
+        depends on KENNING_INFERENCE_LIB
+        default "uart"
+        help
+          This options selects protocol which will be used to communicate with
+          Kenning
+          Available options: uart
+
+config ML_RUNTIME
+        string "ML runtime to be used"
+        depends on KENNING_INFERENCE_LIB
+        default "stub"
+        help
+          This option select ML runtime to be used.
+          Available options: stub, tvm
+
+config TVM_MODEL
+        string "Model loaded by TVM"
+        default "magic_wand"
+        help
+          This option select the ML model to be loaded by TVM runtime.
+          Available options: magic_wand
+
+config TVM_HEAP_SIZE
+        int "Size in kilobytes of the heap used by TVM"
+        default 128
+        help
+          This option sets the size in kilobytes of the heap used by TVM.
 
 module = CALLBACKS
 module-str = callbacks
@@ -29,6 +59,10 @@ source "subsys/logging/Kconfig.template.log_config"
 
 module = MODEL
 module-str = model
+source "subsys/logging/Kconfig.template.log_config"
+
+module = RUNTIME_WRAPPER
+module-str = runtime_wrapper
 source "subsys/logging/Kconfig.template.log_config"
 
 module = UART
