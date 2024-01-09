@@ -17,6 +17,8 @@
 
 GENERATE_MODULE_STATUSES(RUNTIME_WRAPPER);
 
+#define RUNTIME_STAT_NAME_MAX_LEN 32
+
 /**
  * Data types of tensor elements
  */
@@ -70,13 +72,26 @@ typedef struct __attribute__((packed))
     uint8_t model_name[MAX_LENGTH_MODEL_NAME];                      // name of the model
 } MlModel;
 
+typedef struct
+{
+    char stat_name[RUNTIME_STAT_NAME_MAX_LEN];
+    uint64_t stat_value;
+} runtime_statistic_t;
+
+/**
+ * Initializes runtime
+ *
+ * @returns status of the runtime
+ */
+status_t runtime_init();
+
 /**
  * Loads model weights using wrapped runtime
  *
  * @param model_weights_data buffer that contains model weights
  * @param model_data_size size of the buffer
  *
- * @returns status of the framework
+ * @returns status of the runtime
  */
 status_t runtime_load_model_weights(const uint8_t *model_weights_data, const size_t data_size);
 
@@ -84,16 +99,15 @@ status_t runtime_load_model_weights(const uint8_t *model_weights_data, const siz
  * Loads model input using wrapped runtime
  *
  * @param model_input buffer that contains model input
- * @param model_input_size size of the buffer
  *
- * @returns status of the framework
+ * @returns status of the runtime
  */
-status_t runtime_load_model_input(const MlModel *model_struct, const uint8_t *model_input);
+status_t runtime_load_model_input(const uint8_t *model_input);
 
 /**
  * Runs model inference using wrapped runtime
  *
- * @returns status of the framework
+ * @returns status of the runtime
  */
 status_t runtime_run_model();
 
@@ -102,7 +116,7 @@ status_t runtime_run_model();
  *
  * @param model_output buffer to save model output
  *
- * @returns status of the framework
+ * @returns status of the runtime
  */
 status_t runtime_get_model_output(uint8_t *model_output);
 
@@ -113,7 +127,7 @@ status_t runtime_get_model_output(uint8_t *model_output);
  * @param statistics_buffer buffer provided for statistics
  * @param statistics_size size of the returned statistics data
  *
- * @returns status of the framework
+ * @returns status of the runtime
  */
 status_t runtime_get_statistics(const size_t statistics_buffer_size, uint8_t *statistics_buffer,
                                 size_t *statistics_size);
