@@ -7,6 +7,12 @@ manifest:
     - name: zephyrproject-rtos
       url-base: https://github.com/zephyrproject-rtos
 
+    - name: apache
+      url-base: https://github.com/apache
+
+    - name: dmlc
+      url-base: https://github.com/dmlc
+
   projects:
     - name: zephyr
       remote: zephyrproject-rtos
@@ -15,4 +21,17 @@ manifest:
         name-allowlist:
           - cmsis
           - hal_nordic
-          - tflite-micro
+          - hal_stm32
+          - segger
+
+    - name: tflite-micro
+      remote: zephyrproject-rtos
+      revision: main
+
+    - name: tvm
+      remote: apache
+      revision: main
+
+    - name: dlpack
+      remote: dmlc
+      revision: main
