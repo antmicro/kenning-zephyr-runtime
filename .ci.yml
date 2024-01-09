@@ -8,6 +8,21 @@ image: $CI_IMAGE
         - main
         - merge_requests
 
+
+.build: &build
+    <<: *ace
+    <<: *common_only
+    stage: build
+    before_script:
+        - scripts/prepare_zephyr_env.sh
+        - scripts/prepare_modules.sh
+    script:
+        - west build -p always -b ${BOARD} app -- -DEXTRA_CONF_FILE=${RUNTIME_CONF}
+    artifacts:
+        paths:
+            - build/zephyr/zephyr.elf
+        when: always
+
 variables:
     GIT_STRATEGY: clone
 
@@ -23,17 +38,39 @@ pre-commit:
     script:
         - pre-commit run --all-files
 
-build:
+build-nrf52840dk_nrf52840-stub:
+    variables:
+        BOARD: "nrf52840dk_nrf52840"
+    <<: *build
+
+build-stm32f746g_disco-stub:
+    variables:
+        BOARD: "stm32f746g_disco"
+    <<: *build
+
+build-nrf52840dk_nrf52840-tvm-magic_wand:
+    variables:
+        BOARD: "nrf52840dk_nrf52840"
+        RUNTIME_CONF: tvm.conf
+    <<: *build
+
+build-stm32f746g_disco-tvm-magic_wand:
+    variables:
+        BOARD: "stm32f746g_disco"
+        RUNTIME_CONF: tvm.conf
+    <<: *build
+
+unit-tests:
     <<: *ace
     <<: *common_only
-    stage: build
+    stage: tests
     before_script:
         - scripts/prepare_zephyr_env.sh
     script:
-        - west build -p always -b nrf52840dk_nrf52840 app
+        - west twister -T tests -p unit_testing
     artifacts:
         paths:
-            - build/zephyr/zephyr.elf
+            - twister-out/unit_testing/lib/kenning_inference_lib/**/*.log
         when: always
 
 unit-tests:
