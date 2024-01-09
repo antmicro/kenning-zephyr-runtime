@@ -1,0 +1,19 @@
+using sysbus
+$name?="stm32f746g_disco"
+mach create $name
+
+machine LoadPlatformDescription $ORIGIN/platform/stm32f746g_disco.repl
+
+emulation CreateServerSocketTerminal 9898 "term0"
+connector Connect sysbus.usart1 term0
+
+emulation CreateUartPtyTerminal "term" "/tmp/uart"
+connector Connect sysbus.usart6 term
+
+macro reset
+"""
+	sysbus LoadELF $ORIGIN/../../build/zephyr/zephyr.elf
+
+"""
+
+runMacro $reset
