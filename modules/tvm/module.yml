@@ -1,0 +1,4 @@
+name: tvm
+build:
+  cmake-ext: True
+  kconfig-ext: True
