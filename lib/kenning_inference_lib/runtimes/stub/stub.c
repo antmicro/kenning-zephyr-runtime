@@ -8,9 +8,11 @@
 
 GENERATE_MODULE_STATUSES_STR(RUNTIME_WRAPPER);
 
+status_t runtime_init() { return STATUS_OK; }
+
 status_t runtime_load_model_weights(const uint8_t *model_weights_data, const size_t data_size) { return STATUS_OK; }
 
-status_t runtime_load_model_input(const MlModel *model_struct, const uint8_t *model_input) { return STATUS_OK; }
+status_t runtime_load_model_input(const uint8_t *model_input) { return STATUS_OK; }
 
 status_t runtime_run_model() { return STATUS_OK; }
 
