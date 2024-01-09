@@ -55,7 +55,20 @@ static void kenning_protocol_tests_setup_f()
     g_protocol_data_read = 0;
 }
 
-ZTEST_SUITE(kenning_inference_lib_test_kenning_protocol, NULL, NULL, kenning_protocol_tests_setup_f, NULL, NULL);
+static void kenning_protocol_tests_teardown_f()
+{
+    if (IS_VALID_POINTER(gp_message))
+    {
+        free(gp_message);
+    }
+    if (IS_VALID_POINTER(gp_protocol_buffer))
+    {
+        free(gp_protocol_buffer);
+    }
+}
+
+ZTEST_SUITE(kenning_inference_lib_test_kenning_protocol, NULL, NULL, kenning_protocol_tests_setup_f, NULL,
+            kenning_protocol_tests_teardown_f);
 
 // ========================================================
 // receive_message
