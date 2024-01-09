@@ -26,11 +26,12 @@ extern MODEL_STATE g_model_state;
 // ========================================================
 DEFINE_FFF_GLOBALS;
 
-#define MOCKS(MOCK)                                                            \
-    MOCK(status_t, runtime_load_model_weights, const uint8_t *, const size_t)  \
-    MOCK(status_t, runtime_load_model_input, const MlModel *, const uint8_t *) \
-    MOCK(status_t, runtime_run_model)                                          \
-    MOCK(status_t, runtime_get_model_output, uint8_t *)                        \
+#define MOCKS(MOCK)                                                           \
+    MOCK(status_t, runtime_init)                                              \
+    MOCK(status_t, runtime_load_model_weights, const uint8_t *, const size_t) \
+    MOCK(status_t, runtime_load_model_input, const uint8_t *)                 \
+    MOCK(status_t, runtime_run_model)                                         \
+    MOCK(status_t, runtime_get_model_output, uint8_t *)                       \
     MOCK(status_t, runtime_get_statistics, const size_t, uint8_t *, size_t *)
 
 MOCKS(DECLARE_MOCK);
@@ -63,7 +64,7 @@ static void model_tests_setup_f()
 ZTEST_SUITE(kenning_inference_lib_test_model, NULL, NULL, model_tests_setup_f, NULL, NULL);
 
 // ========================================================
-// get_model_state
+// model_get_state
 // ========================================================
 
 /**
@@ -84,7 +85,7 @@ ZTEST(kenning_inference_lib_test_model, test_model_get_state)
 }
 
 // ========================================================
-// reset_model_state
+// model_reset_state
 // ========================================================
 
 /**
@@ -106,8 +107,68 @@ ZTEST(kenning_inference_lib_test_model, test_model_reset_state)
 }
 
 // ========================================================
-// load_model_struct
+// model_init
 // ========================================================
+
+/**
+ * Tests model initialization
+ */
+ZTEST(kenning_inference_lib_test_model, test_model_init)
+{
+    status_t status = STATUS_OK;
+
+    runtime_init_fake.return_val = STATUS_OK;
+
+    status = model_init();
+
+    zassert_equal(STATUS_OK, status);
+    zassert_equal(MODEL_STATE_INITIALIZED, g_model_state);
+}
+
+/**
+ * Tests model initialization when runtime init fails
+ */
+ZTEST(kenning_inference_lib_test_model, test_model_init_fail)
+{
+    status_t status = STATUS_OK;
+
+    runtime_init_fake.return_val = RUNTIME_WRAPPER_STATUS_ERROR;
+
+    status = model_init();
+
+    zassert_equal(RUNTIME_WRAPPER_STATUS_ERROR, status);
+    zassert_equal(MODEL_STATE_UNINITIALIZED, g_model_state);
+}
+
+// ========================================================
+// model_load_struct
+// ========================================================
+
+/**
+ * Tests model struct loading in valid model states
+ */
+ZTEST(kenning_inference_lib_test_model, test_model_load_struct_valid_state)
+{
+    status_t status = STATUS_OK;
+    MlModel model_struct;
+
+#define TEST_LOAD_STRUCT(_model_state)                                     \
+    g_model_state = (_model_state);                                        \
+    model_struct = get_model_struct_data(VALID_HAL_ELEMENT_TYPE);          \
+                                                                           \
+    status = model_load_struct((uint8_t *)&model_struct, sizeof(MlModel)); \
+                                                                           \
+    zassert_equal(STATUS_OK, status);                                      \
+    zassert_equal(g_model_state, MODEL_STATE_STRUCT_LOADED);
+
+    TEST_LOAD_STRUCT(MODEL_STATE_INITIALIZED);
+    TEST_LOAD_STRUCT(MODEL_STATE_STRUCT_LOADED);
+    TEST_LOAD_STRUCT(MODEL_STATE_WEIGHTS_LOADED);
+    TEST_LOAD_STRUCT(MODEL_STATE_INPUT_LOADED);
+    TEST_LOAD_STRUCT(MODEL_STATE_INFERENCE_DONE);
+
+#undef TEST_LOAD_STRUCT
+}
 
 /**
  * Tests model struct parsing for valid HAL element types
@@ -118,6 +179,7 @@ ZTEST(kenning_inference_lib_test_model, test_model_load_struct)
     MlModel model_struct;
 
 #define TEST_LOAD_STRUCT(_dtype_str, _dtype)                               \
+    g_model_state = MODEL_STATE_INITIALIZED;                               \
     model_struct = get_model_struct_data(_dtype_str);                      \
                                                                            \
     status = model_load_struct((uint8_t *)&model_struct, sizeof(MlModel)); \
@@ -142,12 +204,13 @@ ZTEST(kenning_inference_lib_test_model, test_model_load_struct_invalid_dtype)
     MlModel model_struct;
 
 #define TEST_LOAD_STRUCT(_dtype_str)                                       \
+    g_model_state = MODEL_STATE_INITIALIZED;                               \
     model_struct = get_model_struct_data(_dtype_str);                      \
                                                                            \
     status = model_load_struct((uint8_t *)&model_struct, sizeof(MlModel)); \
                                                                            \
     zassert_equal(MODEL_STATUS_INV_ARG, status);                           \
-    zassert_equal(MODEL_STATE_UNINITIALIZED, g_model_state);
+    zassert_equal(MODEL_STATE_INITIALIZED, g_model_state);
 
     TEST_LOAD_STRUCT("");
     TEST_LOAD_STRUCT("x");
@@ -165,6 +228,7 @@ ZTEST(kenning_inference_lib_test_model, test_model_load_struct_num_input)
     MlModel model_struct;
 
 #define TEST_LOAD_STRUCT(_num_input)                                       \
+    g_model_state = MODEL_STATE_INITIALIZED;                               \
     model_struct = get_model_struct_data(VALID_HAL_ELEMENT_TYPE);          \
     model_struct.num_input = (_num_input);                                 \
     for (int i = 0; i < (_num_input); ++i)                                 \
@@ -195,13 +259,14 @@ ZTEST(kenning_inference_lib_test_model, test_model_load_struct_invalid_num_input
     MlModel model_struct;
 
 #define TEST_LOAD_STRUCT(_num_input)                                       \
+    g_model_state = MODEL_STATE_INITIALIZED;                               \
     model_struct = get_model_struct_data(VALID_HAL_ELEMENT_TYPE);          \
     model_struct.num_input = (_num_input);                                 \
                                                                            \
     status = model_load_struct((uint8_t *)&model_struct, sizeof(MlModel)); \
                                                                            \
     zassert_equal(MODEL_STATUS_INV_ARG, status);                           \
-    zassert_equal(MODEL_STATE_UNINITIALIZED, g_model_state);
+    zassert_equal(MODEL_STATE_INITIALIZED, g_model_state);
 
     TEST_LOAD_STRUCT(0);
     TEST_LOAD_STRUCT(-1);
@@ -219,6 +284,7 @@ ZTEST(kenning_inference_lib_test_model, test_model_load_struct_num_output)
     MlModel model_struct;
 
 #define TEST_LOAD_STRUCT(_num_output)                                      \
+    g_model_state = MODEL_STATE_INITIALIZED;                               \
     model_struct = get_model_struct_data(VALID_HAL_ELEMENT_TYPE);          \
     model_struct.num_output = (_num_output);                               \
     for (int i = 0; i < (_num_output); ++i)                                \
@@ -247,13 +313,14 @@ ZTEST(kenning_inference_lib_test_model, test_model_load_struct_invalid_num_outpu
     MlModel model_struct;
 
 #define TEST_LOAD_STRUCT(_num_output)                                      \
+    g_model_state = MODEL_STATE_INITIALIZED;                               \
     model_struct = get_model_struct_data(VALID_HAL_ELEMENT_TYPE);          \
     model_struct.num_output = (_num_output);                               \
                                                                            \
     status = model_load_struct((uint8_t *)&model_struct, sizeof(MlModel)); \
                                                                            \
     zassert_equal(MODEL_STATUS_INV_ARG, status);                           \
-    zassert_equal(MODEL_STATE_UNINITIALIZED, g_model_state);
+    zassert_equal(MODEL_STATE_INITIALIZED, g_model_state);
 
     TEST_LOAD_STRUCT(0);
     TEST_LOAD_STRUCT(-1);
@@ -271,6 +338,7 @@ ZTEST(kenning_inference_lib_test_model, test_model_load_struct_num_input_dim)
     MlModel model_struct;
 
 #define TEST_LOAD_STRUCT(_num_input_dim)                                   \
+    g_model_state = MODEL_STATE_INITIALIZED;                               \
     model_struct = get_model_struct_data(VALID_HAL_ELEMENT_TYPE);          \
     model_struct.num_input_dim[0] = (_num_input_dim);                      \
                                                                            \
@@ -295,13 +363,14 @@ ZTEST(kenning_inference_lib_test_model, test_model_load_struct_invalid_num_input
     MlModel model_struct;
 
 #define TEST_LOAD_STRUCT(_num_input_dim)                                   \
+    g_model_state = MODEL_STATE_INITIALIZED;                               \
     model_struct = get_model_struct_data(VALID_HAL_ELEMENT_TYPE);          \
     model_struct.num_input_dim[0] = (_num_input_dim);                      \
                                                                            \
     status = model_load_struct((uint8_t *)&model_struct, sizeof(MlModel)); \
                                                                            \
     zassert_equal(MODEL_STATUS_INV_ARG, status);                           \
-    zassert_equal(MODEL_STATE_UNINITIALIZED, g_model_state);
+    zassert_equal(MODEL_STATE_INITIALIZED, g_model_state);
 
     TEST_LOAD_STRUCT(0);
     TEST_LOAD_STRUCT(-1);
@@ -319,10 +388,12 @@ ZTEST(kenning_inference_lib_test_model, test_model_load_struct_invalid_size)
     MlModel model_struct = get_model_struct_data(VALID_HAL_ELEMENT_TYPE);
 
 #define TEST_LOAD_STRUCT(_struct_size)                                    \
+    g_model_state = MODEL_STATE_INITIALIZED;                              \
+                                                                          \
     status = model_load_struct((uint8_t *)&model_struct, (_struct_size)); \
                                                                           \
     zassert_equal(MODEL_STATUS_INV_ARG, status);                          \
-    zassert_equal(MODEL_STATE_UNINITIALIZED, g_model_state);
+    zassert_equal(MODEL_STATE_INITIALIZED, g_model_state);
 
     TEST_LOAD_STRUCT(sizeof(MlModel) - 1);
     TEST_LOAD_STRUCT(sizeof(MlModel) + 1);
@@ -338,14 +409,16 @@ ZTEST(kenning_inference_lib_test_model, test_model_load_struct_invalid_ptr)
 {
     status_t status = STATUS_OK;
 
+    g_model_state = MODEL_STATE_INITIALIZED;
+
     status = model_load_struct(NULL, sizeof(MlModel));
 
     zassert_equal(MODEL_STATUS_INV_PTR, status);
-    zassert_equal(MODEL_STATE_UNINITIALIZED, g_model_state);
+    zassert_equal(MODEL_STATE_INITIALIZED, g_model_state);
 }
 
 // ========================================================
-// load_model_weights
+// model_load_weights
 // ========================================================
 
 /**
@@ -421,7 +494,7 @@ ZTEST(kenning_inference_lib_test_model, test_model_load_weights_runtime_fail)
 }
 
 // ========================================================
-// get_model_input_size
+// model_get_input_size
 // ========================================================
 
 /**
@@ -480,7 +553,7 @@ ZTEST(kenning_inference_lib_test_model, test_model_get_input_size_invalid_pointe
 }
 
 // ========================================================
-// load_model_input
+// model_load_input
 // ========================================================
 
 /**
@@ -575,7 +648,7 @@ ZTEST(kenning_inference_lib_test_model, test_model_load_input_invalid_size)
 }
 
 // ========================================================
-// run_model
+// model_run
 // ========================================================
 
 /**
@@ -638,7 +711,7 @@ ZTEST(kenning_inference_lib_test_model, test_model_run_invalid_state)
 }
 
 // ========================================================
-// get_model_output_size
+// model_get_output_size
 // ========================================================
 
 /**
@@ -684,7 +757,7 @@ ZTEST(kenning_inference_lib_test_model, test_model_get_output_size_invalid_state
 }
 
 // ========================================================
-// get_model_output
+// model_get_output
 // ========================================================
 
 /**
@@ -798,7 +871,7 @@ ZTEST(kenning_inference_lib_test_model, test_model_get_output_runtime_fail)
 }
 
 // ========================================================
-// get_statistics
+// model_get_statistics
 // ========================================================
 
 /**
