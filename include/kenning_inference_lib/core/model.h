@@ -23,10 +23,11 @@ GENERATE_MODULE_STATUSES(MODEL);
 typedef enum
 {
     MODEL_STATE_UNINITIALIZED = 0,
-    MODEL_STATE_STRUCT_LOADED = 1,
-    MODEL_STATE_WEIGHTS_LOADED = 2,
-    MODEL_STATE_INPUT_LOADED = 3,
-    MODEL_STATE_INFERENCE_DONE = 4,
+    MODEL_STATE_INITIALIZED = 1,
+    MODEL_STATE_STRUCT_LOADED = 2,
+    MODEL_STATE_WEIGHTS_LOADED = 3,
+    MODEL_STATE_INPUT_LOADED = 4,
+    MODEL_STATE_INFERENCE_DONE = 5,
 } MODEL_STATE;
 
 /**
@@ -40,6 +41,13 @@ MODEL_STATE model_get_state();
  * Resets model state
  */
 void model_reset_state();
+
+/**
+ * Initializes model
+ *
+ * @returns status of the model
+ */
+status_t model_init();
 
 /**
  * Loads model struct from given buffer

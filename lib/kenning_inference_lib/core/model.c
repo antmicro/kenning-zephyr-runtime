@@ -25,11 +25,30 @@ MODEL_STATE model_get_state() { return g_model_state; }
 
 void model_reset_state() { g_model_state = MODEL_STATE_UNINITIALIZED; }
 
+status_t model_init()
+{
+    status_t status = STATUS_OK;
+
+    status = runtime_init();
+
+    if (STATUS_OK == status)
+    {
+        g_model_state = MODEL_STATE_INITIALIZED;
+    }
+
+    return status;
+}
+
 status_t model_load_struct(const uint8_t *model_struct_data, const size_t data_size)
 {
     status_t status = STATUS_OK;
 
     RETURN_ERROR_IF_POINTER_INVALID(model_struct_data, MODEL_STATUS_INV_PTR);
+
+    if (g_model_state < MODEL_STATE_INITIALIZED)
+    {
+        return MODEL_STATUS_INV_STATE;
+    }
 
     if (sizeof(MlModel) != data_size)
     {
@@ -166,7 +185,8 @@ status_t model_load_input(const uint8_t *model_input, const size_t model_input_s
     }
 
     // setup buffers for inputs
-    status = runtime_load_model_input(&g_model_struct, model_input);
+    status = runtime_load_model_input(model_input);
+
     RETURN_ON_ERROR(status, status);
 
     LOG_DBG("Loaded model input");
