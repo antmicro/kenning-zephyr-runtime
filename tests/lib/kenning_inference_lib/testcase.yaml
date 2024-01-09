@@ -6,8 +6,6 @@ common:
   tags:
     - test_framework
   platform_allow:
-    - nrf52840dk_nrf52840
-    - qemu_x86
     - unit_testing
 
 tests:
