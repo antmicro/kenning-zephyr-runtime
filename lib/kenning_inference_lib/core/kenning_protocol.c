@@ -5,7 +5,12 @@
  */
 
 #include "kenning_inference_lib/core/kenning_protocol.h"
+
+#ifndef __UNIT_TEST__
 #include <zephyr/logging/log.h>
+#else // __UNIT_TEST__
+#include "mocks/log.h"
+#endif
 
 LOG_MODULE_REGISTER(kenning_protocol, CONFIG_KENNING_PROTOCOL_LOG_LEVEL);
 
@@ -43,7 +48,13 @@ status_t protocol_recv_msg(message_t **msg)
 
     if (msg_size > MAX_MESSAGE_SIZE_BYTES)
     {
+        LOG_ERR("message too big: %u", msg_size);
         return KENNING_PROTOCOL_STATUS_MSG_TOO_BIG;
+    }
+    if (msg_size < sizeof(message_type_t))
+    {
+        LOG_ERR("invalid message size: %u", msg_size);
+        return KENNING_PROTOCOL_STATUS_INV_MSG_SIZE;
     }
 
     // read type of the message
