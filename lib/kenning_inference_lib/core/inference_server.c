@@ -6,6 +6,7 @@
 
 #include "kenning_inference_lib/core/inference_server.h"
 #include "kenning_inference_lib/core/callbacks.h"
+#include "kenning_inference_lib/core/model.h"
 #include "kenning_inference_lib/core/protocol.h"
 
 #ifndef __UNIT_TEST__
@@ -28,6 +29,10 @@ status_t init_server()
     // initialize protocol
     status = protocol_init();
     CHECK_INIT_STATUS_RET(status, "protocol_init returned 0x%x (%s)", status, get_status_str(status));
+
+    // initialize model
+    status = model_init();
+    CHECK_INIT_STATUS_RET(status, "model_init returned 0x%x (%s)", status, get_status_str(status));
 
     LOG_INF("Inference server started");
     return STATUS_OK;
