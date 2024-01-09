@@ -15,6 +15,7 @@
 
 #include "utils.h"
 
+static uint8_t g_message_buffer[MAX_MESSAGE_SIZE_BYTES];
 message_t *gp_message = NULL;
 
 GENERATE_MODULE_STATUSES_STR(MODEL);
@@ -656,12 +657,7 @@ const char *get_status_str_mock(status_t status) { return "STATUS_STR"; }
 
 void prepare_message(message_type_t msg_type, uint8_t *payload, size_t payload_size, message_t **msg)
 {
-    if (IS_VALID_POINTER(*msg))
-    {
-        free(*msg);
-        *msg = NULL;
-    }
-    *msg = malloc(sizeof(message_size_t) + payload_size);
+    *msg = &g_message_buffer;
     (*msg)->message_size = sizeof(message_type_t) + payload_size;
     (*msg)->message_type = msg_type;
     if (payload_size > 0)
