@@ -1,6 +1,6 @@
 # Zephyr runtime for Kenning
 
-Copyright (c) 2023 [Antmicro](https://www.antmicro.com)
+Copyright (c) 2023-2024 [Antmicro](https://www.antmicro.com)
 
 ### Building the runtime
 
