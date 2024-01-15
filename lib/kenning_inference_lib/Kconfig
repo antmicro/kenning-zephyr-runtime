@@ -30,7 +30,7 @@ config ML_RUNTIME
         default "stub"
         help
           This option select ML runtime to be used.
-          Available options: stub, tvm
+		  Available options: stub, tvm, tflite
 
 config TVM_MODEL
         string "Model loaded by TVM"

@@ -9,4 +9,4 @@ repos:
   rev: v1.3.5
   hooks:
   - id: clang-format
-    args: [--style=file]
+    args: [-i, --style=file]
