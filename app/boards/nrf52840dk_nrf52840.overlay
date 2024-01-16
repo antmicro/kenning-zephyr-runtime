@@ -1,3 +1,9 @@
 &uart1 {
     status = "okay";
 };
+
+/ {
+    aliases {
+        kcomms = &uart1;
+    };
+};

@@ -33,12 +33,4 @@ else()
   message(FATAL_ERROR "Invalid ML runtime selected.")
 endif()
 
-if("${BOARD}" STREQUAL "stm32f746g_disco")
-  add_compile_definitions(COMM_UART=usart6)
-elseif("${BOARD}" STREQUAL "nrf52840dk_nrf52840")
-  add_compile_definitions(COMM_UART=uart1)
-else()
-  message(FATAL_ERROR "Board ${BOARD} not supported")
-endif()
-
 zephyr_library_sources(${core_src} ${protocol_src} ${runtime_src})
