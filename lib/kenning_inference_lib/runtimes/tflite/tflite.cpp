@@ -24,7 +24,7 @@ extern MlModel g_model_struct;
 extern tflite::MicroMutableOpResolver<TFLITE_RESOLVER_SIZE> tflite_resolver;
 static tflite::MicroInterpreter *tflite_interpreter = nullptr;
 
-static uint8_t tfliteBuffer[CONFIG_TFLITE_BUFFER_SIZE];
+static uint8_t __attribute__((aligned(8))) tfliteBuffer[CONFIG_TFLITE_BUFFER_SIZE];
 
 status_t runtime_init()
 {
