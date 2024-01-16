@@ -24,9 +24,7 @@ extern MlModel g_model_struct;
 extern tflite::MicroMutableOpResolver<TFLITE_RESOLVER_SIZE> tflite_resolver;
 static tflite::MicroInterpreter *tflite_interpreter = nullptr;
 
-const static int tfliteMemorySize = 60000;
-
-static uint8_t tfliteMemory[tfliteMemorySize];
+static uint8_t tfliteBuffer[CONFIG_TFLITE_BUFFER_SIZE];
 
 status_t runtime_init()
 {
@@ -36,11 +34,11 @@ status_t runtime_init()
 
 status_t runtime_load_model_weights(const uint8_t *model_weights_data, const size_t model_size)
 {
-    uint8_t *modelWeights = tfliteMemory;
-    uint8_t *tensorArena = tfliteMemory + model_size;
-    size_t tensorArenaSize = tfliteMemorySize - model_size;
+    uint8_t *modelWeights = tfliteBuffer;
+    uint8_t *tensorArena = tfliteBuffer + model_size;
+    size_t tensorArenaSize = CONFIG_TFLITE_BUFFER_SIZE - model_size;
 
-    if (model_size > tfliteMemorySize)
+    if (model_size > CONFIG_TFLITE_BUFFER_SIZE)
         return RUNTIME_WRAPPER_STATUS_ERROR;
 
     memcpy(modelWeights, model_weights_data, model_size);

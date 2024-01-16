@@ -45,6 +45,12 @@ config TVM_HEAP_SIZE
         help
           This option sets the size in kilobytes of the heap used by TVM.
 
+config TFLITE_BUFFER_SIZE
+		int "Size in bytes of the buffer for tensor arena and model used by TFLite"
+		default 65536
+		help
+		  This option sets the size in bytes of the buffer for tensor arena and model used by TFLite.
+
 module = CALLBACKS
 module-str = callbacks
 source "subsys/logging/Kconfig.template.log_config"
