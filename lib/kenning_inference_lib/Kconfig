@@ -30,7 +30,7 @@ config ML_RUNTIME
         default "stub"
         help
           This option select ML runtime to be used.
-		  Available options: stub, tvm, tflite
+          Available options: stub, tvm, tflite
 
 config TVM_MODEL
         string "Model loaded by TVM"
@@ -46,10 +46,10 @@ config TVM_HEAP_SIZE
           This option sets the size in kilobytes of the heap used by TVM.
 
 config TFLITE_BUFFER_SIZE
-		int "Size in bytes of the buffer for tensor arena and model used by TFLite"
-		default 65536
-		help
-		  This option sets the size in bytes of the buffer for tensor arena and model used by TFLite.
+        int "Size in bytes of the buffer for tensor arena and model used by TFLite"
+        default 65536
+        help
+          This option sets the size in bytes of the buffer for tensor arena and model used by TFLite.
 
 module = CALLBACKS
 module-str = callbacks

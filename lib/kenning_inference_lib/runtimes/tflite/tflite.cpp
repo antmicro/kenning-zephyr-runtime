@@ -54,6 +54,7 @@ status_t runtime_load_model_weights(const uint8_t *model_weights_data, const siz
 
     tflite_interpreter = &interpreter;
 
+    // this hack is used for reloading the interpreter on model change
     interpreter.~MicroInterpreter();
     new (&interpreter) tflite::MicroInterpreter(model, tflite_resolver, tensorArena, tensorArenaSize);
 
@@ -70,20 +71,23 @@ status_t runtime_load_model_weights(const uint8_t *model_weights_data, const siz
 status_t runtime_load_model_input(const uint8_t *model_input)
 {
     TfLiteTensor *input = tflite_interpreter->input(0);
-    memcpy(input->data.int8, model_input, input->bytes);
+    memcpy(input->data.data, model_input, input->bytes);
     return STATUS_OK;
 }
 
 status_t runtime_run_model()
 {
-    TfLiteStatus invoke_status = tflite_interpreter->Invoke();
-    return STATUS_OK;
+    TfLiteStatus status = tflite_interpreter->Invoke();
+    if (status == kTfLiteOk)
+        return STATUS_OK;
+
+    return RUNTIME_WRAPPER_STATUS_ERROR;
 }
 
 status_t runtime_get_model_output(uint8_t *model_output)
 {
     TfLiteTensor *output = tflite_interpreter->output(0);
-    memcpy(model_output, output->data.int8, output->bytes);
+    memcpy(model_output, output->data.data, output->bytes);
     return STATUS_OK;
 }
 

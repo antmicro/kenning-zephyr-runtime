@@ -1,5 +1,11 @@
-#ifndef KENNING_INFERENCE_LIB_RUNTIMES_RESOLVER_H
-#define KENNING_INFERENCE_LIB_RUNTIMES_RESOLVER_H
+/*
+ * Copyright (c) 2023-2024 Antmicro <www.antmicro.com>
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+#ifndef KENNING_INFERENCE_LIB_RUNTIMES_TFLITE_RESOLVER_H_
+#define KENNING_INFERENCE_LIB_RUNTIMES_TFLITE_RESOLVER_H_
 
 #include <tensorflow/lite/micro/micro_mutable_op_resolver.h>
 
@@ -7,4 +13,4 @@
 
 void tflite_initialize_resolver();
 
-#endif
+#endif // KENNING_INFERENCE_LIB_RUNTIMES_TFLITE_RESOLVER_H_

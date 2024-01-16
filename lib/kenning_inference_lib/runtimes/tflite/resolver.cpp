@@ -1,3 +1,9 @@
+/*
+ * Copyright (c) 2023-2024 Antmicro <www.antmicro.com>
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 #include <tensorflow/lite/micro/micro_mutable_op_resolver.h>
 
 #include "resolver.h"
