@@ -21,10 +21,10 @@ LOG_MODULE_REGISTER(tflite_runtime, CONFIG_RUNTIME_WRAPPER_LOG_LEVEL);
 
 extern MlModel g_model_struct;
 
-extern tflite::MicroMutableOpResolver<TFLITE_RESOLVER_SIZE> tflite_resolver;
-static tflite::MicroInterpreter *tflite_interpreter = nullptr;
+extern tflite::MicroMutableOpResolver<TFLITE_RESOLVER_SIZE> g_tflite_resolver;
+static tflite::MicroInterpreter *gp_tflite_interpreter = nullptr;
 
-static uint8_t __attribute__((aligned(8))) tfliteBuffer[CONFIG_TFLITE_BUFFER_SIZE];
+static uint8_t __attribute__((aligned(8))) g_tfliteBuffer[CONFIG_TFLITE_BUFFER_SIZE];
 
 status_t runtime_init()
 {
@@ -34,8 +34,8 @@ status_t runtime_init()
 
 status_t runtime_load_model_weights(const uint8_t *model_weights_data, const size_t model_size)
 {
-    uint8_t *modelWeights = tfliteBuffer;
-    uint8_t *tensorArena = tfliteBuffer + model_size;
+    uint8_t *modelWeights = g_tfliteBuffer;
+    uint8_t *tensorArena = g_tfliteBuffer + model_size;
     size_t tensorArenaSize = CONFIG_TFLITE_BUFFER_SIZE - model_size;
 
     if (model_size > CONFIG_TFLITE_BUFFER_SIZE)
@@ -50,13 +50,13 @@ status_t runtime_load_model_weights(const uint8_t *model_weights_data, const siz
         return RUNTIME_WRAPPER_STATUS_ERROR;
     }
 
-    static tflite::MicroInterpreter interpreter(model, tflite_resolver, tensorArena, tensorArenaSize);
+    static tflite::MicroInterpreter interpreter(model, g_tflite_resolver, tensorArena, tensorArenaSize);
 
-    tflite_interpreter = &interpreter;
+    gp_tflite_interpreter = &interpreter;
 
     // this hack is used for reloading the interpreter on model change
     interpreter.~MicroInterpreter();
-    new (&interpreter) tflite::MicroInterpreter(model, tflite_resolver, tensorArena, tensorArenaSize);
+    new (&interpreter) tflite::MicroInterpreter(model, g_tflite_resolver, tensorArena, tensorArenaSize);
 
     TfLiteStatus allocate_status = interpreter.AllocateTensors();
     if (allocate_status != kTfLiteOk)
@@ -70,14 +70,14 @@ status_t runtime_load_model_weights(const uint8_t *model_weights_data, const siz
 
 status_t runtime_load_model_input(const uint8_t *model_input)
 {
-    TfLiteTensor *input = tflite_interpreter->input(0);
+    TfLiteTensor *input = gp_tflite_interpreter->input(0);
     memcpy(input->data.data, model_input, input->bytes);
     return STATUS_OK;
 }
 
 status_t runtime_run_model()
 {
-    TfLiteStatus status = tflite_interpreter->Invoke();
+    TfLiteStatus status = gp_tflite_interpreter->Invoke();
     if (status == kTfLiteOk)
         return STATUS_OK;
 
@@ -86,7 +86,7 @@ status_t runtime_run_model()
 
 status_t runtime_get_model_output(uint8_t *model_output)
 {
-    TfLiteTensor *output = tflite_interpreter->output(0);
+    TfLiteTensor *output = gp_tflite_interpreter->output(0);
     memcpy(model_output, output->data.data, output->bytes);
     return STATUS_OK;
 }
