@@ -1,0 +1,24 @@
+name: Kenning Zephyr runtime tests
+
+on:
+    push:
+        branches: [main]
+    pull_request:
+        branches: [main]
+
+jobs:
+    readme-tests:
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout sources
+              uses: actions/checkout@v3
+              with:
+                  submodules: 'recursive'
+            - name: Install tuttest dependencies
+              run: |
+                  sudo apt-get update -qqy
+                  sudo apt-get install -qqy --no-install-recommends python3 python3-pip git colorized-logs
+                  sudo pip3 install git+https://github.com/antmicro/tuttest.git
+            - name: Run README.md snippets
+              run: |
+                  ./scripts/readme-tests.sh
