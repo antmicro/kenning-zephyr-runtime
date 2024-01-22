@@ -1,0 +1,14 @@
+mach create "stm32f746g_discovery"
+
+machine LoadPlatformDescription @platforms/boards/stm32f7_discovery-bb.repl
+
+# Enable UART connection
+emulation CreateUartPtyTerminal "term-log" "/tmp/uart-log"
+connector Connect sysbus.usart1 term-log
+
+emulation CreateUartPtyTerminal "term" "/tmp/uart"
+connector Connect sysbus.usart6 term
+
+sysbus.cpu EnableOpcodesCounting true
+
+sysbus LoadELF $bin
