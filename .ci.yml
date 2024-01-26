@@ -85,3 +85,10 @@ unit-tests:
         paths:
             - twister-out/unit_testing/lib/kenning_inference_lib/**/*.log
         when: always
+
+tuttest:
+    <<: *ace
+    <<: *common_only
+    stage: tests
+    script:
+        - ./scripts/test_readme.sh
