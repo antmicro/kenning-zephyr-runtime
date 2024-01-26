@@ -9,7 +9,7 @@ PROJECT_ROOT=$(realpath $(pwd))
 # setup SDK
 if [ ! -d "$ZEPHYR_SDK_PATH" ]; then
   # determine latest SDK version
-  ZEPHYR_SDK_VERSION=$(curl "https://api.github.com/repos/zephyrproject-rtos/sdk-ng/tags" | jq -r '.[0].name')
+  ZEPHYR_SDK_VERSION=$(curl "https://api.github.com/repos/zephyrproject-rtos/sdk-ng/tags" | jq -r '[.[].name | select(.|test("-")|not)][0]')
   ZEPHYR_SDK_VERSION="${ZEPHYR_SDK_VERSION:1}"
 
   ZEPHYR_SDK_ARCHIVE="zephyr-sdk-${ZEPHYR_SDK_VERSION}_linux-x86_64_minimal.tar.xz"
