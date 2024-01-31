@@ -29,9 +29,9 @@ To be able to build and use the project, several dependencies need to be install
 On Debian-based Linux distributions, the above-listed dependencies can be installed as follows:
 
 ```bash
-apt update
+sudo apt update
 
-apt install -y --no-install-recommends git ninja-build \
+sudo apt install -y --no-install-recommends git ninja-build \
   ccache dfu-util device-tree-compiler wget \
   python3-dev python3-pip python3-setuptools python3-tk python3-wheel python3-venv xz-utils file \
   make gcc gcc-multilib g++-multilib libsdl2-dev libmagic1 jq curl
