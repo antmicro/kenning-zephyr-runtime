@@ -237,7 +237,7 @@ ZTEST(kenning_inference_lib_test_callbacks, test_data_callback_invalid_pointer)
 }
 
 /**
- * Tests if data callback fails for ivalid request message type
+ * Tests if data callback fails for invalid request message type
  */
 ZTEST(kenning_inference_lib_test_callbacks, test_data_callback_invalid_message_type)
 {

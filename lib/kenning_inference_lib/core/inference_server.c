@@ -90,7 +90,7 @@ status_t handle_message(message_t *msg)
     }
     if (NULL != msg)
     {
-        LOG_DBG("Sending reponse. Size: %d, type: %d (%s)", msg->message_size, msg->message_type,
+        LOG_DBG("Sending response. Size: %d, type: %d (%s)", msg->message_size, msg->message_type,
                 MESSAGE_TYPE_STR[msg->message_type]);
         status = protocol_send_msg(msg);
         if (STATUS_OK != status)

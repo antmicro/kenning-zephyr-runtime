@@ -96,7 +96,7 @@ status_t model_load_input(const uint8_t *model_input, const size_t model_input_s
 status_t model_run();
 
 /**
- * Caluclates model output size based on data from model struct
+ * Calculates model output size based on data from model struct
  *
  * @param model_output_size output value
  *

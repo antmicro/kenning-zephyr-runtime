@@ -92,7 +92,7 @@
    only to set enum counter value and should not be used. The generated enum
    contains generic statuses from GENERIC_STATUSES defined below and custom
    statuses module##_STATUSES that are defined in each modules header. The
-   module##_LAST_STATUS is only to get number of statuses and should noe be used
+   module##_LAST_STATUS is only to get number of statuses and should not be used
  */
 #define GENERATE_MODULE_STATUSES(module)                                                              \
     typedef enum                                                                                      \

@@ -134,7 +134,7 @@ status_t process_callback(message_t **request)
  * Handles OUTPUT message. It retrieves model inference output and sends it back
  *
  * @param request incoming message. It is overwritten by the response message
- * (DATA message containig model output or ERROR message)
+ * (DATA message containing model output or ERROR message)
  *
  * @returns error status of the runtime
  */
@@ -159,7 +159,7 @@ status_t output_callback(message_t **request)
  * Handles STATS message. It retrieves model statistics
  *
  * @param request incoming message. It is overwritten by the response message
- * (STATS message containig model statistics or ERROR message)
+ * (STATS message containing model statistics or ERROR message)
  *
  * @returns error status of the runtime
  */

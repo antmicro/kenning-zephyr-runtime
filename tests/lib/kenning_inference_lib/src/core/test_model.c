@@ -811,7 +811,7 @@ ZTEST(kenning_inference_lib_test_model, test_model_get_output_invalid_size_point
 }
 
 /**
- * Tests model get output for not enought large buffer
+ * Tests model get output for not enough large buffer
  */
 ZTEST(kenning_inference_lib_test_model, test_model_get_output_buffer_too_small)
 {
