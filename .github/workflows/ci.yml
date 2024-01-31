@@ -11,7 +11,7 @@ jobs:
         runs-on: ubuntu-latest
         steps:
             - name: Checkout sources
-              uses: actions/checkout@v3
+              uses: actions/checkout@v4
               with:
                   submodules: 'recursive'
             - name: Install tuttest dependencies
@@ -21,4 +21,4 @@ jobs:
                   sudo pip3 install git+https://github.com/antmicro/tuttest.git
             - name: Run README.md snippets
               run: |
-                  ./scripts/readme-tests.sh
+                  ./scripts/test_readme.sh
