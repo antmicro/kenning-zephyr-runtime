@@ -16,6 +16,7 @@ image: $CI_IMAGE
         APP: app
         ELF_PREFIX: kenning-zephyr-runtime
         BOARDS: >
+            b_u585i_iot02a
             nrf52840dk/nrf52840
             nrf52840dongle
             stm32f746g_disco
@@ -78,6 +79,16 @@ build-tflite:
     variables:
         RUNTIME: tflite
 
+build-iree-vmvx:
+    extends: .build
+    variables:
+        RUNTIME: iree_vmvx
+
+build-iree-embedded-elf:
+    extends: .build
+    variables:
+        RUNTIME: iree_embedded_elf
+
 build-demo-tvm:
     extends: .build-demo
     variables:
@@ -87,6 +98,21 @@ build-demo-tflite:
     extends: .build-demo
     variables:
         RUNTIME: tflite
+
+build-demo-iree-vmvx:
+    extends: .build-demo
+    variables:
+        RUNTIME: iree_vmvx
+        BOARDS: >
+            b_u585i_iot02a
+            hifive_unleashed
+
+build-demo-iree-embedded-elf:
+    extends: .build-demo
+    variables:
+        RUNTIME: iree_embedded_elf
+        BOARDS: >
+            b_u585i_iot02a
 
 build-demo-tvm-gen-model:
     extends: .build-demo
@@ -123,6 +149,8 @@ test-demo:
     dependencies:
         - build-demo-tvm
         - build-demo-tflite
+        - build-demo-iree-vmvx
+        - build-demo-iree-embedded-elf
         - build-demo-tvm-gen-model
         - build-repl
     artifacts:
@@ -151,5 +179,6 @@ tuttest:
     stage: tests
     script:
         - DEBIAN_FRONTEND=noninteractive apt update -qqy && apt-get install -y sudo python3 python3-pip git colorized-logs
-        - pip3 install git+https://github.com/antmicro/tuttest.git
+        - python3 -m pip install setuptools pip
+        - python3 -m pip install git+https://github.com/antmicro/tuttest.git
         - ./scripts/test_readme.sh
