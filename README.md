@@ -2,15 +2,15 @@
 
 Copyright (c) 2023-2024 [Antmicro](https://www.antmicro.com)
 
-This project provides Zephyr library for [Kenning](https://github.com/antmicro/kenning) runtime API, along with application for model evaluation.
+This project provides a Zephyr library for the [Kenning](https://github.com/antmicro/kenning) runtime API, along with an application for model evaluation.
+Its aim is to simplify adoption and switching between existing runtime implementations.
 
 ## Overview
 
 This repository provides:
 
-* `kenning_inference_lib` - a Zephyr library providing generic wrapper methods for loading models and running inference, regardless of underlying implementation.
-  The aim is to simplify adoption and switching between existing runtime implementations.
-* `kenning-zephyr-runtime` app - a Zephyr application for evaluating models and runtimes on devices with [Kenning](https://github.com/antmicro/kenning).
+* `kenning_inference_lib` - a Zephyr library providing generic wrapper methods for loading models and running inference, regardless of their underlying implementation.
+* `kenning-zephyr-runtime` app - a Zephyr application used by [Kenning](https://github.com/antmicro/kenning) for evaluating models and runtimes on devices.
 
 ## Building the project
 
@@ -18,7 +18,7 @@ This section contains instructions for preparing Zephyr and building the runtime
 
 ### Preparing Zephyr development environment
 
-To be able to build and use the project, several dependencies need to be installed:
+To be able to build and use the project, you need the folowing dependencies:
 
 * [Zephyr dependencies](https://docs.zephyrproject.org/latest/develop/getting_started/index.html#install-dependencies)
 * `jq`
@@ -26,7 +26,7 @@ To be able to build and use the project, several dependencies need to be install
 * `west`
 * `CMake`
 
-On Debian-based Linux distributions, the above-listed dependencies can be installed as follows:
+On Debian-based Linux distributions, install the dependencies as follows:
 
 ```bash
 sudo apt update
@@ -39,7 +39,7 @@ sudo apt install -y --no-install-recommends git ninja-build \
 
 ### Preparing the project
 
-First of, create a workspace directory and clone the repository in it:
+First off, create a workspace directory and clone the repository:
 
 ```bash skip
 mkdir zephyr-workspace && cd zephyr-workspace
@@ -47,7 +47,7 @@ git clone https://github.com/antmicro/kenning-zephyr-runtime.git
 cd kenning-zephyr-runtime
 ```
 
-After entering the project's directory, create a Python's virtual environment, and install `CMake` and `west`:
+After entering the project's directory, create a Python virtual environment, and install `CMake` and `west`:
 
 ```bash
 python3 -m venv venv
@@ -55,13 +55,13 @@ source venv/bin/activate
 pip install west cmake
 ```
 
-Then, initialize Zephyr workspace and ensure that Zephyr SDK is installed:
+Then, initialize a Zephyr workspace and ensure that the Zephyr SDK is installed:
 
 ```bash
 ./scripts/prepare_zephyr_env.sh
 ```
 
-And prepare additional modules:
+Prepare additional modules:
 
 ```bash
 ./scripts/prepare_modules.sh
@@ -69,26 +69,26 @@ And prepare additional modules:
 
 ### Building the Kenning runtime tester application
 
-To build Kenning Zephyr runtime, select a supported machine learning runtime and a board.
+To build the Kenning Zephyr runtime, select a supported machine learning runtime and a board.
 
 ```bash skip
 west build --board <board> app -- -DEXTRA_CONF_FILE=<runtime>.conf
 ```
 
-The available runtimes that can be provided in `<runtime>` are:
+You can provide one of the following runtimes in `<runtime>`:
 
 * [tvm](https://tvm.apache.org/docs/topic/microtvm/index.html)
 * [tflite](https://github.com/tensorflow/tflite-micro)
 
-The boards on which the project was tested:
+The project was tested on the following boards:
 
 * [stm32f746g_disco](https://renodepedia.renode.io/boards/stm32f746g_disco/)
 * [nrf52840dongle_nrf52840](https://renodepedia.renode.io/boards/nrf52840dongle_nrf52840)
 * [nrf52840dk_nrf52840](https://renodepedia.renode.io/boards/nrf52840dk_nrf52840)
 
-Check [Adding support for more boards section](#adding-support-for-more-boards) for information on what is needed to add support for your target device.
+Check the [Adding support for more boards section](#adding-support-for-more-boards) for information on whow to add a new target device.
 
-The built binary after `west build` can be found in `build/zephyr/zephyr.elf`.
+The binary built after executing `west build` can be found in `build/zephyr/zephyr.elf`.
 
 ### Installing Kenning with Renode
 
@@ -103,32 +103,32 @@ pip install "kenning[tvm,tensorflow,reports,renode] @ git+https://github.com/ant
 
 [Kenning](https://github.com/antmicro/kenning) provides:
 
-* Optimization and compilation of the model
-* Evaluation of the model on target device:
+* Model optimization and compilation
+* Evaluation of a model on target device:
     * Sending the model to the device using UART communication (e.g. execution graph or TFLite Flatbuffer)
-    * Sending input data for the model to run inference on
+    * Sending input data for running inference on the model
     * Collecting output data from the model, and evaluating the quality and performance of the model on target device with selected runtime
-* Report rendering, including comparison reports that allow to compare various runtimes, boards, models and applied optimizations
+* Report rendering, including comparison reports that allow to compare various runtimes, boards, models and applied optimizations.
 
 With Kenning, we can also evaluate the runtime by simulating the device in Renode.
 This allows us to:
 
-* Check how the model would behave without having the actual hardware
-* Check the performance and correctness of the model and runtime running on device in Continuous Integration pipelines without the actual device in the loop
-* Check the performance of runtimes and models on currently developed platforms
+* Verify model behavior without the need for physical hardware
+* Check model and runtime performance and correctness in Continuous Integration pipelines without the actual device in the loop
+* Check model and runtime performance on platforms under development
 * Obtain more detailed metrics regarding device usage, e.g. histogram of instructions
 
-The switch between Renode and actual hardware is seamless - both communicate with Kenning using UART communication.
+The switch between Renode and actual hardware is seamless - both communicate with Kenning using UART.
 
 ### Building the project and evaluating models in Renode
 
 ![TFLite Micro scenario with Renode simulation](img/renode-scenario-example.png)
 
-This section will demonstrate how to build the project and evaluate model for recognizing gestures on `stm32f746g_disco`.
+This section will demonstrate how to build the project and evaluate a model for recognizing gestures on `stm32f746g_disco`.
 
 #### Using TFLite Micro runtime
 
-First of, build the `kenning-zephyr-runtime` app for `stm32f746g_disco` and TFLite Micro configuration:
+First off, build the `kenning-zephyr-runtime` app for `stm32f746g_disco` and the TFLite Micro configuration:
 
 ```bash
 west build -p always -b stm32f746g_disco app -- -DEXTRA_CONF_FILE=tflite.conf
@@ -145,18 +145,18 @@ kenning optimize test report \
     --verbosity INFO
 ```
 
-The report on model's performance in Markdown format should be available under `reports/stm32-renode-tflite-magic-wand/report.md`.
-The HTML report built on that should be accessible from `reports/stm32-renode-tflite-magic-wand/report/report.html`.
+The model performance report in Markdown will be available under `reports/stm32-renode-tflite-magic-wand/report.md`.
+The HTML version of the report will be accessible from `reports/stm32-renode-tflite-magic-wand/report/report.html`.
 
 #### Using microTVM
 
-To build the `kenning-zephyr-runtime` app to work with microTVM runtime, just set `-DEXTRA_CONF_FILE` to `tvm.conf`, e.g.:
+To build the `kenning-zephyr-runtime` app to work with microTVM runtime, set `-DEXTRA_CONF_FILE` to `tvm.conf`, e.g. by executing:
 
 ```bash
 west build -p always -b stm32f746g_disco app -- -DEXTRA_CONF_FILE=tvm.conf
 ```
 
-Evaluate the model using a sample scenario located in `kenning-scenarios/renode-zephyr-tvm-magic-wand-inference.json`:
+Evaluate the model using the sample scenario located in `kenning-scenarios/renode-zephyr-tvm-magic-wand-inference.json`:
 
 ```bash
 kenning optimize test report \
@@ -167,10 +167,10 @@ kenning optimize test report \
     --verbosity INFO
 ```
 
-## Evaluating the model in Kenning using actual hardware
+## Evaluating a model in Kenning using actual hardware
 
 Kenning can evaluate the runtime running on a physical device.
-To do so, we need to flash the device and replace the `RenodeRuntime` in evaluation scenarios for Kenning with proper runtimes.
+To do so, we need to flash the device and replace `RenodeRuntime` in evaluation scenarios for Kenning with proper runtimes.
 
 ### Running evaluation on NRF52840 dongle
 
@@ -182,9 +182,9 @@ Build the runtime for `nrf52840dongle_nrf52840` (let's use TFLite Micro in this 
 west build -p always -b nrf52840dongle_nrf52840 app -- -DEXTRA_CONF_FILE=tflite.conf
 ```
 
-Flash Kenning runtime on the device by following [instructions](https://docs.zephyrproject.org/latest/boards/arm/nrf52840dongle_nrf52840/doc/index.html#option-1-using-the-built-in-bootloader-only) in Zephyr docs.
+Flash Kenning runtime on the device by following [instructions](https://docs.zephyrproject.org/latest/boards/arm/nrf52840dongle_nrf52840/doc/index.html#option-1-using-the-built-in-bootloader-only) in the Zephyr documenation.
 
-In the end, evaluate the model and generate a report with performance and quality metrics:
+Finally, evaluate the model and generate a report with performance and quality metrics:
 
 ```bash skip
 kenning optimize test report \
@@ -225,7 +225,7 @@ kenning optimize test report \
 ## Adding support for more boards
 
 Adapting `kenning-zephyr-runtime` for new boards is pretty straightforward.
-In general, as long as underlying runtime implementation supports a given board without additional configuration, the process of adapting the application for new board boils down to picking an UART for communicating with the Kenning application running on host.
+In general, as long as the underlying runtime implementation supports a given board without additional configuration, the process of adapting the application for new board boils down to picking an UART for communication with the Kenning application running on host.
 Such UART is expected to be aliased `kcomms` in the application.
 
 The alias can be set in the overlay file under `app/boards/<board_name>.overlay`, where `<board_name>` is the name of the board in Zephyr, passed in `--board` flag in `west build`:
@@ -238,4 +238,4 @@ The alias can be set in the overlay file under `app/boards/<board_name>.overlay`
 };
 ```
 
-It is crucial that selected UART isn't used anywhere else (e.g. as `zephyr,console`).
+It is crucial that the selected UART isn't used anywhere else (e.g. as `zephyr,console`).
