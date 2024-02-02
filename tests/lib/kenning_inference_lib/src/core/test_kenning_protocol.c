@@ -23,11 +23,13 @@ size_t g_protocol_data_read = 0;
 DEFINE_FFF_GLOBALS;
 
 #define MOCKS(MOCK)                                        \
+    MOCK(const char *, get_status_str, status_t)           \
     MOCK(status_t, protocol_read_data, uint8_t *, size_t); \
     MOCK(status_t, protocol_write_data, const uint8_t *, size_t);
 
 MOCKS(DECLARE_MOCK);
 
+const char *get_status_str_mock(status_t);
 status_t protocol_read_data_mock(uint8_t *data, size_t data_length);
 status_t protocol_write_data_mock(const uint8_t *data, size_t data_length);
 
@@ -353,6 +355,8 @@ ZTEST(kenning_inference_lib_test_kenning_protocol, test_prepare_fail_response_in
 // ========================================================
 // mocks definitions
 // ========================================================
+
+const char *get_status_str_mock(status_t status) { return "STATUS_STR"; }
 
 status_t protocol_read_data_mock(uint8_t *data, size_t data_length)
 {
