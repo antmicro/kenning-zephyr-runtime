@@ -13,6 +13,9 @@ manifest:
     - name: dmlc
       url-base: https://github.com/dmlc
 
+    - name: openxla
+      url-base: https://github.com/openxla
+
   projects:
     - name: zephyr
       remote: zephyrproject-rtos
@@ -37,3 +40,9 @@ manifest:
     - name: dlpack
       remote: dmlc
       revision: main
+
+    - name: iree
+      remote: openxla
+      revision: 2f40854c548cbe082190d1dd1691a342ffd9006b
+      submodules:
+        - path: third_party/flatcc
