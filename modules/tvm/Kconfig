@@ -4,3 +4,4 @@
 
 config ZEPHYR_TVM_MODULE
         bool "Enables TVM module"
+        default 0
