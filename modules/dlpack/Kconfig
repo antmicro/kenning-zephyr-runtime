@@ -4,3 +4,4 @@
 
 config ZEPHYR_DLPACK_MODULE
         bool "Enables dlpack module"
+        default 0
