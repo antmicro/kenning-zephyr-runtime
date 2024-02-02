@@ -9,14 +9,15 @@
 
 #include "kenning_inference_lib/core/protocol.h"
 
-#define CHECK_PROTOCOL_STATUS(status)                       \
-    if (PROTOCOL_STATUS_TIMEOUT == (status))                \
-    {                                                       \
-        return KENNING_PROTOCOL_STATUS_TIMEOUT;             \
-    }                                                       \
-    if (STATUS_OK != (status))                              \
-    {                                                       \
-        return KENNING_PROTOCOL_STATUS_CLIENT_DISCONNECTED; \
+#define CHECK_PROTOCOL_STATUS(status)                                       \
+    if (PROTOCOL_STATUS_TIMEOUT == (status))                                \
+    {                                                                       \
+        return KENNING_PROTOCOL_STATUS_TIMEOUT;                             \
+    }                                                                       \
+    if (STATUS_OK != (status))                                              \
+    {                                                                       \
+        LOG_ERR("Protocol error: %d (%s)", status, get_status_str(status)); \
+        return KENNING_PROTOCOL_STATUS_CLIENT_DISCONNECTED;                 \
     }
 
 #define MAX_MESSAGE_SIZE_BYTES (64UL * 1024UL) // 64 KB
