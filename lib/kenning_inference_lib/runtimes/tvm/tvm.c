@@ -208,17 +208,9 @@ status_t runtime_get_statistics(const size_t statistics_buffer_size, uint8_t *st
 
     runtime_stats_ptr = (runtime_statistic_t *)statistics_buffer;
 
-    memset(runtime_stats_ptr[0].stat_name, 0, RUNTIME_STAT_NAME_MAX_LEN);
-    snprintf(runtime_stats_ptr[0].stat_name, RUNTIME_STAT_NAME_MAX_LEN, "tvm_total_allocated");
-    runtime_stats_ptr[0].stat_value = tvm_alloc_stats.total_allocated;
-
-    memset(runtime_stats_ptr[1].stat_name, 0, RUNTIME_STAT_NAME_MAX_LEN);
-    snprintf(runtime_stats_ptr[1].stat_name, RUNTIME_STAT_NAME_MAX_LEN, "tvm_total_freed");
-    runtime_stats_ptr[1].stat_value = tvm_alloc_stats.total_freed;
-
-    memset(runtime_stats_ptr[2].stat_name, 0, RUNTIME_STAT_NAME_MAX_LEN);
-    snprintf(runtime_stats_ptr[2].stat_name, RUNTIME_STAT_NAME_MAX_LEN, "tvm_peak_allocated");
-    runtime_stats_ptr[2].stat_value = tvm_alloc_stats.peak_allocated;
+    LOAD_RUNTIME_STAT(runtime_stats_ptr, 0, tvm_alloc_stats, total_allocated);
+    LOAD_RUNTIME_STAT(runtime_stats_ptr, 1, tvm_alloc_stats, total_freed);
+    LOAD_RUNTIME_STAT(runtime_stats_ptr, 2, tvm_alloc_stats, peak_allocated);
 
     *statistics_size = stats_size;
 
