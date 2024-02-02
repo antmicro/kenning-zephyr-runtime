@@ -7,7 +7,7 @@
 set -e
 set -x
 
-declare -a modules=("tvm" "dlpack")
+declare -a modules=("tvm" "dlpack" "iree")
 
 for module in "${modules[@]}"
 do
@@ -19,3 +19,6 @@ do
 done
 
 cp "./modules/tvm/crt_config.h" "../tvm/include/"
+cp "./modules/iree/zephyr_config.h" "../iree/zephyr/"
+cp "./modules/iree/arch_config.h" "../iree/runtime/src/iree/builtins/ukernel/arch/config.h"
+cp -r "./modules/iree/flatcc" "../zephyr/modules/iree/"
