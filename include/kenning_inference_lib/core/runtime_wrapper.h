@@ -72,6 +72,15 @@ typedef struct __attribute__((packed))
     uint8_t model_name[MAX_LENGTH_MODEL_NAME];                      // name of the model
 } MlModel;
 
+// Loads runtime stat into stats array
+#define LOAD_RUNTIME_STAT(stats_array, stat_idx, src_struct, src_stat_name)               \
+    memset(stats_array[stat_idx].stat_name, 0, RUNTIME_STAT_NAME_MAX_LEN);                \
+    snprintf(stats_array[stat_idx].stat_name, RUNTIME_STAT_NAME_MAX_LEN, #src_stat_name); \
+    stats_array[stat_idx].stat_value = src_struct.src_stat_name;
+
+/**
+ * Struct for holding various runtime statistics
+ */
 typedef struct
 {
     char stat_name[RUNTIME_STAT_NAME_MAX_LEN];
