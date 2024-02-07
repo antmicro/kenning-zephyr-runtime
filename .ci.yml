@@ -17,14 +17,28 @@ image: $CI_IMAGE
         - scripts/prepare_zephyr_env.sh
         - scripts/prepare_modules.sh
     script:
-        - west build -p always -b ${BOARD} app -- -DEXTRA_CONF_FILE=${RUNTIME_CONF}
+        - |
+          if [ "$RUNTIME" != "stub" ]
+          then
+              RUNTIME_CONF="${RUNTIME}.conf"
+          fi
+          mkdir -p artifacts
+          for BOARD in ${BOARDS}
+          do
+              west build -p always -b ${BOARD} app -- -DEXTRA_CONF_FILE=${RUNTIME_CONF}
+              cp build/zephyr/zephyr.elf artifacts/kenning-zephyr-runtime-${BOARD}-${RUNTIME}.elf
+          done
     artifacts:
         paths:
-            - build/zephyr/zephyr.elf
+            - artifacts/*.elf
         when: always
 
 variables:
     GIT_STRATEGY: clone
+    BOARDS: >
+        nrf52840dk_nrf52840
+        nrf52840dongle_nrf52840
+        stm32f746g_disco
 
 stages:
     - lint
@@ -38,26 +52,19 @@ pre-commit:
     script:
         - pre-commit run --all-files
 
-build-nrf52840dk_nrf52840-stub:
+build-stub:
     variables:
-        BOARD: "nrf52840dk_nrf52840"
+        RUNTIME: stub
     <<: *build
 
-build-stm32f746g_disco-stub:
+build-tvm:
     variables:
-        BOARD: "stm32f746g_disco"
+        RUNTIME: tvm
     <<: *build
 
-build-nrf52840dk_nrf52840-tvm-magic_wand:
+build-tflite:
     variables:
-        BOARD: "nrf52840dk_nrf52840"
-        RUNTIME_CONF: tvm.conf
-    <<: *build
-
-build-stm32f746g_disco-tvm-magic_wand:
-    variables:
-        BOARD: "stm32f746g_disco"
-        RUNTIME_CONF: tvm.conf
+        RUNTIME: tflite
     <<: *build
 
 unit-tests:
@@ -91,4 +98,5 @@ tuttest:
     <<: *common_only
     stage: tests
     script:
+        - apt update -y && apt install -y sudo
         - ./scripts/test_readme.sh
