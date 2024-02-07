@@ -4,4 +4,7 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-renode-run -- --console --disable-xwt -e "i @$1; start;"
+renode-run -- --console --disable-xwt -e \
+    "\$bin=@build/zephyr/zephyr.elf;\
+     i @$1;\
+     start;"
