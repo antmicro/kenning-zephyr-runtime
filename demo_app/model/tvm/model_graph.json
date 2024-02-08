@@ -1,0 +1,361 @@
+{
+  "nodes": [
+    {
+      "op": "null",
+      "name": "input_1",
+      "inputs": []
+    },
+    {
+      "op": "null",
+      "name": "p0",
+      "inputs": []
+    },
+    {
+      "op": "null",
+      "name": "p1",
+      "inputs": []
+    },
+    {
+      "op": "tvm_op",
+      "name": "tvmgen_default_fused_nn_conv2d_add_nn_relu",
+      "attrs": {
+        "num_outputs": "1",
+        "num_inputs": "3",
+        "flatten_data": "0",
+        "func_name": "tvmgen_default_fused_nn_conv2d_add_nn_relu",
+        "out_layout": "",
+        "data_layout": "NHWC",
+        "kernel_layout": "HWIO",
+        "hash": "402e5f34bbcdd4d1"
+      },
+      "inputs": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          1,
+          0,
+          0
+        ],
+        [
+          2,
+          0,
+          0
+        ]
+      ]
+    },
+    {
+      "op": "tvm_op",
+      "name": "tvmgen_default_fused_nn_max_pool2d",
+      "attrs": {
+        "num_outputs": "1",
+        "num_inputs": "1",
+        "flatten_data": "0",
+        "func_name": "tvmgen_default_fused_nn_max_pool2d",
+        "out_layout": "",
+        "layout": "NHWC",
+        "hash": "322c811d5cd53625"
+      },
+      "inputs": [
+        [
+          3,
+          0,
+          0
+        ]
+      ]
+    },
+    {
+      "op": "null",
+      "name": "p2",
+      "inputs": []
+    },
+    {
+      "op": "null",
+      "name": "p3",
+      "inputs": []
+    },
+    {
+      "op": "tvm_op",
+      "name": "tvmgen_default_fused_nn_conv2d_add_nn_relu_1",
+      "attrs": {
+        "num_outputs": "1",
+        "num_inputs": "3",
+        "flatten_data": "0",
+        "func_name": "tvmgen_default_fused_nn_conv2d_add_nn_relu_1",
+        "out_layout": "",
+        "data_layout": "NHWC",
+        "kernel_layout": "HWIO",
+        "hash": "a7bfb0aac765b288"
+      },
+      "inputs": [
+        [
+          4,
+          0,
+          0
+        ],
+        [
+          5,
+          0,
+          0
+        ],
+        [
+          6,
+          0,
+          0
+        ]
+      ]
+    },
+    {
+      "op": "tvm_op",
+      "name": "tvmgen_default_fused_nn_max_pool2d_1",
+      "attrs": {
+        "num_outputs": "1",
+        "num_inputs": "1",
+        "flatten_data": "0",
+        "func_name": "tvmgen_default_fused_nn_max_pool2d_1",
+        "out_layout": "",
+        "layout": "NHWC",
+        "hash": "b47772d4384db931"
+      },
+      "inputs": [
+        [
+          7,
+          0,
+          0
+        ]
+      ]
+    },
+    {
+      "op": "tvm_op",
+      "name": "reshape_nop",
+      "attrs": {
+        "num_outputs": "1",
+        "num_inputs": "1",
+        "flatten_data": "0",
+        "func_name": "__nop",
+        "hash": "50f283218007bd02"
+      },
+      "inputs": [
+        [
+          8,
+          0,
+          0
+        ]
+      ]
+    },
+    {
+      "op": "null",
+      "name": "p4",
+      "inputs": []
+    },
+    {
+      "op": "null",
+      "name": "p5",
+      "inputs": []
+    },
+    {
+      "op": "tvm_op",
+      "name": "tvmgen_default_fused_nn_dense_add_nn_relu",
+      "attrs": {
+        "num_outputs": "1",
+        "num_inputs": "3",
+        "flatten_data": "0",
+        "func_name": "tvmgen_default_fused_nn_dense_add_nn_relu",
+        "hash": "13d0cadcf0c5baab"
+      },
+      "inputs": [
+        [
+          9,
+          0,
+          0
+        ],
+        [
+          10,
+          0,
+          0
+        ],
+        [
+          11,
+          0,
+          0
+        ]
+      ]
+    },
+    {
+      "op": "null",
+      "name": "p6",
+      "inputs": []
+    },
+    {
+      "op": "null",
+      "name": "p7",
+      "inputs": []
+    },
+    {
+      "op": "tvm_op",
+      "name": "tvmgen_default_fused_nn_dense_add",
+      "attrs": {
+        "num_outputs": "1",
+        "num_inputs": "3",
+        "flatten_data": "0",
+        "func_name": "tvmgen_default_fused_nn_dense_add",
+        "hash": "047d3ea7f0293576"
+      },
+      "inputs": [
+        [
+          12,
+          0,
+          0
+        ],
+        [
+          13,
+          0,
+          0
+        ],
+        [
+          14,
+          0,
+          0
+        ]
+      ]
+    },
+    {
+      "op": "tvm_op",
+      "name": "tvmgen_default_fused_nn_softmax",
+      "attrs": {
+        "num_outputs": "1",
+        "num_inputs": "1",
+        "flatten_data": "0",
+        "func_name": "tvmgen_default_fused_nn_softmax",
+        "hash": "97bc18bc5e619ec3"
+      },
+      "inputs": [
+        [
+          15,
+          0,
+          0
+        ]
+      ]
+    }
+  ],
+  "arg_nodes": [0, 1, 2, 5, 6, 10, 11, 13, 14],
+  "heads": [
+    [
+      16,
+      0,
+      0
+    ]
+  ],
+  "attrs": {
+    "dltype": [
+      "list_str",
+      [
+        "float32",
+        "float32",
+        "float32",
+        "float32",
+        "float32",
+        "float32",
+        "float32",
+        "float32",
+        "float32",
+        "float32",
+        "float32",
+        "float32",
+        "float32",
+        "float32",
+        "float32",
+        "float32",
+        "float32"
+      ]
+    ],
+    "device_index": [
+      "list_int",
+      [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1
+      ]
+    ],
+    "storage_id": [
+      "list_int",
+      [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        3,
+        4,
+        4,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        9
+      ]
+    ],
+    "shape": [
+      "list_shape",
+      [
+        [1, 128, 3, 1],
+        [4, 3, 1, 8],
+        [8],
+        [1, 128, 3, 8],
+        [1, 42, 1, 8],
+        [4, 1, 8, 16],
+        [16],
+        [1, 42, 1, 16],
+        [1, 14, 1, 16],
+        [1, 224],
+        [16, 224],
+        [16],
+        [1, 16],
+        [4, 16],
+        [4],
+        [1, 4],
+        [1, 4]
+      ]
+    ]
+  },
+  "node_row_ptr": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17
+  ]
+}
