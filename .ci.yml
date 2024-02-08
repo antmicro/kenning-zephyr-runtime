@@ -9,29 +9,39 @@ image: $CI_IMAGE
         - merge_requests
 
 
-.build: &build
+.build:
     <<: *ace
     <<: *common_only
     stage: build
+    variables:
+        APP: app
+        ELF_PREFIX: kenning-zephyr-runtime
     before_script:
         - scripts/prepare_zephyr_env.sh
         - scripts/prepare_modules.sh
+        - mkdir -p artifacts
     script:
         - |
           if [ "$RUNTIME" != "stub" ]
           then
               RUNTIME_CONF="${RUNTIME}.conf"
           fi
-          mkdir -p artifacts
           for BOARD in ${BOARDS}
           do
-              west build -p always -b ${BOARD} app -- -DEXTRA_CONF_FILE=${RUNTIME_CONF}
-              cp build/zephyr/zephyr.elf artifacts/kenning-zephyr-runtime-${BOARD}-${RUNTIME}.elf
+              west build -p always -b ${BOARD} ${APP} -- -DEXTRA_CONF_FILE=${RUNTIME_CONF} ${EXTRA_ARGS}
+              cp build/zephyr/zephyr.elf artifacts/${ELF_PREFIX}-${BOARD}-${RUNTIME}.elf
           done
     artifacts:
         paths:
             - artifacts/*.elf
         when: always
+
+.build-demo:
+    extends: .build
+    variables:
+        APP: demo_app
+        ELF_PREFIX: kenning-zephyr-runtime-demo-${DEMO_MODEL}
+        EXTRA_ARGS: "-DCONFIG_DEMO_MODEL=\"${DEMO_MODEL}\""
 
 variables:
     GIT_STRATEGY: clone
@@ -53,31 +63,37 @@ pre-commit:
         - pre-commit run --all-files
 
 build-stub:
+    extends: .build
     variables:
         RUNTIME: stub
-    <<: *build
 
 build-tvm:
+    extends: .build
     variables:
         RUNTIME: tvm
-    <<: *build
 
 build-tflite:
+    extends: .build
     variables:
         RUNTIME: tflite
-    <<: *build
 
-unit-tests:
+build-demo-tvm-magic-wand:
+    extends: .build-demo
+    variables:
+        RUNTIME: tvm
+        DEMO_MODEL: "magic_wand"
+
+test-demo-tvm-magic-wand:
     <<: *ace
     <<: *common_only
     stage: tests
-    before_script:
-        - scripts/prepare_zephyr_env.sh
     script:
-        - west twister -T tests -p unit_testing
+        - python -m pytest -ra -vv --color=yes --report-log=log.json ./tests/demo/test_demo.py
+    dependencies:
+        - build-demo-tvm-magic-wand
     artifacts:
         paths:
-            - twister-out/unit_testing/lib/kenning_inference_lib/**/*.log
+            - log.json
         when: always
 
 unit-tests:
