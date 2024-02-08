@@ -41,6 +41,14 @@
         break;                 \
     }
 
+/* breaks loop on error and logs provided message */
+#define BREAK_ON_ERROR_LOG(status, log_format, ...) \
+    if (STATUS_OK != (status))                      \
+    {                                               \
+        LOG_ERR(log_format, __VA_ARGS__);           \
+        break;                                      \
+    }
+
 /* CSRs addresses */
 #define CSR_CYCLE (0xC00)
 #define CSR_TIME (0xC01)
@@ -113,6 +121,11 @@
 /**
  * Modules
  */
+#ifdef NO_KENNING_COMM
+#define MODULES(MODULE) \
+    MODULE(MODEL)       \
+    MODULE(RUNTIME_WRAPPER)
+#else // NO_KENNING_COMM
 #define MODULES(MODULE)      \
     MODULE(CALLBACKS)        \
     MODULE(INFERENCE_SERVER) \
@@ -120,6 +133,7 @@
     MODULE(MODEL)            \
     MODULE(PROTOCOL)         \
     MODULE(RUNTIME_WRAPPER)
+#endif // NO_KENNING_COMM
 
 /**
  * Enum with all modules
