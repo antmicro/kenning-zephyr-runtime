@@ -244,7 +244,6 @@ status_t model_get_output(const size_t buffer_size, uint8_t *model_output, size_
     status_t status = STATUS_OK;
 
     RETURN_ERROR_IF_POINTER_INVALID(model_output, MODEL_STATUS_INV_PTR);
-    RETURN_ERROR_IF_POINTER_INVALID(model_output_size, MODEL_STATUS_INV_PTR);
 
     if (g_model_state < MODEL_STATE_INFERENCE_DONE)
     {
@@ -261,7 +260,10 @@ status_t model_get_output(const size_t buffer_size, uint8_t *model_output, size_
         LOG_ERR("Buffer is too small. Buffer size: %zu. Model output size: %zu", buffer_size, output_size);
         return MODEL_STATUS_INV_ARG;
     }
-    *model_output_size = output_size;
+    if (IS_VALID_POINTER(model_output_size))
+    {
+        *model_output_size = output_size;
+    }
 
     status = runtime_get_model_output(model_output);
     RETURN_ON_ERROR(status, status);
