@@ -33,14 +33,15 @@ if [ ! -d "$ZEPHYR_SDK_PATH" ]; then
   mv ./zephyr-sdk-${ZEPHYR_SDK_VERSION} ${ZEPHYR_SDK_PATH}
   rm ${ZEPHYR_SDK_ARCHIVE}
   chmod -R o+w $ZEPHYR_SDK_PATH
-  cd ${ZEPHYR_SDK_PATH}
-  ./setup.sh -t x86_64-zephyr-elf
-  ./setup.sh -t arm-zephyr-eabi
-  ./setup.sh -h
-  ./setup.sh -c
 else
   echo "Zephyr SDK already downloaded"
 fi
+cd ${ZEPHYR_SDK_PATH}
+./setup.sh -t x86_64-zephyr-elf
+./setup.sh -t arm-zephyr-eabi
+./setup.sh -t riscv64-zephyr-elf
+./setup.sh -h
+./setup.sh -c
 
 cd ${PROJECT_ROOT}
 # setup Zephyr project
