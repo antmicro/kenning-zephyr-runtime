@@ -6,14 +6,6 @@ menu "Zephyr"
 source "Kconfig.zephyr"
 endmenu
 
-config DEMO_MODEL
-        string "Model loaded by demo app"
-        default "magic_wand"
-        help
-          This option select the ML model to be loaded by demo app.
-          Available options: magic_wand
-
-
 module = DEMO_APP
 module-str = demo_app
 source "subsys/logging/Kconfig.template.log_config"
