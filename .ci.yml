@@ -8,7 +8,6 @@ image: $CI_IMAGE
         - main
         - merge_requests
 
-
 .build:
     <<: *ace
     <<: *common_only
@@ -16,6 +15,11 @@ image: $CI_IMAGE
     variables:
         APP: app
         ELF_PREFIX: kenning-zephyr-runtime
+        BOARDS: >
+            nrf52840dk_nrf52840
+            nrf52840dongle_nrf52840
+            stm32f746g_disco
+            hifive_unleashed
     before_script:
         - scripts/prepare_zephyr_env.sh
         - scripts/prepare_modules.sh
@@ -28,8 +32,8 @@ image: $CI_IMAGE
           fi
           for BOARD in ${BOARDS}
           do
-              west build -p always -b ${BOARD} ${APP} -- -DEXTRA_CONF_FILE=${RUNTIME_CONF} ${EXTRA_ARGS}
-              cp build/zephyr/zephyr.elf artifacts/${ELF_PREFIX}-${BOARD}-${RUNTIME}.elf
+              west build -p always -b ${BOARD} ${APP} -- -DEXTRA_CONF_FILE=${RUNTIME_CONF}
+              cp build/zephyr/zephyr.elf artifacts/${ELF_PREFIX}-${RUNTIME}-${BOARD}.elf
           done
     artifacts:
         paths:
@@ -40,15 +44,10 @@ image: $CI_IMAGE
     extends: .build
     variables:
         APP: demo_app
-        ELF_PREFIX: kenning-zephyr-runtime-demo-${DEMO_MODEL}
-        EXTRA_ARGS: "-DCONFIG_DEMO_MODEL=\"${DEMO_MODEL}\""
+        ELF_PREFIX: kenning-zephyr-runtime-demo
 
 variables:
     GIT_STRATEGY: clone
-    BOARDS: >
-        nrf52840dk_nrf52840
-        nrf52840dongle_nrf52840
-        stm32f746g_disco
 
 stages:
     - lint
@@ -77,20 +76,41 @@ build-tflite:
     variables:
         RUNTIME: tflite
 
-build-demo-tvm-magic-wand:
+build-demo-tvm:
     extends: .build-demo
     variables:
         RUNTIME: tvm
-        DEMO_MODEL: "magic_wand"
 
-test-demo-tvm-magic-wand:
+build-demo-tflite:
+    extends: .build-demo
+    variables:
+        RUNTIME: tflite
+
+build-repl:
+    extends: .build
+    script:
+        - |
+          for BOARD in ${BOARDS}
+          do
+              west build -p always -b ${BOARD} demo_app || true
+              west build -t board-repl
+              cp build/${BOARD}.repl artifacts/
+          done
+    artifacts:
+        paths:
+            - artifacts/*.repl
+        when: always
+
+test-demo:
     <<: *ace
     <<: *common_only
     stage: tests
     script:
         - python -m pytest -ra -vv --color=yes --report-log=log.json ./tests/demo/test_demo.py
     dependencies:
-        - build-demo-tvm-magic-wand
+        - build-demo-tvm
+        - build-demo-tflite
+        - build-repl
     artifacts:
         paths:
             - log.json
