@@ -31,10 +31,10 @@ On Debian-based Linux distributions, install the dependencies as follows:
 ```bash
 sudo apt update
 
-sudo apt install -y --no-install-recommends git ninja-build \
-  ccache dfu-util device-tree-compiler wget \
-  python3-dev python3-pip python3-setuptools python3-tk python3-wheel python3-venv xz-utils file \
-  make gcc gcc-multilib g++-multilib libsdl2-dev libmagic1 jq curl
+sudo apt install -y --no-install-recommends ccache curl device-tree-compiler dfu-util file \
+  g++-multilib gcc gcc-multilib git jq libmagic1 libsdl2-dev make ninja-build \
+  python3-dev python3-pip python3-setuptools python3-tk python3-wheel python3-venv \
+  wget xxd xz-utils
 ```
 
 ### Preparing the project
@@ -85,6 +85,7 @@ The project was tested on the following boards:
 * [stm32f746g_disco](https://renodepedia.renode.io/boards/stm32f746g_disco/)
 * [nrf52840dongle_nrf52840](https://renodepedia.renode.io/boards/nrf52840dongle_nrf52840)
 * [nrf52840dk_nrf52840](https://renodepedia.renode.io/boards/nrf52840dk_nrf52840)
+* [hifive_unleashed](https://renodepedia.renode.io/boards/hifive_unleashed)
 
 Check the [Adding support for more boards section](#adding-support-for-more-boards) for information on whow to add a new target device.
 
@@ -222,6 +223,47 @@ kenning optimize test report \
     --verbosity INFO
 ```
 
+## Running demo without Kenning
+
+There is also provided `demo_app` which does not require Kenning to run inference.
+This app has hardcoded model (Magic Wand) and couple batches of input.
+After running, it loads the model and then performs inference on each batch of data.
+
+This demo requires [pyrenode3](https://github.com/antmicro/pyrenode3/), please follow installation instructions in its README.
+
+To build the `demo_app` run:
+```bash
+west build -p always -b hifive_unleashed demo_app -- -DEXTRA_CONF_FILE=tvm.conf
+```
+
+Next, generate board `repl` file for Renode using:
+```bash
+west build -t board-repl
+```
+The result can be found under `./build/<board_name>.repl`.
+
+Finally, the demo can be run with:
+```bash skip
+python ./scripts/run_renode.py
+```
+The output should look like this:
+```skip
+Starting Renode simulation. Press CTRL+C to exit.
+*** Booting Zephyr OS build zephyr-v3.5.0-5385-g415cb65e3f48 ***
+__nop function is not yet supported.I: model output: [wing: 1.000000, ring: 0.000000, slope: 0.000000, negative: 0.000000]
+I: model output: [wing: 0.000000, ring: 0.000000, slope: 0.000000, negative: 1.000000]
+I: model output: [wing: 0.000000, ring: 0.000000, slope: 1.000000, negative: 0.000000]
+I: model output: [wing: 1.000000, ring: 0.000000, slope: 0.000000, negative: 0.000000]
+I: model output: [wing: 0.000000, ring: 0.997457, slope: 0.000000, negative: 0.002543]
+I: model output: [wing: 0.000000, ring: 0.000000, slope: 1.000000, negative: 0.000000]
+I: model output: [wing: 1.000000, ring: 0.000000, slope: 0.000000, negative: 0.000000]
+I: model output: [wing: 1.000000, ring: 0.000000, slope: 0.000000, negative: 0.000000]
+I: model output: [wing: 1.000000, ring: 0.000000, slope: 0.000000, negative: 0.000000]
+I: model output: [wing: 0.000000, ring: 0.000000, slope: 1.000000, negative: 0.000000]
+I: model output: [wing: 0.000000, ring: 0.000000, slope: 0.000000, negative: 1.000000]
+I: inference done
+```
+
 ## Adding support for more boards
 
 Adapting `kenning-zephyr-runtime` for new boards is pretty straightforward.
@@ -239,3 +281,6 @@ The alias can be set in the overlay file under `app/boards/<board_name>.overlay`
 ```
 
 It is crucial that the selected UART isn't used anywhere else (e.g. as `zephyr,console`).
+
+Some boards may also require additional configuration.
+Those should be placed at `app/boards/<board_name>.conf`.
