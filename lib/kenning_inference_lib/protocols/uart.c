@@ -59,7 +59,7 @@ status_t protocol_write_data(const uint8_t *data, size_t data_length)
 
     RETURN_ERROR_IF_POINTER_INVALID(data, PROTOCOL_STATUS_INV_PTR);
 
-    LOG_DBG("Writing %d bytes to UART", data_length);
+    LOG_DBG("Writing %zu bytes to UART", data_length);
 
     status_t status = STATUS_OK;
 
