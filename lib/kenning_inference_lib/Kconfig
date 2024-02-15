@@ -7,7 +7,7 @@ config KENNING_INFERENCE_LIB
         help
           This option enables the kenning_inference_lib library
 
-config NRF_UART_SLEEP_AFTER_POLL_WORKAROUND
+config KENNING_NRF_UART_SLEEP_AFTER_POLL_WORKAROUND
         bool "workaround for UART reading on NRF"
         depends on KENNING_INFERENCE_LIB
         default 0
@@ -15,39 +15,69 @@ config NRF_UART_SLEEP_AFTER_POLL_WORKAROUND
           This option adds 1 tick sleep after uart_poll_in. This is a temporary
           solution for UART missing some data when reading.
 
-config PROTOCOL
-        string "Protocol to be used to communicate with Kenning"
+choice KENNING_COMMUNICATION_PROTOCOL
+        prompt "Protocol to be used to communicate with Kenning"
         depends on KENNING_INFERENCE_LIB
-        default "uart"
+        default KENNING_COMMUNICATION_PROTOCOL_UART
         help
           This options selects protocol which will be used to communicate with
           Kenning
-          Available options: uart
+          Available options: PROTOCOL_NONE, PROTOCOL_UART
 
-config ML_RUNTIME
-        string "ML runtime to be used"
+config KENNING_COMMUNICATION_PROTOCOL_NONE
+        bool
+        prompt "Communication with Kenning disabled"
+
+config KENNING_COMMUNICATION_PROTOCOL_UART
+        bool
+        prompt "UART protocol"
+
+endchoice
+
+choice KENNING_ML_RUNTIME
+        prompt "ML runtime to be used"
         depends on KENNING_INFERENCE_LIB
-        default "stub"
+        default KENNING_ML_RUNTIME_STUB
         help
           This option select ML runtime to be used.
-          Available options: stub, tvm, tflite
+          Available options: ML_RUNTIME_STUB, ML_RUNTIME_TVM, ML_RUNTIME_TFLITE
 
-config TVM_MODEL
+config KENNING_ML_RUNTIME_STUB
+        bool
+        prompt "Runtime stub"
+
+config KENNING_ML_RUNTIME_TVM
+        bool
+        prompt "microTVM runtime"
+        select ZEPHYR_TVM_MODULE
+        select ZEPHYR_DLPACK_MODULE
+
+config KENNING_ML_RUNTIME_TFLITE
+        bool
+        prompt "TFLite Micro runtime"
+        select TENSORFLOW_LITE_MICRO
+
+endchoice
+
+config KENNING_TVM_MODEL
         string "Model loaded by TVM"
         default "magic_wand"
+        depends on KENNING_ML_RUNTIME_TVM
         help
           This option select the ML model to be loaded by TVM runtime.
           Available options: magic_wand
 
-config TVM_HEAP_SIZE
+config KENNING_TVM_HEAP_SIZE
         int "Size in kilobytes of the heap used by TVM"
         default 128
+        depends on KENNING_ML_RUNTIME_TVM
         help
           This option sets the size in kilobytes of the heap used by TVM.
 
-config TFLITE_BUFFER_SIZE
-        int "Size in bytes of the buffer for tensor arena and model used by TFLite"
-        default 65536
+config KENNING_TFLITE_BUFFER_SIZE
+        int "Size in kilobytes of the buffer for tensor arena and model used by TFLite"
+        default 64
+        depends on KENNING_ML_RUNTIME_TFLITE
         help
           This option sets the size in bytes of the buffer for tensor arena and model used by TFLite.
 
