@@ -105,7 +105,8 @@ status_t runtime_load_model_weights(const uint8_t *model_weights_data, const siz
 
         if (data_size != sizeof(tvm_graph_t) + tvm_graph->graph_json_size + tvm_graph->graph_params_size)
         {
-            LOG_ERR("Invalid TVM graph size");
+            LOG_ERR("Invalid TVM graph or params size: %u %u", tvm_graph->graph_json_size,
+                    tvm_graph->graph_params_size);
             status = RUNTIME_WRAPPER_STATUS_INV_ARG;
             break;
         }
