@@ -52,7 +52,7 @@ status_t model_load_struct(const uint8_t *model_struct_data, const size_t data_s
 
     if (sizeof(MlModel) != data_size)
     {
-        LOG_ERR("Wrong model struct size: %zu. Should be: %d.", data_size, sizeof(MlModel));
+        LOG_ERR("Wrong model struct size: %zu. Should be: %zu.", data_size, sizeof(MlModel));
         return MODEL_STATUS_INV_ARG;
     }
 
@@ -62,22 +62,26 @@ status_t model_load_struct(const uint8_t *model_struct_data, const size_t data_s
     if (g_model_struct.num_input < 1 || g_model_struct.num_input > MAX_MODEL_INPUT_NUM ||
         g_model_struct.num_output < 1 || g_model_struct.num_output > MAX_MODEL_OUTPUTS)
     {
+        LOG_ERR("Wrong number of inputs or outputs");
         return MODEL_STATUS_INV_ARG;
     }
     for (int i = 0; i < g_model_struct.num_input; ++i)
     {
         if (0 == g_model_struct.num_input_dim[i] || g_model_struct.num_input_dim[i] > MAX_MODEL_INPUT_DIM)
         {
+            LOG_ERR("Wrong input dim");
             return MODEL_STATUS_INV_ARG;
         }
         if (0 == g_model_struct.input_length[i])
         {
+            LOG_ERR("Wrong input length");
             return MODEL_STATUS_INV_ARG;
         }
         for (int j = 0; j < g_model_struct.num_input_dim[i]; ++j)
         {
             if (0 == g_model_struct.input_shape[i][j])
             {
+                LOG_ERR("Wrong input shape");
                 return MODEL_STATUS_INV_ARG;
             }
         }
@@ -87,6 +91,7 @@ status_t model_load_struct(const uint8_t *model_struct_data, const size_t data_s
     {
         if (0 == g_model_struct.output_length[i])
         {
+            LOG_ERR("Wrong output length");
             return MODEL_STATUS_INV_ARG;
         }
     }
