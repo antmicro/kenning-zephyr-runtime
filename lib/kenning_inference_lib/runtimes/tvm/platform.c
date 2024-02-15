@@ -17,7 +17,7 @@
 
 LOG_MODULE_REGISTER(tvm_platform, CONFIG_RUNTIME_WRAPPER_LOG_LEVEL);
 
-K_HEAP_DEFINE(tvm_heap, 1024 * CONFIG_TVM_HEAP_SIZE);
+K_HEAP_DEFINE(tvm_heap, 1024 * CONFIG_KENNING_TVM_HEAP_SIZE);
 
 volatile timing_t g_microtvm_start_time, g_microtvm_end_time;
 int g_microtvm_timer_running = 0;
@@ -47,7 +47,7 @@ size_t TVMPlatformFormatMessage(char *out_buf, size_t out_buf_size_bytes, const 
 
 tvm_crt_error_t TVMPlatformMemoryAllocate(size_t num_bytes, DLDevice dev, void **out_ptr)
 {
-    LOG_DBG("TVM alloc: %u", num_bytes);
+    LOG_DBG("TVM alloc: %zu", num_bytes);
     if (0 == num_bytes)
     {
         *out_ptr = NULL;
