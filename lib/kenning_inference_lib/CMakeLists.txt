@@ -32,6 +32,23 @@ elseif(${CONFIG_KENNING_ML_RUNTIME_TVM})
     list(APPEND runtime_src "runtimes/tvm/generated/magic_wand.c")
     set_source_files_properties("runtimes/tvm/generated/magic_wand.c" PROPERTIES COMPILE_FLAGS "-Wno-unused-variable")
     add_compile_definitions(TVM_MODEL_MAGIC_WAND)
+  elseif("${CONFIG_KENNING_TVM_MODEL}" STREQUAL "gen_model")
+    add_custom_command(
+      OUTPUT
+        runtimes/tvm/generated/model_impl.c
+        runtimes/tvm/generated/model_impl.h
+      COMMAND
+        python3 ${CMAKE_SOURCE_DIR}/../scripts/gen_tvm_ops.py
+          --input-path ${CONFIG_KENNING_MODEL_PATH}
+          --output-path runtimes/tvm/generated/model_impl.graph_data
+          --template-header-path ${CMAKE_CURRENT_SOURCE_DIR}/runtimes/tvm/generated/model_impl.h.template
+          --board ${BOARD}
+          ${CONFIG_KENNING_MODEL_COMPILER_ARGS}
+    )
+    list(APPEND runtime_src "runtimes/tvm/generated/model_impl.c")
+    set_source_files_properties("runtimes/tvm/generated/model_impl.c" PROPERTIES COMPILE_FLAGS "-Wno-unused-variable")
+    add_compile_definitions(TVM_MODEL_MODEL_IMPL)
+    include_directories(${CMAKE_CURRENT_BINARY_DIR}/runtimes/tvm/)
   else()
     message(FATAL_ERROR "Invalid TVM model selected: ${CONFIG_KENNING_TVM_MODEL}.")
   endif()
