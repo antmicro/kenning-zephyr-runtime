@@ -8,31 +8,57 @@ find_package(Zephyr REQUIRED HINTS $ENV{ZEPHYR_BASE})
 project(demo_app LANGUAGES C)
 
 if(${CONFIG_KENNING_ML_RUNTIME_TVM})
-  set(model_graph_path ${CMAKE_CURRENT_SOURCE_DIR}/model/tvm/model_graph.json)
-  set(model_params_path ${CMAKE_CURRENT_SOURCE_DIR}/model/tvm/model_params.bin)
+  if("${CONFIG_KENNING_MODEL_PATH}" STREQUAL "")
+    set(model_graph_path ${CMAKE_CURRENT_SOURCE_DIR}/model/tvm/model_graph.json)
+    set(model_params_path ${CMAKE_CURRENT_SOURCE_DIR}/model/tvm/model_params.bin)
+
+    add_custom_command(
+      OUTPUT
+        model_data
+      COMMAND
+        stat --printf="%s" ${model_graph_path} |
+          xargs printf "0: %08x" |
+          xxd -r -g0 1>model_data
+      COMMAND
+        stat --printf="%s" ${model_params_path} |
+          xargs printf "0: %08x" |
+          xxd -r -g0 1>>model_data
+      COMMAND
+        objcopy
+          -I binary
+          -O binary
+          --reverse-bytes=4
+          model_data
+          model_data
+      COMMAND
+        cat
+          ${model_graph_path} ${model_params_path}
+          1>>model_data
+    )
+    unset(model_graph_path)
+    unset(model_params_path)
+  else()
+    set(CONFIG_KENNING_TVM_MODEL "gen_model")
+    add_custom_command(
+      OUTPUT
+        model_data
+      COMMAND
+        python3 ${CMAKE_SOURCE_DIR}/../scripts/gen_tvm_ops.py
+          --input-path ${CONFIG_KENNING_MODEL_PATH}
+          --output-path model_impl.graph_data
+          --template-header-path ${CMAKE_SOURCE_DIR}/../lib/kenning_inference_lib/runtimes/tvm/generated/model_impl.h.template
+          --board ${BOARD}
+          ${CONFIG_KENNING_MODEL_COMPILER_ARGS}
+      COMMAND
+        cp model_impl.graph_data model_data
+    )
+  endif()
 
   add_custom_command(
     OUTPUT
       src/model_data.h
-    COMMAND
-      stat --printf="%s" ${model_graph_path} |
-        xargs printf "0: %08x" |
-        xxd -r -g0 1>model_data
-    COMMAND
-      stat --printf="%s" ${model_params_path} |
-        xargs printf "0: %08x" |
-        xxd -r -g0 1>>model_data
-    COMMAND
-      objcopy
-        -I binary
-        -O binary
-        --reverse-bytes=4
-        model_data
-        model_data
-    COMMAND
-      cat
-        ${model_graph_path} ${model_params_path}
-        1>>model_data
+    DEPENDS
+      model_data
     COMMAND
       xxd
         -i
@@ -42,6 +68,7 @@ if(${CONFIG_KENNING_ML_RUNTIME_TVM})
       rm
         model_data
   )
+
   add_custom_target(
     generate_model_data_h
     DEPENDS
@@ -49,8 +76,6 @@ if(${CONFIG_KENNING_ML_RUNTIME_TVM})
   )
   add_dependencies(app generate_model_data_h)
 
-  unset(model_graph_path)
-  unset(model_params_path)
 elseif(${CONFIG_KENNING_ML_RUNTIME_TFLITE})
 
   set(model_path ${CMAKE_CURRENT_SOURCE_DIR}/model/tflite/model.tflite)
