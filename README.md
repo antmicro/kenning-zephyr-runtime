@@ -223,30 +223,48 @@ kenning optimize test report \
     --verbosity INFO
 ```
 
-## Running demo without Kenning
+## Demo application using Kenning inference library
 
-There is also provided `demo_app` which does not require Kenning to run inference.
-This app has hardcoded model (Magic Wand) and couple batches of input.
-After running, it loads the model and then performs inference on each batch of data.
+The Kenning inference library present in this repository can be also used in actual applications, not only in the evaluation process in Kenning.
 
-This demo requires [pyrenode3](https://github.com/antmicro/pyrenode3/), please follow installation instructions in its README.
+The application present in `demo_app` demonstrates how to use Kenning Zephyr Runtime in actual, simple use case, where we take a model recognizing gestures (wing, ring, slope and negative, trained with Magic Wand dataset) and compile it with picked runtime.
+It goes through delivered inputs, runs inference and prints the output.
 
-To build the `demo_app` run:
+This demo requires [pyrenode3](https://github.com/antmicro/pyrenode3/) - please follow installation instructions in its README.
+
+To begin with, let's install additional dependencies for running the model:
+
 ```bash
-west build -p always -b hifive_unleashed demo_app -- -DEXTRA_CONF_FILE=tvm.conf
+pip install -r ./tests/demo/requirements.txt
 ```
 
+To build the `demo_app` run:
+
+* microTVM runtime:
+  ```bash
+  west build -p always -b hifive_unleashed demo_app -- -DEXTRA_CONF_FILE=tvm.conf
+  ```
+* TFLite Micro runtime:
+  ```bash
+  west build -p always -b hifive_unleashed demo_app -- -DEXTRA_CONF_FILE=tflite.conf
+  ```
+
 Next, generate board `repl` file for Renode using:
+
 ```bash
 west build -t board-repl
 ```
+
 The result can be found under `./build/<board_name>.repl`.
 
 Finally, the demo can be run with:
+
 ```bash skip
 python ./scripts/run_renode.py
 ```
+
 The output should look like this:
+
 ```skip
 Starting Renode simulation. Press CTRL+C to exit.
 *** Booting Zephyr OS build zephyr-v3.5.0-5385-g415cb65e3f48 ***
