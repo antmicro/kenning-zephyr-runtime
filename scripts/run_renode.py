@@ -91,7 +91,7 @@ if __name__ == "__main__":
     while True:
         try:
             logs = console.read_all().decode()
-            print(logs, end="")
+            print(logs, end="", flush=True)
             if "demo_app" == project_name and "inference done" in logs:
                 break
         except KeyboardInterrupt:
