@@ -7,6 +7,18 @@ config KENNING_INFERENCE_LIB
         help
           This option enables the kenning_inference_lib library
 
+config KENNING_MODEL_PATH
+        string "path to the model that would be used"
+        depends on KENNING_INFERENCE_LIB
+        help
+          This options selects the model that would be used by backend that
+          require model during compilation (i.e. TVM). Can be path or URI to
+          Kenning resource (i.e. kenning:///models/classification/magic_wand.h5)
+
+config KENNING_MODEL_COMPILER_ARGS
+        string "additional args passed to Kenning model compiler"
+        depends on KENNING_INFERENCE_LIB
+
 config KENNING_NRF_UART_SLEEP_AFTER_POLL_WORKAROUND
         bool "workaround for UART reading on NRF"
         depends on KENNING_INFERENCE_LIB
@@ -51,11 +63,16 @@ config KENNING_ML_RUNTIME_TVM
         prompt "microTVM runtime"
         select ZEPHYR_TVM_MODULE
         select ZEPHYR_DLPACK_MODULE
+        select CMSIS_NN if CPU_CORTEX_M
+        select CMSIS_DSP if CPU_CORTEX_M
 
 config KENNING_ML_RUNTIME_TFLITE
         bool
         prompt "TFLite Micro runtime"
         select TENSORFLOW_LITE_MICRO
+        select TENSORFLOW_LITE_MICRO_CMSIS_NN_KERNELS if CPU_CORTEX_M
+        select CMSIS_NN if CPU_CORTEX_M
+        select CMSIS_DSP if CPU_CORTEX_M
 
 endchoice
 
