@@ -23,6 +23,8 @@
 
 #if defined(TVM_MODEL_MAGIC_WAND)
 #include "generated/magic_wand.h"
+#elif defined(TVM_MODEL_MODEL_IMPL)
+#include "generated/model_impl.h"
 #else
 #error "No model selected"
 #endif
