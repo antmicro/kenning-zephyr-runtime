@@ -24,6 +24,7 @@ image: $CI_IMAGE
         - scripts/prepare_zephyr_env.sh
         - scripts/prepare_modules.sh
         - mkdir -p artifacts
+        - source .venv/bin/activate
     script:
         - |
           if [ "$RUNTIME" != "stub" ]
@@ -122,6 +123,7 @@ unit-tests:
     stage: tests
     before_script:
         - scripts/prepare_zephyr_env.sh
+        - source .venv/bin/activate
     script:
         - west twister -T tests -p unit_testing
     artifacts:

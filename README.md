@@ -52,14 +52,14 @@ After entering the project's directory, initialize a Zephyr workspace with:
 
 ```bash
 ./scripts/prepare_zephyr_env.sh
+source .venv/bin/activate
 ```
 
 This will:
 
 * Download (if necessary) and set up Zephyr SDK
 * Download necessary toolchains
-* Set up Python virtual environment with necessary dependencies
-* Configure all necessary variables.
+* Set up Python virtual environment with necessary dependencies.
 
 This can be reused to load all necessary environment before launching commands mentioned later in the README.md.
 
