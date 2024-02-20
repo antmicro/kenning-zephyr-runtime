@@ -34,7 +34,7 @@ image: $CI_IMAGE
           for BOARD in ${BOARDS}
           do
               BOARD_NAME="${BOARD//\//_}"
-              python -m west build -p always -b ${BOARD} ${APP} -- -DEXTRA_CONF_FILE=${RUNTIME_CONF}
+              python -m west build -p always -b ${BOARD} ${APP} -- -DEXTRA_CONF_FILE=${RUNTIME_CONF} ${EXTRA_ARGS}
               cp build/zephyr/zephyr.elf artifacts/${ELF_PREFIX}-${RUNTIME}-${BOARD_NAME}.elf
           done
     artifacts:
@@ -88,6 +88,15 @@ build-demo-tflite:
     variables:
         RUNTIME: tflite
 
+build-demo-tvm-gen-model:
+    extends: .build-demo
+    variables:
+        RUNTIME: tvm
+        ELF_PREFIX: kenning-zephyr-runtime-demo-gen-model
+        EXTRA_ARGS: -DCONFIG_KENNING_MODEL_PATH="https://dl.antmicro.com/kenning/models/classification/magic_wand.h5"
+        BOARDS: >
+            stm32f746g_disco
+
 build-repl:
     extends: .build
     script:
@@ -113,6 +122,7 @@ test-demo:
     dependencies:
         - build-demo-tvm
         - build-demo-tflite
+        - build-demo-tvm-gen-model
         - build-repl
     artifacts:
         paths:
