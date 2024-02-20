@@ -10,6 +10,7 @@
 #include <model_data.h> /* header with model weights generated during build from ./models/magic_wand/<runtime>/ */
 #include <stdio.h>
 #include <stdlib.h>
+#include <zephyr/kernel.h>
 #include <zephyr/logging/log.h>
 
 LOG_MODULE_REGISTER(demo_app, CONFIG_DEMO_APP_LOG_LEVEL);
@@ -50,6 +51,8 @@ int main(void)
     uint8_t *model_output = NULL;
     size_t model_output_size = 0;
     uint8_t output_str[512];
+    int64_t timer_start = 0;
+    int64_t timer_end = 0;
 
     do
     {
@@ -74,6 +77,7 @@ int main(void)
         model_output = malloc(model_output_size);
 
         // inference loop
+        timer_start = k_uptime_get();
         for (size_t batch_index = 0; batch_index < sizeof(data) / sizeof(data[0]); ++batch_index)
         {
             status = model_load_input((uint8_t *)data[batch_index], sizeof(data[0]));
@@ -88,6 +92,7 @@ int main(void)
             format_output(output_str, sizeof(output_str), model_output);
             LOG_INF("model output: %s", output_str);
         }
+        timer_end = k_uptime_get();
     } while (0);
 
     if (IS_VALID_POINTER(model_output))
@@ -96,7 +101,8 @@ int main(void)
     }
     if (STATUS_OK == status)
     {
-        LOG_INF("inference done");
+        LOG_INF("inference done in %lld ms (%lld ms per batch)", timer_end - timer_start,
+                (timer_end - timer_start) * sizeof(data[0]) / sizeof(data));
     }
     for (;;)
         ;
