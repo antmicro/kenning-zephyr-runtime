@@ -1,5 +1,8 @@
+cmake
+pyelftools
 pyrenode3 @ git+https://github.com/antmicro/pyrenode3
 pyserial
 pytest
 pytest-reportlog
 renode-run @ git+https://github.com/antmicro/renode-run
+west

@@ -10,6 +10,23 @@ set -x
 ZEPHYR_SDK_PATH=$HOME/.local/opt/zephyr-sdk
 PROJECT_ROOT=$(realpath $(pwd))
 
+# prepare venv for the project
+if [ ! -d ".venv" ]; then
+    python3 -m venv .venv
+fi
+
+# source venv
+source .venv/bin/activate
+
+# check if west and other project dependencies are installed
+python3 -m pip freeze -r requirements.txt | grep "not installed" && INSTALL_DEPS=0 || INSTALL_DEPS=1
+if [ $INSTALL_DEPS -ne 0 ]; then
+    echo "Installing missing dependencies"
+    python3 -m pip install -r requirements.txt
+else
+    echo "Project dependencies installed"
+fi
+
 # setup SDK
 if [ ! -d "$ZEPHYR_SDK_PATH" ]; then
   cd /tmp
@@ -36,6 +53,7 @@ if [ ! -d "$ZEPHYR_SDK_PATH" ]; then
 else
   echo "Zephyr SDK already downloaded"
 fi
+
 cd ${ZEPHYR_SDK_PATH}
 ./setup.sh -t x86_64-zephyr-elf
 ./setup.sh -t arm-zephyr-eabi
@@ -44,12 +62,22 @@ cd ${ZEPHYR_SDK_PATH}
 ./setup.sh -c
 
 cd ${PROJECT_ROOT}
+
 # setup Zephyr project
 if [ ! -d "../.west" ]; then
   west init -l .
   west update
   west zephyr-export
-  python3 -m pip install -r ../zephyr/scripts/requirements.txt
 else
   echo "Zephyr project already downloaded"
+  west update
 fi
+
+
+# install Zephyr's Python dependencies
+if [ ! -f ".venv/zephyr-deps.stamp" ]; then
+    python3 -m pip install -r ../zephyr/scripts/requirements.txt
+    touch .venv/zephyr-deps.stamp
+fi
+
+echo "The environment is configured"
