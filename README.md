@@ -11,12 +11,13 @@ This repository provides:
 
 * `kenning_inference_lib` - a Zephyr library providing generic wrapper methods for loading models and running inference, regardless of their underlying implementation.
 * `kenning-zephyr-runtime` app - a Zephyr application used by [Kenning](https://github.com/antmicro/kenning) for evaluating models and runtimes on devices.
+* demo application (`demo_app`) - a Zephyr application that uses `kenning_inference_lib` to run gesture recognition on sample data.
 
 ## Building the project
 
 This section contains instructions for preparing Zephyr and building the runtime.
 
-### Preparing Zephyr development environment
+### System prerequisites
 
 To be able to build and use the project, you need the folowing dependencies:
 
@@ -37,7 +38,7 @@ sudo apt install -y --no-install-recommends ccache curl device-tree-compiler dfu
   wget xxd xz-utils
 ```
 
-### Preparing the project
+### Cloning the project and preparing the environment
 
 First off, create a workspace directory and clone the repository:
 
@@ -47,21 +48,22 @@ git clone https://github.com/antmicro/kenning-zephyr-runtime.git
 cd kenning-zephyr-runtime
 ```
 
-After entering the project's directory, create a Python virtual environment, and install `CMake` and `west`:
-
-```bash
-python3 -m venv venv
-source venv/bin/activate
-pip install west cmake
-```
-
-Then, initialize a Zephyr workspace and ensure that the Zephyr SDK is installed:
+After entering the project's directory, initialize a Zephyr workspace with:
 
 ```bash
 ./scripts/prepare_zephyr_env.sh
 ```
 
-Prepare additional modules:
+This will:
+
+* Download (if necessary) and set up Zephyr SDK
+* Download necessary toolchains
+* Set up Python virtual environment with necessary dependencies
+* Configure all necessary variables.
+
+This can be reused to load all necessary environment before launching commands mentioned later in the README.md.
+
+After this, prepare additional modules:
 
 ```bash
 ./scripts/prepare_modules.sh
@@ -227,29 +229,24 @@ kenning optimize test report \
 
 The Kenning inference library present in this repository can be also used in actual applications, not only in the evaluation process in Kenning.
 
-The application present in `demo_app` demonstrates how to use Kenning Zephyr Runtime in actual, simple use case, where we take a model recognizing gestures (wing, ring, slope and negative, trained with Magic Wand dataset) and compile it with picked runtime.
+The application present in `demo_app` demonstrates how to use Kenning Zephyr Runtime in actual, simple use case, where we take a model recognizing gestures (`wing`, `ring`, `slope` and `negative`, trained with Magic Wand dataset) and compile it with picked runtime.
 It goes through delivered inputs, runs inference and prints the output.
 
 This demo requires [pyrenode3](https://github.com/antmicro/pyrenode3/) - please follow installation instructions in its README.
 
-To begin with, let's install additional dependencies for running the model:
+After configuring the build environment as described in the [Cloning the project and preparing the environment](#cloning-the-project-and-preparing-the-environment), you can build the `demo_app` as follows:
 
-```bash
-pip install -r ./tests/demo/requirements.txt
-```
-
-To build the `demo_app` run:
-
-* microTVM runtime:
+* using microTVM runtime:
   ```bash
   west build -p always -b hifive_unleashed demo_app -- -DEXTRA_CONF_FILE=tvm.conf
   ```
-* TFLite Micro runtime:
+* using TFLite Micro runtime:
   ```bash
   west build -p always -b hifive_unleashed demo_app -- -DEXTRA_CONF_FILE=tflite.conf
   ```
 
-Next, generate board `repl` file for Renode using:
+After building the application with specified board, we can either flash the hardware with it, or simulate it in Renode.
+To simulate it in Renode, generate board's `repl` platform file using:
 
 ```bash
 west build -t board-repl
