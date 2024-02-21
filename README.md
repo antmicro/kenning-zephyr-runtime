@@ -35,7 +35,7 @@ sudo apt update
 sudo apt install -y --no-install-recommends ccache curl device-tree-compiler dfu-util file \
   g++-multilib gcc gcc-multilib git jq libmagic1 libsdl2-dev make ninja-build \
   python3-dev python3-pip python3-setuptools python3-tk python3-wheel python3-venv \
-  wget xxd xz-utils
+  mono-complete wget xxd xz-utils
 ```
 
 ### Cloning the project and preparing the environment
@@ -101,6 +101,16 @@ Use `pip` to install [Kenning](https://github.com/antmicro/kenning) with Renode 
 pip install --upgrade pip
 pip install "kenning[tvm,tensorflow,reports,renode] @ git+https://github.com/antmicro/kenning.git"
 ```
+
+The [pyrenode3](https://github.com/antmicro/pyrenode3/) module requires installing Renode to work.
+The easiest way is to use the latest Renode package and store its location in `PYRENODE_PKG`:
+
+```bash
+wget https://builds.renode.io/renode-latest.pkg.tar.xz
+export PYRENODE_PKG=`pwd`/renode-latest.pkg.tar.xz
+```
+
+For other configuration options check [pyrenode3 README.md](https://github.com/antmicro/pyrenode3/blob/main/README.md).
 
 ## Evaluating the model in Kenning
 
@@ -231,8 +241,6 @@ The Kenning inference library present in this repository can be also used in act
 
 The application present in `demo_app` demonstrates how to use Kenning Zephyr Runtime in actual, simple use case, where we take a model recognizing gestures (`wing`, `ring`, `slope` and `negative`, trained with Magic Wand dataset) and compile it with picked runtime.
 It goes through delivered inputs, runs inference and prints the output.
-
-This demo requires [pyrenode3](https://github.com/antmicro/pyrenode3/) - please follow installation instructions in its README.
 
 With the build environment configured as described in the [Cloning the project and preparing the environment](#cloning-the-project-and-preparing-the-environment), you can build the `demo_app` as follows:
 
