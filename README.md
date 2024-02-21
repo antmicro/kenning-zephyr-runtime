@@ -57,13 +57,13 @@ source .venv/bin/activate
 
 This will:
 
-* Download (if necessary) and set up Zephyr SDK
+* Download (if necessary) and set up the Zephyr SDK
 * Download necessary toolchains
-* Set up Python virtual environment with necessary dependencies.
+* Set up a Python virtual environment with necessary dependencies.
 
-This can be reused to load all necessary environment before launching commands mentioned later in the README.md.
+This can be reused to load the necessary environment before launching commands mentioned later in this README.
 
-After this, prepare additional modules:
+Now, prepare additional modules:
 
 ```bash
 ./scripts/prepare_modules.sh
@@ -234,19 +234,19 @@ It goes through delivered inputs, runs inference and prints the output.
 
 This demo requires [pyrenode3](https://github.com/antmicro/pyrenode3/) - please follow installation instructions in its README.
 
-After configuring the build environment as described in the [Cloning the project and preparing the environment](#cloning-the-project-and-preparing-the-environment), you can build the `demo_app` as follows:
+With the build environment configured as described in the [Cloning the project and preparing the environment](#cloning-the-project-and-preparing-the-environment), you can build the `demo_app` as follows:
 
-* using microTVM runtime:
+* using the microTVM runtime:
   ```bash
   west build -p always -b hifive_unleashed demo_app -- -DEXTRA_CONF_FILE=tvm.conf
   ```
-* using TFLite Micro runtime:
+* using the TFLite Micro runtime:
   ```bash
   west build -p always -b hifive_unleashed demo_app -- -DEXTRA_CONF_FILE=tflite.conf
   ```
 
-After building the application with specified board, we can either flash the hardware with it, or simulate it in Renode.
-To simulate it in Renode, generate board's `repl` platform file using:
+After building the application with a board specified, we can either flash the hardware with it, or simulate it in Renode.
+To simulate it in Renode, generate the board's `repl` platform file using:
 
 ```bash
 west build -t board-repl
@@ -254,7 +254,7 @@ west build -t board-repl
 
 The result can be found under `./build/<board_name>.repl`.
 
-Finally, the demo can be run with:
+Finally, run the demo with:
 
 ```bash skip
 python ./scripts/run_renode.py
@@ -281,8 +281,8 @@ I: inference done
 
 ## Adding support for more boards
 
-Adapting `kenning-zephyr-runtime` for new boards is pretty straightforward.
-In general, as long as the underlying runtime implementation supports a given board without additional configuration, the process of adapting the application for new board boils down to picking an UART for communication with the Kenning application running on host.
+Adapting `kenning-zephyr-runtime` for new boards is straightforward.
+As long as the underlying runtime implementation supports a given board without additional configuration, the process of adapting the application for new board boils down to picking an UART for communication with the Kenning application running on host.
 Such UART is expected to be aliased `kcomms` in the application.
 
 The alias can be set in the overlay file under `app/boards/<board_name>.overlay`, where `<board_name>` is the name of the board in Zephyr, passed in `--board` flag in `west build`:
