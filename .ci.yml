@@ -134,7 +134,9 @@ unit-tests:
 tuttest:
     <<: *ace
     <<: *common_only
+    image: debian:bullseye
     stage: tests
     script:
-        - apt update -y && apt install -y sudo
+        - DEBIAN_FRONTEND=noninteractive apt update -qqy && apt-get install -y sudo python3 python3-pip git colorized-logs
+        - pip3 install git+https://github.com/antmicro/tuttest.git
         - ./scripts/test_readme.sh
