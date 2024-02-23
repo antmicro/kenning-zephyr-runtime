@@ -12,19 +12,24 @@ PROJECT_ROOT=$(realpath $(pwd))
 
 # prepare venv for the project
 if [ ! -d ".venv" ]; then
+  if [[ ! -z "$CI" ]]; then
+    # include global packages when run in CI
+    python3 -m venv .venv --system-site-packages
+  else
     python3 -m venv .venv
+  fi
 fi
 
 # source venv
 source .venv/bin/activate
 
 # check if west and other project dependencies are installed
-python3 -m pip freeze -r requirements.txt | grep "not installed" && INSTALL_DEPS=0 || INSTALL_DEPS=1
+python3 -m pip freeze -r requirements.txt | grep "not installed" && INSTALL_DEPS=1 || INSTALL_DEPS=0
 if [ $INSTALL_DEPS -ne 0 ]; then
-    echo "Installing missing dependencies"
-    python3 -m pip install -r requirements.txt
+  echo "Installing missing dependencies"
+  python3 -m pip install -r requirements.txt
 else
-    echo "Project dependencies installed"
+  echo "Project dependencies installed"
 fi
 
 # setup SDK
@@ -76,8 +81,8 @@ fi
 
 # install Zephyr's Python dependencies
 if [ ! -f ".venv/zephyr-deps.stamp" ]; then
-    python3 -m pip install -r ../zephyr/scripts/requirements.txt
-    touch .venv/zephyr-deps.stamp
+  python3 -m pip install -r ../zephyr/scripts/requirements.txt
+  touch .venv/zephyr-deps.stamp
 fi
 
 echo "The environment is configured"
