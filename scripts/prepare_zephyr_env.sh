@@ -24,12 +24,11 @@ fi
 source .venv/bin/activate
 
 # check if west and other project dependencies are installed
-python3 -m pip freeze -r requirements.txt | grep "not installed" && INSTALL_DEPS=1 || INSTALL_DEPS=0
-if [ $INSTALL_DEPS -ne 0 ]; then
+if $(python3 -m pip freeze -r requirements.txt | grep "not installed"); then
+  echo "Project dependencies installed"
+else
   echo "Installing missing dependencies"
   python3 -m pip install -r requirements.txt
-else
-  echo "Project dependencies installed"
 fi
 
 # setup SDK
@@ -81,7 +80,9 @@ fi
 
 # install Zephyr's Python dependencies
 if [ ! -f ".venv/zephyr-deps.stamp" ]; then
-  python3 -m pip install -r ../zephyr/scripts/requirements.txt
+  python3 -m pip install -r ../zephyr/scripts/requirements-base.txt
+  python3 -m pip install -r ../zephyr/scripts/requirements-build-test.txt
+  python3 -m pip install -r ../zephyr/scripts/requirements-run-test.txt
   touch .venv/zephyr-deps.stamp
 fi
 
