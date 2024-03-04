@@ -180,6 +180,28 @@ kenning optimize test report \
     --verbosity INFO
 ```
 
+##### Building runtime with microTVM backend using custom model
+
+This step requires Kenning to be installed.
+Follow the steps in [Installing Kenning with Renode](installing-kenning-with-renode) to install it.
+
+The microTVM backend requires having TVM ops used by model to be compiled with the runtime.
+By default, it is compiled with Magic Wand model ops, but it is possible to use ops from any model.
+To do so, provide additional config variable `CONFIG_KENNING_MODEL_PATH` which should contain path to the model.
+This path can be either path to the file or URL to any model hosted online, for example at https://dl.antmicro.com/kenning/ (i.e. https://dl.antmicro.com/kenning/models/classification/magic_wand.h5).
+The supported model formats are:
+* ONNX (.onnx),
+* Keras (.h5),
+* PyTorch (.pt, .pth),
+* TFLite (.tflite).
+
+You can set this variable in `prj.conf` or add it to `west build` as follows (remember to wrap path in `\"`):
+```bash
+west build -p always -b stm32f746g_disco app -- \
+    -DEXTRA_CONF_FILE=tvm.conf \
+    -DCONFIG_KENNING_MODEL_PATH=\"https://dl.antmicro.com/kenning/models/classification/magic_wand.h5\"
+```
+
 ## Evaluating a model in Kenning using actual hardware
 
 Kenning can evaluate the runtime running on a physical device.
@@ -285,6 +307,17 @@ I: model output: [wing: 1.000000, ring: 0.000000, slope: 0.000000, negative: 0.0
 I: model output: [wing: 0.000000, ring: 0.000000, slope: 1.000000, negative: 0.000000]
 I: model output: [wing: 0.000000, ring: 0.000000, slope: 0.000000, negative: 1.000000]
 I: inference done
+```
+
+### Building demo using different model
+
+It is also possible to build `demo_app` using some custom model.
+To do it, you need to edit `model_struct` in `demo_app/src/main.c` to match the model IO specification.
+Then, provide model input in `demo_app/src/input_data.h` and model path using `CONFIG_KENNING_MODEL_PATH` config variable (similarly as in [Building runtime with microTVM backend using custom model](#Building-runtime-with-microTVM-backend-using-custom-model)):
+```bash
+west build -p always -b stm32f746g_disco demo_app -- \
+    -DEXTRA_CONF_FILE=tvm.conf \
+    -DCONFIG_KENNING_MODEL_PATH=\"https://dl.antmicro.com/kenning/models/classification/magic_wand.h5\"
 ```
 
 ## Adding support for more boards
