@@ -16,8 +16,8 @@ image: $CI_IMAGE
         APP: app
         ELF_PREFIX: kenning-zephyr-runtime
         BOARDS: >
-            nrf52840dk_nrf52840
-            nrf52840dongle_nrf52840
+            nrf52840dk/nrf52840
+            nrf52840dongle
             stm32f746g_disco
             hifive_unleashed
     before_script:
@@ -33,8 +33,9 @@ image: $CI_IMAGE
           fi
           for BOARD in ${BOARDS}
           do
-              west build -p always -b ${BOARD} ${APP} -- -DEXTRA_CONF_FILE=${RUNTIME_CONF}
-              cp build/zephyr/zephyr.elf artifacts/${ELF_PREFIX}-${RUNTIME}-${BOARD}.elf
+              BOARD_NAME="${BOARD//\//_}"
+              python -m west build -p always -b ${BOARD} ${APP} -- -DEXTRA_CONF_FILE=${RUNTIME_CONF}
+              cp build/zephyr/zephyr.elf artifacts/${ELF_PREFIX}-${RUNTIME}-${BOARD_NAME}.elf
           done
     artifacts:
         paths:
@@ -93,9 +94,10 @@ build-repl:
         - |
           for BOARD in ${BOARDS}
           do
-              west build -p always -b ${BOARD} demo_app || true
-              west build -t board-repl
-              cp build/${BOARD}.repl artifacts/
+              BOARD_NAME="${BOARD//\//_}"
+              python -m west build -p always -b ${BOARD} demo_app || true
+              python -m west build -t board-repl
+              cp build/*.repl artifacts/${BOARD_NAME}.repl
           done
     artifacts:
         paths:
@@ -125,7 +127,7 @@ unit-tests:
         - scripts/prepare_zephyr_env.sh
         - source .venv/bin/activate
     script:
-        - west twister -T tests -p unit_testing
+        - python -m west twister -T tests -p unit_testing
     artifacts:
         paths:
             - twister-out/unit_testing/lib/kenning_inference_lib/**/*.log
