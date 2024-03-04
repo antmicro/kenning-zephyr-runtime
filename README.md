@@ -85,8 +85,8 @@ You can provide one of the following runtimes in `<runtime>`:
 The project was tested on the following boards:
 
 * [stm32f746g_disco](https://renodepedia.renode.io/boards/stm32f746g_disco/)
-* [nrf52840dongle_nrf52840](https://renodepedia.renode.io/boards/nrf52840dongle_nrf52840)
-* [nrf52840dk_nrf52840](https://renodepedia.renode.io/boards/nrf52840dk_nrf52840)
+* [nrf52840dongle](https://renodepedia.renode.io/boards/nrf52840dongle_nrf52840)
+* [nrf52840dk/nrf52840](https://renodepedia.renode.io/boards/nrf52840dk_nrf52840)
 * [hifive_unleashed](https://renodepedia.renode.io/boards/hifive_unleashed)
 
 Check the [Adding support for more boards section](#adding-support-for-more-boards) for information on whow to add a new target device.
@@ -189,13 +189,13 @@ To do so, we need to flash the device and replace `RenodeRuntime` in evaluation 
 
 ![TFLite Micro scenario running on hardware](img/device-scenario-example.png)
 
-Build the runtime for `nrf52840dongle_nrf52840` (let's use TFLite Micro in this example):
+Build the runtime for `nrf52840dongle` (let's use TFLite Micro in this example):
 
 ```bash skip
-west build -p always -b nrf52840dongle_nrf52840 app -- -DEXTRA_CONF_FILE=tflite.conf
+west build -p always -b nrf52840dongle app -- -DEXTRA_CONF_FILE=tflite.conf
 ```
 
-Flash Kenning runtime on the device by following [instructions](https://docs.zephyrproject.org/latest/boards/arm/nrf52840dongle_nrf52840/doc/index.html#option-1-using-the-built-in-bootloader-only) in the Zephyr documenation.
+Flash Kenning runtime on the device by following [instructions](https://docs.zephyrproject.org/latest/boards/nordic/nrf52840dongle/doc/index.html#option-1-using-the-built-in-bootloader-only) in the Zephyr documenation.
 
 Finally, evaluate the model and generate a report with performance and quality metrics:
 
