@@ -65,12 +65,12 @@ cd ${PROJECT_ROOT}
 
 # setup Zephyr project
 if [ ! -d "../.west" ]; then
-  west init -l .
-  west update
-  west zephyr-export
+  python3 -m west init -l .
+  python3 -m west update
+  python3 -m west zephyr-export
 else
   echo "Zephyr project already downloaded"
-  west update
+  python3 -m west update
 fi
 
 
