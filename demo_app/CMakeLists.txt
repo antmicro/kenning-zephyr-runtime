@@ -14,9 +14,19 @@ if(${CONFIG_KENNING_ML_RUNTIME_TVM})
 
     add_custom_command(
       OUTPUT
+        model_graph_min.json
+      COMMAND
+        cat ${model_graph_path} |
+          tr -d \"\\n\\t \" 1>model_graph_min.json
+    )
+
+    add_custom_command(
+      DEPENDS
+        model_graph_min.json
+      OUTPUT
         model_data
       COMMAND
-        stat --printf="%s" ${model_graph_path} |
+        stat --printf="%s" model_graph_min.json |
           xargs printf "0: %08x" |
           xxd -r -g0 1>model_data
       COMMAND
@@ -32,7 +42,7 @@ if(${CONFIG_KENNING_ML_RUNTIME_TVM})
           model_data
       COMMAND
         cat
-          ${model_graph_path} ${model_params_path}
+          model_graph_min.json ${model_params_path}
           1>>model_data
     )
     unset(model_graph_path)
