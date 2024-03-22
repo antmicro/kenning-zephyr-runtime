@@ -156,7 +156,7 @@ enum
     STATUS(module##_STATUS_UNINIT)  /* module uninitialized */ \
     STATUS(module##_STATUS_TIMEOUT) /* timeout */
 
-typedef uint32_t status_t;
+typedef int32_t status_t;
 
 const char *get_status_str(status_t status);
 
