@@ -21,13 +21,11 @@ manifest:
       remote: zephyrproject-rtos
       revision: main
       import:
-        name-allowlist:
-          - cmsis
-          - cmsis-nn
-          - cmsis-dsp
-          - hal_nordic
-          - hal_stm32
-          - segger
+        path-allowlist:
+          - modules/debug/*
+          - modules/hal/*
+          - modules/lib/*
+          - modules/tee/tf-m/*
 
     - name: tflite-micro
       remote: zephyrproject-rtos
