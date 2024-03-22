@@ -24,9 +24,9 @@ image: $CI_IMAGE
         - scripts/prepare_zephyr_env.sh
         - scripts/prepare_modules.sh
         - mkdir -p artifacts
-        - source .venv/bin/activate
     script:
         - |
+          source .venv/bin/activate
           if [ "$RUNTIME" != "stub" ]
           then
               RUNTIME_CONF="${RUNTIME}.conf"
@@ -101,6 +101,7 @@ build-repl:
     extends: .build
     script:
         - |
+          source .venv/bin/activate
           for BOARD in ${BOARDS}
           do
               BOARD_NAME="${BOARD//\//_}"
@@ -135,8 +136,8 @@ unit-tests:
     stage: tests
     before_script:
         - scripts/prepare_zephyr_env.sh
-        - source .venv/bin/activate
     script:
+        - source .venv/bin/activate
         - python -m west twister -T tests -p unit_testing
     artifacts:
         paths:
