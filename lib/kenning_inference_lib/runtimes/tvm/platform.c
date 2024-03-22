@@ -35,7 +35,9 @@ void k_sys_fatal_error_handler(unsigned int reason, const z_arch_esf_t *esf)
 void TVMPlatformAbort(tvm_crt_error_t error)
 {
     LOG_ERR("TVM error: 0x%x", error);
+#ifdef CONFIG_REBOOT
     sys_reboot(SYS_REBOOT_COLD);
+#endif // CONFIG_REBOOT
     for (;;)
         ;
 }
