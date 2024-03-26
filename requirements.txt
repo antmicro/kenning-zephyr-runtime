@@ -1,6 +1,7 @@
 cmake
+importlib_metadata
+kenning[iree,renode,tensorflow,tflite] @ git+https://github.com/antmicro/kenning.git
 pyelftools
-pyrenode3 @ git+https://github.com/antmicro/pyrenode3
 pyserial
 pytest
 pytest-reportlog
