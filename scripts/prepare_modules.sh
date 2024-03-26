@@ -20,5 +20,4 @@ done
 
 cp "./modules/tvm/crt_config.h" "../tvm/include/"
 cp "./modules/iree/zephyr_config.h" "../iree/zephyr/"
-cp "./modules/iree/arch_config.h" "../iree/runtime/src/iree/builtins/ukernel/arch/config.h"
 cp -r "./modules/iree/flatcc" "../zephyr/modules/iree/"

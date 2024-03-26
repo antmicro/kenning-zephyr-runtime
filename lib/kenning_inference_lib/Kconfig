@@ -51,8 +51,8 @@ choice KENNING_ML_RUNTIME
         depends on KENNING_INFERENCE_LIB
         default KENNING_ML_RUNTIME_STUB
         help
-          This option select ML runtime to be used.
-          Available options: ML_RUNTIME_STUB, ML_RUNTIME_TVM, ML_RUNTIME_TFLITE
+          This option selects ML runtime to be used.
+          Available options: KENNING_ML_RUNTIME_STUB, KENNING_ML_RUNTIME_TVM, KENNING_ML_RUNTIME_TFLITE
 
 config KENNING_ML_RUNTIME_STUB
         bool
@@ -73,6 +73,11 @@ config KENNING_ML_RUNTIME_TFLITE
         select TENSORFLOW_LITE_MICRO_CMSIS_NN_KERNELS if CPU_CORTEX_M
         select CMSIS_NN if CPU_CORTEX_M
         select CMSIS_DSP if CPU_CORTEX_M
+
+config KENNING_ML_RUNTIME_IREE
+        bool
+        prompt "IREE runtime"
+        select ZEPHYR_IREE_MODULE
 
 endchoice
 
@@ -97,6 +102,24 @@ config KENNING_TFLITE_BUFFER_SIZE
         depends on KENNING_ML_RUNTIME_TFLITE
         help
           This option sets the size in bytes of the buffer for tensor arena and model used by TFLite.
+
+choice KENNING_IREE_LOADER
+        prompt "loader to be used by IREE"
+        depends on KENNING_ML_RUNTIME_IREE
+        default KENNING_IREE_LOADER_VMVX
+        help
+          This option selects the loader to be used by IREE.
+          Available options: KENNING_IREE_LOADER_VMVX, KENNING_IREE_LOADER_EMBEDDED_ELF
+
+config KENNING_IREE_LOADER_VMVX
+        bool
+        prompt "vmvx module loader"
+
+config KENNING_IREE_LOADER_EMBEDDED_ELF
+        bool
+        prompt "embedded elf loader"
+
+endchoice
 
 module = CALLBACKS
 module-str = callbacks
