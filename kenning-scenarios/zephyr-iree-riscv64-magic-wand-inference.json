@@ -1,0 +1,46 @@
+{
+    "dataset": {
+        "type": "kenning.datasets.magic_wand_dataset.MagicWandDataset",
+        "parameters": {
+            "dataset_root": "./build/MagicWandDataset"
+        }
+    },
+    "model_wrapper": {
+        "type": "kenning.modelwrappers.classification.tflite_magic_wand.MagicWandModelWrapper",
+        "parameters": {
+            "model_path": "kenning:///models/classification/magic_wand.h5"
+        }
+    },
+    "optimizers": [
+        {
+            "type": "kenning.optimizers.iree.IREECompiler",
+            "parameters": {
+                "compiled_model_path": "./build/magic-wand-iree-rv64.vmfb",
+                "backend": "llvm-cpu",
+                "model_framework": "keras",
+                "compiler_args": [
+                    "iree-vm-bytecode-module-strip-source-map=true",
+                    "iree-vm-emit-polyglot-zip=false",
+                    "iree-llvm-debug-symbols=false",
+                    "iree-llvm-target-triple=riscv64-pc-linux-elf",
+                    "iree-llvm-target-cpu=generic-rv64",
+                    "iree-llvm-target-cpu-features=+m,+f"
+                ]
+            }
+        }
+    ],
+    "runtime": {
+        "type": "kenning.runtimes.iree.IREERuntime",
+        "parameters": {
+            "driver": "local-task"
+        }
+    },
+    "protocol": {
+        "type": "kenning.protocols.uart.UARTProtocol",
+        "parameters": {
+            "port": "/tmp/uart",
+            "baudrate": 115200,
+            "endianness": "little"
+        }
+    }
+}
