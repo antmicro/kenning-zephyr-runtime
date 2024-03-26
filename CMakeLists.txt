@@ -2,6 +2,8 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
+set_property(GLOBAL PROPERTY CSTD gnu11)
+
 zephyr_include_directories(include)
 
 if (CONFIG_ZTEST)
