@@ -7,7 +7,7 @@
 #include <input_data.h>
 #include <kenning_inference_lib/core/model.h>
 #include <kenning_inference_lib/core/utils.h>
-#include <model_data.h> /* header with model weights generated during build from ./models/magic_wand/<runtime>/ */
+#include <model_data.h> /* header with model weights generated during build from ./model/<runtime>/ */
 #include <stdio.h>
 #include <stdlib.h>
 #include <zephyr/kernel.h>
@@ -23,8 +23,8 @@ LOG_MODULE_REGISTER(demo_app, CONFIG_DEMO_APP_LOG_LEVEL);
  */
 const MlModel model_struct = {
     .num_input = 1,
-    .num_input_dim = {3},
-    .input_shape = {{128, 3, 1}},
+    .num_input_dim = {4},
+    .input_shape = {{1, 128, 3, 1}},
     .input_length = {384},
     .input_size_bytes = {4},
     .num_output = 1,
