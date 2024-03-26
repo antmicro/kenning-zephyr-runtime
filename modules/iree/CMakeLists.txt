@@ -17,22 +17,16 @@ if(CONFIG_ZEPHYR_IREE_MODULE)
   set(ZEPHYR_CONFIG_HEADER "${IREE_DIR}/zephyr/zephyr_config.h")
 
   if("${CONFIG_ARM64}")
-    message("IREE arm64")
     add_compile_definitions(-DIREE_ARCH_ARM_64)
   elseif("${CONFIG_ARM}")
-    message("IREE arm32")
     add_compile_definitions(-DIREE_ARCH_ARM_32)
   elseif("${CONFIG_RISCV}" AND "${CONFIG_64BIT}")
-    message("IREE riscv64")
     add_compile_definitions(-DIREE_ARCH_RISCV_64)
   elseif("${CONFIG_RISCV}")
-    message("IREE riscv32")
     add_compile_definitions(-DIREE_ARCH_RISCV_32)
   elseif("${CONFIG_X86}" AND "${CONFIG_64BIT}")
-    message("IREE x86_64")
     add_compile_definitions(-DIREE_ARCH_X86_64)
   elseif("${CONFIG_X86}")
-    message("IREE x86_32")
     add_compile_definitions(-DIREE_ARCH_X86_32)
   else()
     message(FATAL_ERROR "unsupported architecture")
@@ -43,8 +37,8 @@ if(CONFIG_ZEPHYR_IREE_MODULE)
   add_compile_definitions(-DIREE_PLATFORM_GENERIC=1)
   add_compile_definitions(-DIREE_SYNCHRONIZATION_DISABLE_UNSAFE=1)
   add_compile_definitions(-DIREE_USER_CONFIG_H="${ZEPHYR_CONFIG_HEADER}")
-  add_compile_definitions(-DIREE_VM_EXECUTION_TRACING_ENABLE=1)
-  add_compile_definitions(-DIREE_HAL_VERBOSE_TRACING_ENABLE=1)
+  add_compile_definitions(-DIREE_VM_EXECUTION_TRACING_ENABLE=0)
+  add_compile_definitions(-DIREE_HAL_VERBOSE_TRACING_ENABLE=0)
   set(CMAKE_SYSTEM_NAME Generic)
   set(IREE_BUILD_BINDINGS_TFLITE OFF)
   set(IREE_BUILD_COMPILER OFF)
@@ -89,12 +83,35 @@ if(CONFIG_ZEPHYR_IREE_MODULE)
 
   zephyr_include_directories(
     ${IREE_SRC_DIR}
+    ${CMAKE_CURRENT_BINARY_DIR}
     "${IREE_DIR}/third_party/flatcc/include"
   )
   zephyr_library_add_dependencies(
     "flatcc_dummy"
     "flatcc_bytecode_module_def"
   )
+
+  if("${CONFIG_64BIT}")
+    set(IREE_UK_POINTER_SIZE 8)
+  else("${CONFIG_64BIT}")
+    set(IREE_UK_POINTER_SIZE 4)
+  endif("${CONFIG_64BIT}")
+
+  # disabled for now, because causes issues on some boards
+  # if("${CONFIG_ARM64}")
+  #   set(IREE_UK_ARCH_ARM_64 1)
+  # endif("${CONFIG_ARM64}")
+
+  set(iree_ukernel_config_headers)
+  list(APPEND iree_ukernel_config_headers "iree/builtins/ukernel/arch/config.h")
+  list(APPEND iree_ukernel_config_headers "iree/builtins/ukernel/arch/arm_64/config.h")
+
+  foreach(config_header ${iree_ukernel_config_headers})
+    configure_file(
+      "${IREE_SRC_DIR}/${config_header}.in"
+      "${config_header}"
+    )
+  endforeach()
 
   set(iree_src "")
 
@@ -139,6 +156,7 @@ if(CONFIG_ZEPHYR_IREE_MODULE)
   list(APPEND iree_src "${IREE_SRC_DIR}/iree/hal/local/local_executable_cache.c")
   list(APPEND iree_src "${IREE_SRC_DIR}/iree/hal/local/local_pipeline_layout.c")
   list(APPEND iree_src "${IREE_SRC_DIR}/iree/hal/local/loaders/embedded_elf_loader.c")
+  list(APPEND iree_src "${IREE_SRC_DIR}/iree/hal/local/loaders/vmvx_module_loader.c")
   list(APPEND iree_src "${IREE_SRC_DIR}/iree/hal/pipeline_layout.c")
   list(APPEND iree_src "${IREE_SRC_DIR}/iree/hal/semaphore.c")
   list(APPEND iree_src "${IREE_SRC_DIR}/iree/hal/string_util.c")
@@ -164,6 +182,29 @@ if(CONFIG_ZEPHYR_IREE_MODULE)
   list(APPEND iree_src "${IREE_SRC_DIR}/iree/vm/shims.c")
   list(APPEND iree_src "${IREE_SRC_DIR}/iree/vm/stack.c")
   list(APPEND iree_src "${FLATCC_SRC_DIR}/runtime/verifier.c")
+
+  # ukernel sources
+  list(APPEND iree_src "${IREE_SRC_DIR}/iree/builtins/ukernel/elementwise_generic.c")
+  list(APPEND iree_src "${IREE_SRC_DIR}/iree/builtins/ukernel/pack_tile.c")
+  list(APPEND iree_src "${IREE_SRC_DIR}/iree/builtins/ukernel/unpack_tile.c")
+  list(APPEND iree_src "${IREE_SRC_DIR}/iree/builtins/ukernel/mmt4d_tile.c")
+  list(APPEND iree_src "${IREE_SRC_DIR}/iree/builtins/ukernel/pack.c")
+  list(APPEND iree_src "${IREE_SRC_DIR}/iree/builtins/ukernel/unpack.c")
+  list(APPEND iree_src "${IREE_SRC_DIR}/iree/builtins/ukernel/mmt4d.c")
+  list(APPEND iree_src "${IREE_SRC_DIR}/iree/builtins/ukernel/query_tile_sizes.c")
+  if("${IREE_UK_ARCH_ARM_64}")
+    list(APPEND iree_src "${IREE_SRC_DIR}/iree/builtins/ukernel/arch/arm_64/pack_arm_64.c")
+    list(APPEND iree_src "${IREE_SRC_DIR}/iree/builtins/ukernel/arch/arm_64/unpack_arm_64.c")
+    list(APPEND iree_src "${IREE_SRC_DIR}/iree/builtins/ukernel/arch/arm_64/mmt4d_arm_64.c")
+    list(APPEND iree_src "${IREE_SRC_DIR}/iree/builtins/ukernel/arch/arm_64/mmt4d_arm_64.S")
+    if("${IREE_UK_BUILD_ARM_64_DOTPROD}")
+      list(APPEND iree_src "${IREE_SRC_DIR}/iree/builtins/ukernel/arch/arm_64/mmt4d_arm_64_dotprod.S")
+    endif("${IREE_UK_BUILD_ARM_64_DOTPROD}")
+    if("${IREE_UK_BUILD_ARM_64_I8MM}")
+      list(APPEND iree_src "${IREE_SRC_DIR}/iree/builtins/ukernel/arch/arm_64/mmt4d_arm_64_i8mm.S")
+    endif("${IREE_UK_BUILD_ARM_64_I8MM}")
+    list(APPEND iree_src "${IREE_SRC_DIR}/iree/builtins/ukernel/arch/arm_64/query_tile_sizes_arm_64.c")
+  endif("${IREE_UK_ARCH_ARM_64}")
 
   if("${CONFIG_ARM64}")
     list(APPEND iree_src "${IREE_SRC_DIR}/iree/hal/local/elf/arch/arm_64.c")
