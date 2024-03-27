@@ -98,8 +98,6 @@ int main(void)
     {
         LOG_INF("inference done");
     }
-    for (;;)
-        ;
     return 0;
 }
 
