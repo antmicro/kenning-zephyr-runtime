@@ -104,8 +104,6 @@ int main(void)
         LOG_INF("inference done in %lld ms (%lld ms per batch)", timer_end - timer_start,
                 (timer_end - timer_start) * sizeof(data[0]) / sizeof(data));
     }
-    for (;;)
-        ;
     return 0;
 }
 
