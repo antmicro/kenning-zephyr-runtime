@@ -24,10 +24,11 @@ fi
 source .venv/bin/activate
 
 # check if west and other project dependencies are installed
-if $(python3 -m pip freeze -r requirements.txt | grep "not installed"); then
+if [ -z "$(python3 -m pip freeze -r requirements.txt 2>&1 | grep "not installed")" ]; then
     echo "Project dependencies installed"
 else
     echo "Installing missing dependencies"
+    python3 -m pip install pip setuptools --upgrade
     python3 -m pip install -r requirements.txt
 fi
 
