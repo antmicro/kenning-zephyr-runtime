@@ -6,6 +6,7 @@
 Python script for running Kenning Zephyr Runtime in Renode.
 """
 
+import argparse
 import re
 
 import serial
@@ -55,7 +56,11 @@ def get_kenning_communication_uart(boards: str) -> str:
 
 
 if __name__ == "__main__":
-    board = get_cmake_var("BOARD:STRING")
+    parser = argparse.ArgumentParser(__doc__)
+    parser.add_argument("--debug", action="store_true", help="Enable GDB server")
+    args = parser.parse_args()
+
+    board = get_cmake_var("BOARD:STRING").split("/")[0]
     build_path = get_cmake_var("APPLICATION_BINARY_DIR:PATH")
     project_name = get_cmake_var("CMAKE_PROJECT_NAME:STATIC")
 
@@ -64,6 +69,13 @@ if __name__ == "__main__":
     platform = emulation.add_mach(board)
     platform.load_repl(f"{build_path}/{board}.repl")
     platform.load_elf(f"{build_path}/zephyr/zephyr.elf")
+
+    if args.debug:
+        platform.StartGdbServer(3333)
+        print("gdb server started at :3333")
+        print("Press ENTER to start simulation")
+
+        input()
 
     # create pty terminal for UART with logs
     console_uart = get_zephyr_console_uart(board)
@@ -88,11 +100,19 @@ if __name__ == "__main__":
     print("Starting Renode simulation. Press CTRL+C to exit.")
     emulation.StartAll()
 
+    logs_tail = ""
     while True:
         try:
-            logs = console.read_all().decode()
+            logs = console.read_all().decode(errors="ignore")
+
             print(logs, end="", flush=True)
-            if "demo_app" == project_name and "inference done" in logs:
+
+            logs_tail = logs_tail.split("\n")[-1] + logs if logs_tail else logs
+            if (
+                "demo_app" == project_name
+                and "I: inference done" in logs_tail
+                and "\n" in logs_tail
+            ):
                 break
         except KeyboardInterrupt:
             print("Exiting...")
