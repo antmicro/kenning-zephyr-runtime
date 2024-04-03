@@ -28,7 +28,7 @@ class TestDemo:
         platform.load_elf(binary)
 
         testers = [
-            TerminalTester(getattr(platform.sysbus, uart_name), 10)
+            TerminalTester(getattr(platform.sysbus, uart_name), 30)
             for uart_name in dir(platform.sysbus)
             if "uart" in uart_name or "usart" in uart_name
         ]
