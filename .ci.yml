@@ -22,8 +22,12 @@ image: $CI_IMAGE
             stm32f746g_disco
             hifive_unleashed
     before_script:
-        - scripts/prepare_zephyr_env.sh
-        - scripts/prepare_modules.sh
+        - mkdir -p $HOME/.local/opt
+        - tar xzf env.tar.gz
+        - cp -r env/.venv .
+        - cp -r env/zephyr-sdk $HOME/.local/opt/
+        - cp -r env/zephyr-workspace/* ..
+        - cp -r env/zephyr-workspace/.west ..
         - mkdir -p artifacts
     script:
         - |
@@ -38,6 +42,8 @@ image: $CI_IMAGE
               python -m west build -p always -b ${BOARD} ${APP} -- -DEXTRA_CONF_FILE=${RUNTIME_CONF} ${EXTRA_ARGS}
               cp build/zephyr/zephyr.elf artifacts/${ELF_PREFIX}-${RUNTIME}-${BOARD_NAME}.elf
           done
+    dependencies:
+        - prepare-env
     artifacts:
         paths:
             - artifacts/*.elf
@@ -54,6 +60,7 @@ variables:
 
 stages:
     - lint
+    - prepare-env
     - build
     - tests
 
@@ -63,6 +70,30 @@ pre-commit:
     stage: lint
     script:
         - pre-commit run --all-files
+
+prepare-env:
+    <<: *ace
+    <<: *common_only
+    stage: prepare-env
+    script:
+        - scripts/prepare_zephyr_env.sh
+        - scripts/prepare_modules.sh
+        - mkdir env
+        - mkdir env/zephyr-workspace
+        - cp -r .venv env
+        - cp -r $HOME/.local/opt/zephyr-sdk env
+        - cp -r ../.west env/zephyr-workspace
+        - cp -r ../dlpack env/zephyr-workspace
+        - cp -r ../iree env/zephyr-workspace
+        - cp -r ../modules env/zephyr-workspace
+        - cp -r ../tflite-micro env/zephyr-workspace
+        - cp -r ../tvm env/zephyr-workspace
+        - cp -r ../zephyr env/zephyr-workspace
+        - tar czf env.tar.gz env
+    artifacts:
+        paths:
+            - env.tar.gz
+        expire_in: 1 day
 
 build-stub:
     extends: .build
@@ -163,10 +194,17 @@ unit-tests:
     <<: *common_only
     stage: tests
     before_script:
-        - scripts/prepare_zephyr_env.sh
+        - mkdir -p $HOME/.local/opt
+        - tar xzf env.tar.gz
+        - cp -r env/.venv .
+        - cp -r env/zephyr-sdk $HOME/.local/opt/
+        - cp -r env/zephyr-workspace/* ..
+        - cp -r env/zephyr-workspace/.west ..
     script:
         - source .venv/bin/activate
         - python -m west twister -T tests -p unit_testing
+    dependencies:
+        - prepare-env
     artifacts:
         paths:
             - twister-out/unit_testing/lib/kenning_inference_lib/**/*.log
