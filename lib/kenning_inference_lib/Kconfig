@@ -43,6 +43,7 @@ config KENNING_COMMUNICATION_PROTOCOL_NONE
 config KENNING_COMMUNICATION_PROTOCOL_UART
         bool
         prompt "UART protocol"
+        select UART_SIFIVE_PORT_1 if UART_SIFIVE
 
 endchoice
 

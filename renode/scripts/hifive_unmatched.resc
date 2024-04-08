@@ -1,0 +1,30 @@
+mach create "hifive_unmatched"
+
+machine LoadPlatformDescription $ORIGIN/../../build/hifive_unmatched.repl
+
+# Enable UART connection
+emulation CreateUartPtyTerminal "term-log" "/tmp/uart-log"
+connector Connect sysbus.uart0 term-log
+
+emulation CreateUartPtyTerminal "term" "/tmp/uart"
+connector Connect sysbus.uart1 term
+
+sysbus.cpu0 EnableRiscvOpcodesCounting
+sysbus.cpu0 EnableVectorOpcodesCounting
+
+sysbus.cpu1 EnableVectorOpcodesCounting
+sysbus.cpu2 EnableVectorOpcodesCounting
+sysbus.cpu3 EnableVectorOpcodesCounting
+sysbus.cpu4 EnableVectorOpcodesCounting
+
+sysbus.u74_1 EnableRiscvOpcodesCounting
+sysbus.u74_2 EnableRiscvOpcodesCounting
+sysbus.u74_3 EnableRiscvOpcodesCounting
+sysbus.u74_4 EnableRiscvOpcodesCounting
+
+sysbus.u74_1 EnableVectorOpcodesCounting
+sysbus.u74_2 EnableVectorOpcodesCounting
+sysbus.u74_3 EnableVectorOpcodesCounting
+sysbus.u74_4 EnableVectorOpcodesCounting
+
+sysbus LoadELF $bin
