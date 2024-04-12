@@ -12,8 +12,8 @@ PROJECT_ROOT=$(realpath $(pwd))
 
 # prepare venv for the project
 if [ ! -d ".venv" ]; then
-    if [[ ! -z "$CI" ]]; then
-        # include global packages when run in CI
+    if [[ ! -z "$CI" ]] || [[ -f /.dockerenv ]]; then
+        # include global packages when run in CI or docker container
         python3 -m venv .venv --system-site-packages
     else
         python3 -m venv .venv
