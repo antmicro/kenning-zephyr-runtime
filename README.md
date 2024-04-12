@@ -13,11 +13,81 @@ This repository provides:
 * `kenning-zephyr-runtime` app - a Zephyr application used by [Kenning](https://github.com/antmicro/kenning) for evaluating models and runtimes on devices.
 * demo application (`demo_app`) - a Zephyr application that uses `kenning_inference_lib` to run gesture recognition on sample data.
 
+## Quickstart
+
+This is the minimal set of steps to build the runtime and run demo application or Kenning inference server.
+
+The easiest way to obtain environment with all dependences is to [use prepared Docker image](#using-the-docker-environment)
+
+```
+mkdir zephyr-workspace && cd zephyr-workspace
+docker run --rm -it -v $(pwd):$(pwd) -w $(pwd) ghcr.io/antmicro/kenning-zephyr-runtime:latest /bin/bash
+```
+
+Now clone this repository and install the latest Zephyr SDK
+
+```
+git clone https://github.com/antmicro/kenning-zephyr-runtime
+cd kenning-zephyr-runtime/
+./scripts/prepare_zephyr_env.sh
+./scripts/prepare_modules.sh
+source .venv/bin/activate
+```
+
+### Building and running demo app
+
+At this point you should be able to build the demo app and run it
+
+```
+west build -p always -b stm32f746g_disco demo_app -- -DEXTRA_CONF_FILE=tvm.conf
+west build -t board-repl
+python ./scripts/run_renode.py
+```
+
+The output should look similar as in [demo app section](#demo-application-using-Kenning-inference-library).
+
+### Building inference server app and benchmarking with Kenning
+
+To build Kenning inference server app run
+
+```
+west build -p always -b stm32f746g_disco app -- -DEXTRA_CONF_FILE=tvm.conf
+```
+
+And then execute Kenning to compile the model, run benchmark and generate report
+
+```
+kenning optimize test report
+    --json-cfg ./kenning-scenarios/renode-zephyr-tvm-magic-wand-inference.json
+    --measurements ./results-tvm.json
+    --report-path ./report-tvm.md
+    --report-types performance classification renode_stats
+    --to-html
+    --verbosity INFO
+```
+
+The report will be saved as `report-tvm/report-tvm.html`.
+
 ## Building the project
 
 This section contains instructions for preparing Zephyr and building the runtime.
 
-### System prerequisites
+### Using the Docker environment
+
+The Docker environment with all the necessary components is available in [Dockerfile](./Dockerfile).
+The built image can be pulled with:
+
+```
+docker pull ghcr.io/antmicro/kenning-zephyr-runtime:latest
+```
+
+or you can build the image with
+
+```
+docker build -t kenning-zephyr-runtime:local .
+```
+
+### Installing the dependencies in the system
 
 To be able to build and use the project, you need the folowing dependencies:
 
