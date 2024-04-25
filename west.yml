@@ -13,8 +13,8 @@ manifest:
     - name: dmlc
       url-base: https://github.com/dmlc
 
-    - name: openxla
-      url-base: https://github.com/openxla
+    - name: iree-org
+      url-base: https://github.com/iree-org
 
   projects:
     - name: zephyr
@@ -40,7 +40,7 @@ manifest:
       revision: main
 
     - name: iree
-      remote: openxla
+      remote: iree-org
       revision: 2f40854c548cbe082190d1dd1691a342ffd9006b
       submodules:
         - path: third_party/flatcc
