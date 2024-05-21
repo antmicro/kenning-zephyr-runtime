@@ -38,7 +38,7 @@ if [ ! -d "$ZEPHYR_SDK_PATH" ]; then
     for SDK_IDX in 0 1 2
     do
         # determine latest SDK version
-        ZEPHYR_SDK_VERSION=$(curl "https://api.github.com/repos/zephyrproject-rtos/sdk-ng/tags" | jq -r "[.[].name | select(.|test(\"-\")|not)][$SDK_IDX]")
+        ZEPHYR_SDK_VERSION=$(curl "https://api.github.com/repos/zephyrproject-rtos/sdk-ng/tags" | jq -r "[.[].name | select(.|test(\"-\")|not)][$SDK_IDX]" | sed "/v0.16.6/d")
         ZEPHYR_SDK_VERSION="${ZEPHYR_SDK_VERSION:1}"
 
         ZEPHYR_SDK_ARCHIVE="zephyr-sdk-${ZEPHYR_SDK_VERSION}_linux-x86_64_minimal.tar.xz"
