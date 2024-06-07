@@ -17,8 +17,6 @@ image: $CI_IMAGE
         ELF_PREFIX: kenning-zephyr-runtime
         BOARDS: >
             b_u585i_iot02a
-            nrf52840dk/nrf52840
-            nrf52840dongle
             stm32f746g_disco
             hifive_unleashed
     before_script:
