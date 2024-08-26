@@ -24,6 +24,10 @@ class TestDemo:
         emulation = Emulation()
 
         platform = emulation.add_mach(board)
+        if platform is None:
+            # workaround for some Renode versions
+            platform = emulation.get_mach(board)
+
         platform.load_repl(repl_path.resolve())
         platform.load_elf(binary)
 
@@ -36,7 +40,14 @@ class TestDemo:
         emulation.StartAll()
 
         assert any(
-            tester.WaitFor("I: inference done", includeUnfinishedLine=True)
+            tester.WaitFor(
+                "I: inference done",
+                timeout=None,
+                treatAsRegex=False,
+                includeUnfinishedLine=True,
+                pauseEmulation=False,
+                matchNextLine=False,
+            )
             for tester in testers
         ), "\n\n".join(tester.GetReport() for tester in testers)
 
