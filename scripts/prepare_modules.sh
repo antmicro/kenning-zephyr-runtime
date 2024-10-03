@@ -14,10 +14,8 @@ do
     mkdir -p "../zephyr/modules/${module}"
     mkdir -p "../${module}/zephyr"
     cp "./modules/${module}/module.yml" "../${module}/zephyr"
-    cp "./modules/${module}/Kconfig" "../zephyr/modules/${module}/"
-    cp "./modules/${module}/CMakeLists.txt" "../zephyr/modules/${module}/"
+    cp -r ./modules/${module}/* "../zephyr/modules/${module}/"
 done
 
 cp "./modules/tvm/crt_config.h" "../tvm/include/"
 cp "./modules/iree/zephyr_config.h" "../iree/zephyr/"
-cp -r "./modules/iree/flatcc" "../zephyr/modules/iree/"

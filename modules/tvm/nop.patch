@@ -1,0 +1,15 @@
+*** src/runtime/crt/graph_executor/graph_executor.c	2024-10-03 12:02:13.415213550 +0200
+--- src/runtime/crt/graph_executor/graph_executor_patched.c	2024-10-03 12:29:19.929913868 +0200
+***************
+*** 1141,1150 ****
+        t->shape[0] = arg_ptr.shape_data[idx];
+      }
+    }
+-   if (!strcmp(param->func_name, "__nop") || !strcmp(param->func_name, "__copy")) {
+-     fprintf(stderr, "%s function is not yet supported.", param->func_name);
+-     status = -1;
+-   }
+  
+    TVMArgs targs = TVMArgs_Create(arg_ptr.arg_values, arg_ptr.arg_tcodes, arg_ptr.arg_values_count);
+    status = TVMPackedFunc_InitModuleFunc(pf, executor->module_handle, param->func_name, &targs);
+--- 1141,1146 ----
