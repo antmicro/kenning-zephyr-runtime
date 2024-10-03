@@ -426,3 +426,5 @@ status_t runtime_get_statistics(const size_t statistics_buffer_size, uint8_t *st
 
     return STATUS_OK;
 }
+
+status_t runtime_deinit() { return STATUS_OK; }

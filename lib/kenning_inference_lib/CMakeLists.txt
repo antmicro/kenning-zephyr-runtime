@@ -93,6 +93,8 @@ elseif(${CONFIG_KENNING_ML_RUNTIME_IREE})
   elseif()
     message(FATAL_ERROR "Invalid IREE loader")
   endif()
+elseif(${CONFIG_KENNING_ML_RUNTIME_LLEXT})
+  list(APPEND runtime_src "runtimes/llext/llext.c")
 endif()
 
 zephyr_library_sources(${core_src} ${protocol_src} ${runtime_src})

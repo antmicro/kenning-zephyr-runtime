@@ -20,7 +20,7 @@
         return KENNING_PROTOCOL_STATUS_CLIENT_DISCONNECTED;                 \
     }
 
-#define MAX_MESSAGE_SIZE_BYTES (64UL * 1024UL) // 64 KB
+#define MAX_MESSAGE_SIZE_BYTES (80UL * 1024UL)
 
 #define MESSAGE_SIZE_PAYLOAD(msg_size) ((msg_size) - sizeof(message_type_t))
 #define MESSAGE_SIZE_FULL(msg_size) (sizeof(message_t) + MESSAGE_SIZE_PAYLOAD(msg_size))
@@ -28,15 +28,18 @@
 /**
  * An enum that describes message type
  */
-#define MESSAGE_TYPES(TYPE)    \
-    TYPE(MESSAGE_TYPE_OK)      \
-    TYPE(MESSAGE_TYPE_ERROR)   \
-    TYPE(MESSAGE_TYPE_DATA)    \
-    TYPE(MESSAGE_TYPE_MODEL)   \
-    TYPE(MESSAGE_TYPE_PROCESS) \
-    TYPE(MESSAGE_TYPE_OUTPUT)  \
-    TYPE(MESSAGE_TYPE_STATS)   \
-    TYPE(MESSAGE_TYPE_IOSPEC)  \
+#define MESSAGE_TYPES(TYPE)           \
+    TYPE(MESSAGE_TYPE_OK)             \
+    TYPE(MESSAGE_TYPE_ERROR)          \
+    TYPE(MESSAGE_TYPE_DATA)           \
+    TYPE(MESSAGE_TYPE_MODEL)          \
+    TYPE(MESSAGE_TYPE_PROCESS)        \
+    TYPE(MESSAGE_TYPE_OUTPUT)         \
+    TYPE(MESSAGE_TYPE_STATS)          \
+    TYPE(MESSAGE_TYPE_IOSPEC)         \
+    TYPE(MESSAGE_TYPE_OPTIMIZERS)     \
+    TYPE(MESSAGE_TYPE_OPTIMIZE_MODEL) \
+    TYPE(MESSAGE_TYPE_RUNTIME)        \
     TYPE(NUM_MESSAGE_TYPES)
 
 typedef enum
@@ -71,6 +74,9 @@ typedef struct __attribute__((packed))
     message_type_t message_type;
     uint8_t payload[0];
 } message_t;
+
+/* Max length of LLEXT name */
+#define LLEXT_NAME_MAX_LEN 32
 
 /**
  * Waits for a message to be received

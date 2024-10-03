@@ -10,6 +10,7 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 #ifndef __UNIT_TEST__
 #define ut_static static
@@ -19,6 +20,14 @@
 
 /* checks if pointer is valid */
 #define IS_VALID_POINTER(ptr) (NULL != (ptr))
+
+/* frees a pointer if not NULL and sets it to NULL */
+#define FREE_POINTER(ptr) \
+    if (NULL != (ptr))    \
+    {                     \
+        free(ptr);        \
+        ptr = NULL;       \
+    }
 
 /* checks if pointer is NULL and returns error when it is true */
 #define RETURN_ERROR_IF_POINTER_INVALID(ptr, error_status) \

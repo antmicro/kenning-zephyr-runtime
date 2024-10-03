@@ -30,9 +30,11 @@ status_t init_server()
     status = protocol_init();
     CHECK_INIT_STATUS_RET(status, "protocol_init returned 0x%x (%s)", status, get_status_str(status));
 
-    // initialize model
+// initialize model if LLEXT is not used
+#if !defined(CONFIG_LLEXT)
     status = model_init();
     CHECK_INIT_STATUS_RET(status, "model_init returned 0x%x (%s)", status, get_status_str(status));
+#endif
 
     LOG_INF("Inference server started");
     return STATUS_OK;

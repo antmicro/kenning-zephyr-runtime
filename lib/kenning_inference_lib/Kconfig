@@ -80,6 +80,11 @@ config KENNING_ML_RUNTIME_IREE
         prompt "IREE runtime"
         select ZEPHYR_IREE_MODULE
 
+config KENNING_ML_RUNTIME_LLEXT
+        bool
+        prompt "LLEXT runtime"
+        select LLEXT
+
 endchoice
 
 config KENNING_TVM_MODEL

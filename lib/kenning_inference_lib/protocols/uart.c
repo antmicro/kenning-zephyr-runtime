@@ -72,8 +72,6 @@ status_t protocol_write_data(const uint8_t *data, size_t data_length)
 
 status_t protocol_read_data(uint8_t *data, size_t data_length)
 {
-    RETURN_ERROR_IF_POINTER_INVALID(data, PROTOCOL_STATUS_INV_PTR);
-
     if (!g_uart_initialized)
     {
         return PROTOCOL_STATUS_UNINIT;
@@ -97,7 +95,10 @@ status_t protocol_read_data(uint8_t *data, size_t data_length)
 #endif // CONFIG_NRF_UART_SLEEP_AFTER_POLL_WORKAROUND
         if (0 == rx_status)
         {
-            data[data_read++] = c;
+            if (IS_VALID_POINTER(data))
+            {
+                data[data_read++] = c;
+            }
             start_timer = k_uptime_get();
         }
         else if (k_uptime_get() - start_timer > UART_TIMEOUT_S * 1000)

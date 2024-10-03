@@ -41,7 +41,7 @@ status_t protocol_init();
 status_t protocol_write_data(const uint8_t *data, size_t data_length);
 
 /**
- * Reads bytes into given buffer
+ * Reads bytes into given buffer. If the buffer pointer is NULL, then data is read and ignored
  *
  * @param data buffer for results
  * @param data_length length of the buffer

@@ -4,12 +4,20 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include "kenning_inference_lib/core/callbacks.h"
-#include "kenning_inference_lib/core/model.h"
+#include <kenning_inference_lib/core/callbacks.h>
+#include <kenning_inference_lib/core/model.h>
+#include <kenning_inference_lib/core/runtime_wrapper.h>
+#include <kenning_inference_lib/core/utils.h>
+
+#ifdef CONFIG_LLEXT
+#include <zephyr/llext/buf_loader.h>
+#include <zephyr/llext/llext.h>
+#endif // CONFIG_LLEXT
 
 #ifndef __UNIT_TEST__
 #include <zephyr/logging/log.h>
 #else // __UNIT_TEST__
+#include "mocks/llext.h"
 #include "mocks/log.h"
 #endif
 
@@ -22,13 +30,37 @@ const callback_ptr_t g_msg_callback[NUM_MESSAGE_TYPES] = {
 #undef ENTRY
 };
 
+extern const char *const MESSAGE_TYPE_STR[];
+
+/**
+ * Handles unsupported message
+ *
+ * @param request incoming message. It is overwritten with ERROR message
+ *
+ * @returns error status of the callback
+ */
+status_t unsupported_callback(message_t **request)
+{
+    status_t status = STATUS_OK;
+
+    RETURN_ERROR_IF_POINTER_INVALID(request, CALLBACKS_STATUS_INV_PTR);
+
+    LOG_WRN("Unsupported message received: %d (%s)", (*request)->message_type,
+            MESSAGE_TYPE_STR[(*request)->message_type]);
+
+    status = protocol_prepare_fail_resp(request);
+    RETURN_ON_ERROR(status, status);
+
+    return STATUS_OK;
+}
+
 /**
  * Handles OK message
  *
  * @param request incoming message. It is overwritten with NULL as there is no
  * response
  *
- * @returns error status of the runtime
+ * @returns error status of the callback
  */
 status_t ok_callback(message_t **request)
 {
@@ -45,7 +77,7 @@ status_t ok_callback(message_t **request)
  * @param request incoming message. It is overwritten with NULL as there is no
  * response
  *
- * @returns error status of the runtime
+ * @returns error status of the callback
  */
 status_t error_callback(message_t **request)
 {
@@ -63,7 +95,7 @@ status_t error_callback(message_t **request)
  * @param request incoming message. It is overwritten by the response message
  * (OK/ERROR message)
  *
- * @returns error status of the runtime
+ * @returns error status of the callback
  */
 status_t data_callback(message_t **request)
 {
@@ -88,7 +120,7 @@ status_t data_callback(message_t **request)
  * @param request incoming message. It is overwritten by the response message
  * (OK/ERROR message)
  *
- * @returns error status of the runtime
+ * @returns error status of the callback
  */
 status_t model_callback(message_t **request)
 {
@@ -112,7 +144,7 @@ status_t model_callback(message_t **request)
  * @param request incoming message. It is overwritten by the response message
  * (OK/ERROR message)
  *
- * @returns error status of the runtime
+ * @returns error status of the callback
  */
 status_t process_callback(message_t **request)
 {
@@ -136,7 +168,7 @@ status_t process_callback(message_t **request)
  * @param request incoming message. It is overwritten by the response message
  * (DATA message containing model output or ERROR message)
  *
- * @returns error status of the runtime
+ * @returns error status of the callback
  */
 status_t output_callback(message_t **request)
 {
@@ -161,7 +193,7 @@ status_t output_callback(message_t **request)
  * @param request incoming message. It is overwritten by the response message
  * (STATS message containing model statistics or ERROR message)
  *
- * @returns error status of the runtime
+ * @returns error status of the callback
  */
 status_t stats_callback(message_t **request)
 {
@@ -187,7 +219,7 @@ status_t stats_callback(message_t **request)
  * @param request incoming message. It is overwritten by the response message
  * (OK/ERROR message)
  *
- * @returns error status of the runtime
+ * @returns error status of the callback
  */
 status_t iospec_callback(message_t **request)
 {
@@ -204,3 +236,77 @@ status_t iospec_callback(message_t **request)
 
     return STATUS_OK;
 }
+
+#if defined(CONFIG_LLEXT) || defined(CONFIG_ZTEST)
+
+/**
+ * Handles RUNTIME message. It loads runtime provided as loadable linkable extension.
+ *
+ * @param request incoming message. It is overwritten by the response message (OK/ERROR message)
+ *
+ * @returns error status of the callback
+ */
+status_t runtime_callback(message_t **request)
+{
+    status_t status = STATUS_OK;
+    int llext_status = 0;
+
+    VALIDATE_REQUEST(MESSAGE_TYPE_RUNTIME, request);
+
+    size_t llext_size = MESSAGE_SIZE_PAYLOAD((*request)->message_size);
+
+    LOG_INF("Attempting to load %d", llext_size);
+
+    struct llext_buf_loader buf_loader = LLEXT_BUF_LOADER((*request)->payload, llext_size);
+    struct llext_loader *loader = &buf_loader.loader;
+    struct llext_load_param ldr_param = LLEXT_LOAD_PARAM_DEFAULT;
+
+    do
+    {
+        // deinitalize runtime
+        status = runtime_deinit();
+        BREAK_ON_ERROR(status);
+
+        // unload LLEXT if already exists
+        struct llext *p_llext = llext_by_name("runtime");
+        if (IS_VALID_POINTER(p_llext))
+        {
+            llext_teardown(p_llext);
+            llext_status = llext_unload(&p_llext);
+            if (0 != llext_status)
+            {
+                LOG_ERR("LLEXT runtime unload error: %d", llext_status);
+                status = CALLBACKS_STATUS_ERROR;
+                break;
+            }
+        }
+
+        // load LLEXT
+        llext_status = llext_load(loader, "runtime", &p_llext, &ldr_param);
+        llext_bringup(p_llext);
+        if (0 != llext_status)
+        {
+            LOG_ERR("LLEXT runtme load error: %d", llext_status);
+            status = CALLBACKS_STATUS_ERROR;
+            break;
+        }
+        LOG_INF("LLEXT loaded symbols (%d):", p_llext->exp_tab.sym_cnt);
+        for (int i = 0; i < p_llext->exp_tab.sym_cnt; ++i)
+        {
+            struct llext_symbol *sym = &p_llext->exp_tab.syms[i];
+            LOG_INF("%s at (0x%x)", sym->name, (uint32_t)sym->addr);
+        }
+
+    } while (0);
+
+    if (status == STATUS_OK)
+    {
+        status = model_init();
+    }
+
+    PREPARE_RESPONSE(status);
+
+    return status;
+}
+
+#endif // defined(CONFIG_LLEXT) || defined(CONFIG_ZTEST)

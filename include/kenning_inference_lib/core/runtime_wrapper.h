@@ -141,4 +141,11 @@ status_t runtime_get_model_output(uint8_t *model_output);
 status_t runtime_get_statistics(const size_t statistics_buffer_size, uint8_t *statistics_buffer,
                                 size_t *statistics_size);
 
+/**
+ * Deinitializes runtime
+ *
+ * @returns status of the runtime
+ */
+status_t runtime_deinit();
+
 #endif // KENNING_INFERENCE_LIB_CORE_RUNTIME_WRAPPER_H_

@@ -49,11 +49,19 @@ status_t protocol_recv_msg(message_t **msg)
     if (msg_size > MAX_MESSAGE_SIZE_BYTES)
     {
         LOG_ERR("message too big: %u", msg_size);
+        // read the rest of the data
+        status = protocol_read_data(NULL, msg_size);
+
         return KENNING_PROTOCOL_STATUS_MSG_TOO_BIG;
     }
     if (msg_size < sizeof(message_type_t))
     {
         LOG_ERR("invalid message size: %u", msg_size);
+        if (msg_size > 0)
+        {
+            // read the rest of the message
+            status = protocol_read_data(NULL, msg_size);
+        }
         return KENNING_PROTOCOL_STATUS_INV_MSG_SIZE;
     }
 

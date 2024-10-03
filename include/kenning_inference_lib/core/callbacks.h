@@ -43,24 +43,46 @@ GENERATE_MODULE_STATUSES(CALLBACKS);
         LOG_DBG(log_format, ##log_args);                                \
     } while (0);
 
+#define PREPARE_RESPONSE(status)                                  \
+    do                                                            \
+    {                                                             \
+        status_t resp_status = STATUS_OK;                         \
+        if (STATUS_OK == status)                                  \
+        {                                                         \
+            resp_status = protocol_prepare_success_resp(request); \
+            RETURN_ON_ERROR(resp_status, resp_status);            \
+        }                                                         \
+        else                                                      \
+        {                                                         \
+            resp_status = protocol_prepare_fail_resp(request);    \
+            RETURN_ON_ERROR(resp_status, resp_status);            \
+        }                                                         \
+    } while (0);
 /**
  * Type of callback function
  */
 typedef status_t (*callback_ptr_t)(message_t **);
 
+#if !defined(CONFIG_LLEXT) && !defined(CONFIG_ZTEST)
+#define runtime_callback unsupported_callback
+#endif // !defined(CONFIG_LLEXT) && !defined(CONFIG_ZTEST)
+
 /**
  * List of callbacks for each message type
  */
-#define CALLBACKS_TABLE(ENTRY)                    \
-    /*    MessageType      Callback_function */   \
-    ENTRY(MESSAGE_TYPE_OK, ok_callback)           \
-    ENTRY(MESSAGE_TYPE_ERROR, error_callback)     \
-    ENTRY(MESSAGE_TYPE_DATA, data_callback)       \
-    ENTRY(MESSAGE_TYPE_MODEL, model_callback)     \
-    ENTRY(MESSAGE_TYPE_PROCESS, process_callback) \
-    ENTRY(MESSAGE_TYPE_OUTPUT, output_callback)   \
-    ENTRY(MESSAGE_TYPE_STATS, stats_callback)     \
-    ENTRY(MESSAGE_TYPE_IOSPEC, iospec_callback)
+#define CALLBACKS_TABLE(ENTRY)                               \
+    /*    MessageType      Callback_function */              \
+    ENTRY(MESSAGE_TYPE_OK, ok_callback)                      \
+    ENTRY(MESSAGE_TYPE_ERROR, error_callback)                \
+    ENTRY(MESSAGE_TYPE_DATA, data_callback)                  \
+    ENTRY(MESSAGE_TYPE_MODEL, model_callback)                \
+    ENTRY(MESSAGE_TYPE_PROCESS, process_callback)            \
+    ENTRY(MESSAGE_TYPE_OUTPUT, output_callback)              \
+    ENTRY(MESSAGE_TYPE_STATS, stats_callback)                \
+    ENTRY(MESSAGE_TYPE_IOSPEC, iospec_callback)              \
+    ENTRY(MESSAGE_TYPE_OPTIMIZERS, unsupported_callback)     \
+    ENTRY(MESSAGE_TYPE_OPTIMIZE_MODEL, unsupported_callback) \
+    ENTRY(MESSAGE_TYPE_RUNTIME, runtime_callback)
 
 #define ENTRY(msg_type, callback_func) status_t callback_func(message_t **);
 CALLBACKS_TABLE(ENTRY)
