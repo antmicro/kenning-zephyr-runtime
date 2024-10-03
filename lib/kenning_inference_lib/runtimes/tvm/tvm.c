@@ -8,6 +8,7 @@
 
 #include <dlpack/dlpack.h>
 #include <stdbool.h>
+#include <stdio.h>
 #include <string.h>
 #include <tvm/runtime/c_backend_api.h>
 #include <tvm/runtime/c_runtime_api.h>
@@ -18,6 +19,9 @@
 #include <tvm/runtime/crt/module.h>
 #include <tvm/runtime/crt/packed_func.h>
 #include <zephyr/logging/log.h>
+#if defined(CONFIG_LLEXT)
+#include <zephyr/llext/symbol.h>
+#endif // defined(CONFIG_LLEXT)
 
 #include "tvm.h"
 
@@ -34,7 +38,6 @@ LOG_MODULE_REGISTER(tvm_runtime, CONFIG_RUNTIME_WRAPPER_LOG_LEVEL);
 GENERATE_MODULE_STATUSES_STR(RUNTIME_WRAPPER);
 
 extern MlModel g_model_struct;
-extern const TVMModule g_tvm_module;
 
 static bool g_tvm_runtime_initialized = false;
 static const DLDevice g_device = {kDLCPU, 1};
@@ -78,9 +81,6 @@ status_t runtime_init()
         tvm_status = TVMInitializeRuntime();
         CHECK_TVM_STATUS_BREAK(status, tvm_status, "TVM runtime init error 0x%x", tvm_status);
 
-        tvm_status = TVMModCreateFromCModule(&g_tvm_module, &g_tvm_module_handle);
-        CHECK_TVM_STATUS_BREAK(status, tvm_status, "TVM module create error 0x%x", tvm_status);
-
         g_tvm_runtime_initialized = true;
     } while (0);
 
@@ -112,6 +112,16 @@ status_t runtime_load_model_weights(const uint8_t *model_weights_data, const siz
             status = RUNTIME_WRAPPER_STATUS_INV_ARG;
             break;
         }
+
+        const TVMModule *tvm_module = TVMSystemLibEntryPoint();
+        if (!IS_VALID_POINTER(tvm_module))
+        {
+            LOG_ERR("Invalid TVM lib entry point");
+            return RUNTIME_WRAPPER_STATUS_INV_PTR;
+        }
+
+        tvm_status = TVMModCreateFromCModule(tvm_module, &g_tvm_module_handle);
+        CHECK_TVM_STATUS_BREAK(status, tvm_status, "TVM module create error 0x%x", tvm_status);
 
         tvm_status = TVMGraphExecutor_Create(tvm_graph_json_ptr(tvm_graph), g_tvm_module_handle, &g_device,
                                              &gp_tvm_graph_executor);
@@ -216,3 +226,15 @@ status_t runtime_get_statistics(const size_t statistics_buffer_size, uint8_t *st
 
     return STATUS_OK;
 }
+
+status_t runtime_deinit() { return STATUS_OK; }
+
+#if defined(CONFIG_LLEXT)
+LL_EXTENSION_SYMBOL(runtime_init);
+LL_EXTENSION_SYMBOL(runtime_load_model_weights);
+LL_EXTENSION_SYMBOL(runtime_load_model_input);
+LL_EXTENSION_SYMBOL(runtime_run_model);
+LL_EXTENSION_SYMBOL(runtime_get_model_output);
+LL_EXTENSION_SYMBOL(runtime_get_statistics);
+LL_EXTENSION_SYMBOL(runtime_deinit);
+#endif // defined(CONFIG_LLEXT)

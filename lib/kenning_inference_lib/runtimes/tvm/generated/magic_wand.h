@@ -20,7 +20,7 @@
     FUNC(tvmgen_default_fused_nn_max_pool2d_1)         \
     FUNC(tvmgen_default_fused_nn_softmax)
 
-#define TVMGEN_FUNCTIONS_COUNT "\x09"
+#define TVMGEN_FUNCTIONS_COUNT "\x08"
 
 #define TVMGEN_DECLARE(func_name)                                                                      \
     extern int32_t func_name(void *args, int32_t *arg_type_ids, int32_t num_args, void *out_ret_value, \

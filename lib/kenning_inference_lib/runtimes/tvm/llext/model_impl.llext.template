@@ -1,0 +1,9 @@
+{{MODEL_SRC}}
+
+#include <zephyr/llext/symbol.h>
+
+#define TVMGEN_FUNCTIONS(FUNC) {{TVMGEN_FUNCTIONS}}
+
+#define LLEXT_TVM(F) LL_EXTENSION_SYMBOL(F);
+
+TVMGEN_FUNCTIONS(LLEXT_TVM)

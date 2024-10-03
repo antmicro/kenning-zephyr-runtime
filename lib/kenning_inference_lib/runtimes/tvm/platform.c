@@ -15,16 +15,26 @@
 
 #include "tvm.h"
 
-LOG_MODULE_REGISTER(tvm_platform, CONFIG_RUNTIME_WRAPPER_LOG_LEVEL);
+LOG_MODULE_REGISTER(tvm_platform, CONFIG_KENNING_TVM_HEAP_SIZE);
 
+#if defined(EXTENSION_TVM)
+struct k_heap tvm_heap;
+
+__attribute__((aligned(8))) uint8_t tvm_heap_data[1024 * CONFIG_KENNING_TVM_HEAP_SIZE];
+
+void local_heap_init() { k_heap_init(&tvm_heap, tvm_heap_data, 1024 * CONFIG_KENNING_TVM_HEAP_SIZE); }
+
+__attribute__((section(".init_array"))) void *init_array[] = {local_heap_init};
+#else
 K_HEAP_DEFINE(tvm_heap, 1024 * CONFIG_KENNING_TVM_HEAP_SIZE);
+#endif
 
 volatile timing_t g_microtvm_start_time, g_microtvm_end_time;
 int g_microtvm_timer_running = 0;
 
-static uint64_t total_allocated = 0;
-static uint64_t total_freed = 0;
-static uint64_t peak_allocated = 0;
+static uint64_t g_total_allocated = 0;
+static uint64_t g_total_freed = 0;
+static uint64_t g_peak_allocated = 0;
 
 void k_sys_fatal_error_handler(unsigned int reason, const z_arch_esf_t *esf)
 {
@@ -58,10 +68,10 @@ tvm_crt_error_t TVMPlatformMemoryAllocate(size_t num_bytes, DLDevice dev, void *
     *out_ptr = k_heap_alloc(&tvm_heap, num_bytes, K_NO_WAIT);
     if (*out_ptr != NULL)
     {
-        total_allocated += sys_heap_usable_size(&(tvm_heap.heap), *out_ptr);
-        if (total_allocated - total_freed > peak_allocated)
+        g_total_allocated += sys_heap_usable_size(&(tvm_heap.heap), *out_ptr);
+        if (g_total_allocated - g_total_freed > g_peak_allocated)
         {
-            peak_allocated = total_allocated - total_freed;
+            g_peak_allocated = g_total_allocated - g_total_freed;
         }
     }
     return (*out_ptr == NULL) ? kTvmErrorPlatformNoMemory : kTvmErrorNoError;
@@ -73,7 +83,7 @@ tvm_crt_error_t TVMPlatformMemoryFree(void *ptr, DLDevice dev)
     {
         return kTvmErrorNoError;
     }
-    total_freed += sys_heap_usable_size(&(tvm_heap.heap), ptr);
+    g_total_freed += sys_heap_usable_size(&(tvm_heap.heap), ptr);
     k_heap_free(&tvm_heap, ptr);
     return kTvmErrorNoError;
 }
@@ -137,9 +147,16 @@ tvm_crt_error_t TVMPlatformInitialize()
     return kTvmErrorNoError;
 }
 
+const uint8_t *tvm_graph_json_ptr(const tvm_graph_t *tvm_graph) { return tvm_graph->graph_data; }
+
+const uint8_t *tvm_graph_params_ptr(const tvm_graph_t *tvm_graph)
+{
+    return &(tvm_graph->graph_data[tvm_graph->graph_json_size]);
+}
+
 void tvm_get_allocation_stats(tvm_alloc_stats_t *tvm_alloc_stats)
 {
-    tvm_alloc_stats->total_allocated = total_allocated;
-    tvm_alloc_stats->total_freed = total_freed;
-    tvm_alloc_stats->peak_allocated = peak_allocated;
+    tvm_alloc_stats->total_allocated = g_total_allocated;
+    tvm_alloc_stats->total_freed = g_total_freed;
+    tvm_alloc_stats->peak_allocated = g_peak_allocated;
 }

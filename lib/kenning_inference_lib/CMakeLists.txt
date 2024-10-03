@@ -2,7 +2,34 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-zephyr_library()
+zephyr_library_named(kenning_inference_lib)
+
+macro(appendTVMModel runtime_src)
+  if("${CONFIG_KENNING_TVM_MODEL}" STREQUAL "magic_wand")
+    list(APPEND ${runtime_src} "runtimes/tvm/generated/magic_wand.c")
+    set_source_files_properties("runtimes/tvm/generated/magic_wand.c" PROPERTIES COMPILE_FLAGS "-Wno-unused-variable")
+    add_compile_definitions(TVM_MODEL_MAGIC_WAND)
+  elseif("${CONFIG_KENNING_TVM_MODEL}" STREQUAL "gen_model")
+    add_custom_command(
+      OUTPUT
+        runtimes/tvm/generated/model_impl.c
+        runtimes/tvm/generated/model_impl.h
+      COMMAND
+        python3 ${CMAKE_SOURCE_DIR}/../scripts/gen_tvm_ops.py
+          --input-path ${CONFIG_KENNING_MODEL_PATH}
+          --output-path runtimes/tvm/generated/model_impl.graph_data
+          --template-header-path ${CMAKE_CURRENT_SOURCE_DIR}/runtimes/tvm/generated/model_impl.h.template
+          --board ${BOARD}
+          ${CONFIG_KENNING_MODEL_COMPILER_ARGS}
+    )
+    list(APPEND ${runtime_src} "runtimes/tvm/generated/model_impl.c")
+    set_source_files_properties("runtimes/tvm/generated/model_impl.c" PROPERTIES COMPILE_FLAGS "-Wno-unused-variable")
+    add_compile_definitions(TVM_MODEL_MODEL_IMPL)
+    include_directories(${CMAKE_CURRENT_BINARY_DIR}/runtimes/tvm/)
+  else()
+    message(FATAL_ERROR "Invalid TVM model selected: ${CONFIG_KENNING_TVM_MODEL}.")
+  endif()
+endmacro()
 
 set(core_src "")
 list(APPEND core_src "core/model.c")
@@ -27,31 +54,8 @@ if(${CONFIG_KENNING_ML_RUNTIME_STUB})
 elseif(${CONFIG_KENNING_ML_RUNTIME_TVM})
   list(APPEND runtime_src "runtimes/tvm/tvm.c")
   list(APPEND runtime_src "runtimes/tvm/platform.c")
+  appendTVMModel(runtime_src)
 
-  if("${CONFIG_KENNING_TVM_MODEL}" STREQUAL "magic_wand")
-    list(APPEND runtime_src "runtimes/tvm/generated/magic_wand.c")
-    set_source_files_properties("runtimes/tvm/generated/magic_wand.c" PROPERTIES COMPILE_FLAGS "-Wno-unused-variable")
-    add_compile_definitions(TVM_MODEL_MAGIC_WAND)
-  elseif("${CONFIG_KENNING_TVM_MODEL}" STREQUAL "gen_model")
-    add_custom_command(
-      OUTPUT
-        runtimes/tvm/generated/model_impl.c
-        runtimes/tvm/generated/model_impl.h
-      COMMAND
-        python3 ${CMAKE_SOURCE_DIR}/../scripts/gen_tvm_ops.py
-          --input-path ${CONFIG_KENNING_MODEL_PATH}
-          --output-path runtimes/tvm/generated/model_impl.graph_data
-          --template-header-path ${CMAKE_CURRENT_SOURCE_DIR}/runtimes/tvm/generated/model_impl.h.template
-          --board ${BOARD}
-          ${CONFIG_KENNING_MODEL_COMPILER_ARGS}
-    )
-    list(APPEND runtime_src "runtimes/tvm/generated/model_impl.c")
-    set_source_files_properties("runtimes/tvm/generated/model_impl.c" PROPERTIES COMPILE_FLAGS "-Wno-unused-variable")
-    add_compile_definitions(TVM_MODEL_MODEL_IMPL)
-    include_directories(${CMAKE_CURRENT_BINARY_DIR}/runtimes/tvm/)
-  else()
-    message(FATAL_ERROR "Invalid TVM model selected: ${CONFIG_KENNING_TVM_MODEL}.")
-  endif()
 elseif(${CONFIG_KENNING_ML_RUNTIME_TFLITE})
   list(APPEND runtime_src "runtimes/tflite/tflite.cpp")
   list(APPEND runtime_src "runtimes/tflite/tflite.c")
@@ -98,3 +102,36 @@ elseif(${CONFIG_KENNING_ML_RUNTIME_LLEXT})
 endif()
 
 zephyr_library_sources(${core_src} ${protocol_src} ${runtime_src})
+
+if(CONFIG_LLEXT)
+  if(CONFIG_ZEPHYR_TVM_MODULE)
+    set(tvm_runtime_src "")
+    list(APPEND tvm_runtime_src ${ZEPHYR_TVM_MODULE_DIR}/src/runtime/crt/common/crt_backend_api.c)
+    list(APPEND tvm_runtime_src ${ZEPHYR_TVM_MODULE_DIR}/src/runtime/crt/common/crt_runtime_api.c)
+    list(APPEND tvm_runtime_src ${ZEPHYR_TVM_MODULE_DIR}/src/runtime/crt/common/func_registry.c)
+    list(APPEND tvm_runtime_src ${ZEPHYR_TVM_MODULE_DIR}/src/runtime/crt/common/ndarray.c)
+    list(APPEND tvm_runtime_src ${ZEPHYR_TVM_MODULE_DIR}/src/runtime/crt/common/packed_func.c)
+    list(APPEND tvm_runtime_src ${ZEPHYR_TVM_MODULE_DIR}/src/runtime/crt/graph_executor/graph_executor.c)
+    list(APPEND tvm_runtime_src ${ZEPHYR_TVM_MODULE_DIR}/src/runtime/crt/graph_executor/load_json.c)
+    list(APPEND tvm_runtime_src ${ZEPHYR_TVM_MODULE_DIR}/src/runtime/crt/memory/page_allocator.c)
+    list(APPEND tvm_runtime_src ${ZEPHYR_TVM_MODULE_DIR}/src/runtime/crt/memory/stack_allocator.c)
+
+    list(APPEND tvm_runtime_src "runtimes/tvm/tvm.c")
+    list(APPEND tvm_runtime_src "runtimes/tvm/platform.c")
+
+    appendTVMModel(tvm_runtime_src)
+
+    add_compile_definitions(EXTENSION_TVM)
+
+    add_llext_target(
+      "llext-tvm"
+      OUTPUT "${CMAKE_BINARY_DIR}/llext/tvm.llext"
+      SOURCES "${tvm_runtime_src}"
+    )
+
+    llext_compile_options("llext-tvm" -mlong-calls)
+    llext_compile_options("llext-tvm" -Os)
+
+    add_dependencies(app llext-tvm)
+  endif(CONFIG_ZEPHYR_TVM_MODULE)
+endif(CONFIG_LLEXT)

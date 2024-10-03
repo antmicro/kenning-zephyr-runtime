@@ -9,6 +9,10 @@
 
 #include <stdint.h>
 
+#if defined(TVM_MODEL_LLEXT)
+#define TVM_FUNC_REGISTRY_MAX_NAMES_LEN 512
+#endif // TVM_MODEL_LLEXT
+
 #define CHECK_TVM_STATUS_BREAK(status, tvm_status, log_format, log_args...) \
     if (0 != tvm_status)                                                    \
     {                                                                       \
@@ -44,7 +48,7 @@ typedef struct
  *
  * @returns pointer to graph JSON
  */
-inline const uint8_t *tvm_graph_json_ptr(const tvm_graph_t *tvm_graph) { return tvm_graph->graph_data; }
+const uint8_t *tvm_graph_json_ptr(const tvm_graph_t *tvm_graph);
 
 /**
  * Returns pointer to graph params
@@ -53,10 +57,7 @@ inline const uint8_t *tvm_graph_json_ptr(const tvm_graph_t *tvm_graph) { return 
  *
  * @returns pointer to graph params
  */
-inline const uint8_t *tvm_graph_params_ptr(const tvm_graph_t *tvm_graph)
-{
-    return &(tvm_graph->graph_data[tvm_graph->graph_json_size]);
-}
+const uint8_t *tvm_graph_params_ptr(const tvm_graph_t *tvm_graph);
 
 /**
  * Returns TVM allocation statistics
