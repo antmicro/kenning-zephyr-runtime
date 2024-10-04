@@ -58,6 +58,23 @@
         break;                                      \
     }
 
+/* breaks loop when the condition is true and logs provided message */
+#define BREAK_ON_TRUE_LOG(cond, log_format, ...) \
+    if ((cond))                                  \
+    {                                            \
+        LOG_ERR(log_format, __VA_ARGS__);        \
+        break;                                   \
+    }
+
+/* breaks loop when the condition is true and logs provided message */
+#define BREAK_ON_TRUE_LOG_SET_STATUS(status, error_code, cond, log_format, ...) \
+    if ((cond))                                                                 \
+    {                                                                           \
+        status = error_code;                                                    \
+        LOG_ERR(log_format, __VA_ARGS__);                                       \
+        break;                                                                  \
+    }
+
 /* CSRs addresses */
 #define CSR_CYCLE (0xC00)
 #define CSR_TIME (0xC01)

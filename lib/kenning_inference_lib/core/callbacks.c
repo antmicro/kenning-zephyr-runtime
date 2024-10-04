@@ -271,25 +271,24 @@ status_t runtime_callback(message_t **request)
         struct llext *p_llext = llext_by_name("runtime");
         if (IS_VALID_POINTER(p_llext))
         {
-            llext_teardown(p_llext);
+            llext_status = llext_teardown(p_llext);
+            BREAK_ON_TRUE_LOG_SET_STATUS(status, CALLBACKS_STATUS_ERROR, llext_status,
+                                         "LLEXT runtime teardown error: %d", llext_status);
+
             llext_status = llext_unload(&p_llext);
-            if (0 != llext_status)
-            {
-                LOG_ERR("LLEXT runtime unload error: %d", llext_status);
-                status = CALLBACKS_STATUS_ERROR;
-                break;
-            }
+            BREAK_ON_TRUE_LOG_SET_STATUS(status, CALLBACKS_STATUS_ERROR, llext_status, "LLEXT runtime unload error: %d",
+                                         llext_status);
         }
 
         // load LLEXT
         llext_status = llext_load(loader, "runtime", &p_llext, &ldr_param);
-        llext_bringup(p_llext);
-        if (0 != llext_status)
-        {
-            LOG_ERR("LLEXT runtme load error: %d", llext_status);
-            status = CALLBACKS_STATUS_ERROR;
-            break;
-        }
+        BREAK_ON_TRUE_LOG_SET_STATUS(status, CALLBACKS_STATUS_ERROR, llext_status, "LLEXT runtime load error: %d",
+                                     llext_status);
+
+        llext_status = llext_bringup(p_llext);
+        BREAK_ON_TRUE_LOG_SET_STATUS(status, CALLBACKS_STATUS_ERROR, llext_status, "LLEXT runtime bringup error: %d",
+                                     llext_status);
+
         LOG_INF("LLEXT loaded symbols (%d):", p_llext->exp_tab.sym_cnt);
         for (int i = 0; i < p_llext->exp_tab.sym_cnt; ++i)
         {
