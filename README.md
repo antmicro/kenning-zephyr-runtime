@@ -95,6 +95,7 @@ To be able to build and use the project, you need the folowing dependencies:
 * `jq`
 * `curl`
 * `west`
+* `patch`
 * `CMake`
 
 On Debian-based Linux distributions, install the dependencies as follows:
@@ -105,7 +106,7 @@ sudo apt update
 sudo apt install -y --no-install-recommends ccache curl device-tree-compiler dfu-util file \
   g++-multilib gcc gcc-multilib git jq libmagic1 libsdl2-dev make ninja-build \
   python3-dev python3-pip python3-setuptools python3-tk python3-wheel python3-venv \
-  mono-complete wget xxd xz-utils
+  mono-complete wget xxd xz-utils patch
 ```
 
 ### Cloning the project and preparing the environment
