@@ -38,6 +38,7 @@ DEFINE_FFF_GLOBALS;
     MOCK(status_t, model_init)                           \
     MOCK(status_t, protocol_recv_msg, message_t **)      \
     MOCK(status_t, protocol_send_msg, const message_t *) \
+    MOCK(status_t, unsupported_callback, message_t **)   \
     MOCK(status_t, ok_callback, message_t **)            \
     MOCK(status_t, error_callback, message_t **)         \
     MOCK(status_t, data_callback, message_t **)          \
@@ -45,7 +46,8 @@ DEFINE_FFF_GLOBALS;
     MOCK(status_t, process_callback, message_t **)       \
     MOCK(status_t, output_callback, message_t **)        \
     MOCK(status_t, stats_callback, message_t **)         \
-    MOCK(status_t, iospec_callback, message_t **)
+    MOCK(status_t, iospec_callback, message_t **)        \
+    MOCK(status_t, runtime_callback, message_t **)
 
 MOCKS(DECLARE_MOCK);
 

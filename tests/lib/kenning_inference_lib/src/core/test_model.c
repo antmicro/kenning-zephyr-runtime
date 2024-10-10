@@ -453,12 +453,18 @@ ZTEST(kenning_inference_lib_test_model, test_model_load_weights_invalid_state)
     status_t status = STATUS_OK;
     uint8_t model_weights[128] = {0};
 
-    g_model_state = MODEL_STATE_UNINITIALIZED;
+#define TEST_LOAD_WEIGHTS(_model_state)                                \
+    g_model_state = _model_state;                                      \
+                                                                       \
+    status = model_load_weights(model_weights, sizeof(model_weights)); \
+                                                                       \
+    zassert_equal(MODEL_STATUS_INV_STATE, status);                     \
+    zassert_equal(_model_state, g_model_state);
 
-    status = model_load_weights(model_weights, sizeof(model_weights));
+    TEST_LOAD_WEIGHTS(MODEL_STATE_UNINITIALIZED);
+    TEST_LOAD_WEIGHTS(MODEL_STATE_INITIALIZED);
 
-    zassert_equal(MODEL_STATUS_INV_STATE, status);
-    zassert_equal(MODEL_STATE_UNINITIALIZED, g_model_state);
+#undef TEST_LOAD_WEIGHTS
 }
 
 /**
