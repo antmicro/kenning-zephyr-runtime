@@ -67,6 +67,8 @@ void prepare_message(message_type_t msg_type, uint8_t *payload, size_t payload_s
 
 struct llext *prepare_llext();
 
+struct llext *prepare_llext_replacement();
+
 // ========================================================
 // setup
 // ========================================================
@@ -730,16 +732,14 @@ ZTEST(kenning_inference_lib_test_callbacks, test_iospec_callback_invalid_message
 // ========================================================
 
 /**
- *
+ * Test if runtime_callback handles loading the first runtime properly
  */
 ZTEST(kenning_inference_lib_test_callbacks, test_runtime_callback)
 {
     status_t status = STATUS_OK;
     uint8_t payload[] = "abcdefg";
 
-    struct llext *p_llext = NULL;
-
-    llext_by_name_fake.return_val = p_llext;
+    llext_by_name_fake.return_val = NULL;
 
     llext_load_fake.custom_fake = llext_load_success_mock;
     llext_bringup_fake.return_val = STATUS_OK;
@@ -758,7 +758,122 @@ ZTEST(kenning_inference_lib_test_callbacks, test_runtime_callback)
     zassert_equal(0, llext_unload_fake.call_count);
     zassert_equal(0, llext_teardown_fake.call_count);
 
+    zassert_equal(prepare_llext(), llext_bringup_fake.arg0_val);
+
     zassert_equal(STATUS_OK, status);
+}
+
+/**
+ * Test if runtime_callback handles replacing the previously loaded runtime properly
+ */
+ZTEST(kenning_inference_lib_test_callbacks, test_runtime_callback_replace)
+{
+    status_t status = STATUS_OK;
+    uint8_t payload[] = "abcdefg";
+
+    llext_by_name_fake.return_val = prepare_llext_replacement();
+
+    llext_load_fake.custom_fake = llext_load_success_mock;
+    llext_bringup_fake.return_val = STATUS_OK;
+    llext_unload_fake.return_val = STATUS_OK;
+    llext_teardown_fake.return_val = STATUS_OK;
+
+    model_init_fake.return_val = STATUS_OK;
+    runtime_deinit_fake.return_val = STATUS_OK;
+
+    prepare_message(MESSAGE_TYPE_RUNTIME, payload, sizeof(payload), &gp_message);
+
+    status = runtime_callback(&gp_message);
+
+    zassert_equal(1, llext_load_fake.call_count);
+    zassert_equal(1, llext_bringup_fake.call_count);
+    zassert_equal(1, llext_unload_fake.call_count);
+    zassert_equal(1, llext_teardown_fake.call_count);
+
+    zassert_equal(prepare_llext(), llext_bringup_fake.arg0_val);
+    zassert_equal(prepare_llext_replacement(), llext_teardown_fake.arg0_val);
+
+    zassert_equal(STATUS_OK, status);
+}
+
+/**
+ * Test if runtime_callback fails in the right places
+ */
+ZTEST(kenning_inference_lib_test_callbacks, test_runtime_callback_errors)
+{
+    status_t status = STATUS_OK;
+    uint8_t payload[] = "abcdefg";
+
+    llext_by_name_fake.return_val = prepare_llext_replacement();
+
+    runtime_deinit_fake.return_val = STATUS_OK;
+    llext_teardown_fake.return_val = STATUS_OK;
+    llext_unload_fake.return_val = STATUS_OK;
+    llext_load_fake.return_val = STATUS_OK;
+    llext_bringup_fake.return_val = STATUS_OK;
+    model_init_fake.return_val = STATUS_OK;
+
+    prepare_message(MESSAGE_TYPE_RUNTIME, payload, sizeof(payload), &gp_message);
+
+    // llext_teardown error
+    llext_teardown_fake.return_val = 1;
+    status = runtime_callback(&gp_message);
+    zassert_equal(CALLBACKS_STATUS_ERROR, status);
+    llext_teardown_fake.return_val = STATUS_OK;
+
+    zassert_equal(1, llext_teardown_fake.call_count);
+    zassert_equal(0, llext_unload_fake.call_count);
+    zassert_equal(0, llext_load_fake.call_count);
+    zassert_equal(0, llext_bringup_fake.call_count);
+    zassert_equal(0, model_init_fake.call_count);
+
+    // llext_unload error
+    llext_unload_fake.return_val = 1;
+    status = runtime_callback(&gp_message);
+    zassert_equal(CALLBACKS_STATUS_ERROR, status);
+    llext_unload_fake.return_val = STATUS_OK;
+
+    zassert_equal(2, llext_teardown_fake.call_count);
+    zassert_equal(1, llext_unload_fake.call_count);
+    zassert_equal(0, llext_load_fake.call_count);
+    zassert_equal(0, llext_bringup_fake.call_count);
+    zassert_equal(0, model_init_fake.call_count);
+
+    // llext_load error
+    llext_load_fake.return_val = 1;
+    status = runtime_callback(&gp_message);
+    zassert_equal(CALLBACKS_STATUS_ERROR, status);
+    llext_load_fake.return_val = STATUS_OK;
+
+    zassert_equal(3, llext_teardown_fake.call_count);
+    zassert_equal(2, llext_unload_fake.call_count);
+    zassert_equal(1, llext_load_fake.call_count);
+    zassert_equal(0, llext_bringup_fake.call_count);
+    zassert_equal(0, model_init_fake.call_count);
+
+    // llext_bringup error
+    llext_bringup_fake.return_val = 1;
+    status = runtime_callback(&gp_message);
+    zassert_equal(CALLBACKS_STATUS_ERROR, status);
+    llext_bringup_fake.return_val = STATUS_OK;
+
+    zassert_equal(4, llext_teardown_fake.call_count);
+    zassert_equal(3, llext_unload_fake.call_count);
+    zassert_equal(2, llext_load_fake.call_count);
+    zassert_equal(1, llext_bringup_fake.call_count);
+    zassert_equal(0, model_init_fake.call_count);
+
+    // model_init error
+    model_init_fake.return_val = 12345;
+    status = runtime_callback(&gp_message);
+    zassert_equal(12345, status);
+    model_init_fake.return_val = STATUS_OK;
+
+    zassert_equal(5, llext_teardown_fake.call_count);
+    zassert_equal(4, llext_unload_fake.call_count);
+    zassert_equal(3, llext_load_fake.call_count);
+    zassert_equal(2, llext_bringup_fake.call_count);
+    zassert_equal(1, model_init_fake.call_count);
 }
 
 // ========================================================
@@ -802,6 +917,25 @@ struct llext *prepare_llext()
                                        },
                                    .exp_tab = {
                                        .sym_cnt = 2,
+                                       .syms = syms,
+                                   }};
+
+    return &p_llext;
+}
+
+struct llext *prepare_llext_replacement()
+{
+    static struct llext_symbol syms[2] = {
+        (struct llext_symbol){.name = "sym3", .addr = NULL},
+    };
+
+    static struct llext p_llext = {.sym_tab =
+                                       {
+                                           .sym_cnt = 0,
+                                           .syms = NULL,
+                                       },
+                                   .exp_tab = {
+                                       .sym_cnt = 1,
                                        .syms = syms,
                                    }};
 
