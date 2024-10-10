@@ -234,9 +234,8 @@ ZTEST(kenning_inference_lib_test_uart, test_uart_read_data_invalid_pointer)
     uart_poll_in_fake.custom_fake = uart_poll_in_mock;
 
     status = protocol_read_data(NULL, sizeof(data));
-
-    zassert_equal(PROTOCOL_STATUS_INV_PTR, status);
-    zassert_equal(0, g_uart_buffer_in_idx);
+    zassert_equal(STATUS_OK, status);
+    zassert_equal(sizeof(data), g_uart_buffer_in_idx);
 }
 
 /**

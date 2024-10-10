@@ -97,8 +97,9 @@ status_t protocol_read_data(uint8_t *data, size_t data_length)
         {
             if (IS_VALID_POINTER(data))
             {
-                data[data_read++] = c;
+                data[data_read] = c;
             }
+            data_read++;
             start_timer = k_uptime_get();
         }
         else if (k_uptime_get() - start_timer > UART_TIMEOUT_S * 1000)

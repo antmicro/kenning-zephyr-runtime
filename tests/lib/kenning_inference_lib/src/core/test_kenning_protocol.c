@@ -363,15 +363,18 @@ status_t protocol_read_data_mock(uint8_t *data, size_t data_length)
     switch (g_protocol_data_read)
     {
     case 0:
-        memcpy(data, &gp_message->message_size, sizeof(message_size_t));
+        if (data != NULL)
+            memcpy(data, &gp_message->message_size, sizeof(message_size_t));
         g_protocol_data_read += data_length;
         break;
     case sizeof(message_size_t):
-        memcpy(data, &gp_message->message_type, sizeof(message_type_t));
+        if (data != NULL)
+            memcpy(data, &gp_message->message_type, sizeof(message_type_t));
         g_protocol_data_read += data_length;
         break;
     case sizeof(message_t):
-        memcpy(data, &gp_message->payload, gp_message->message_size);
+        if (data != NULL)
+            memcpy(data, &gp_message->payload, gp_message->message_size);
         g_protocol_data_read = 0;
         break;
     default:
