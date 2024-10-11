@@ -15,7 +15,7 @@
         {
             "type": "kenning.optimizers.tvm.TVMCompiler",
             "parameters": {
-                "compiled_model_path": "./build/microtvm-magic-wand.graph_data",
+                "compiled_model_path": "./output/microtvm-magic-wand.graph_data",
                 "model_framework": "keras",
                 "target": "zephyr",
                 "target_microtvm_board": "stm32f746g_disco",
@@ -23,16 +23,27 @@
             }
         }
     ],
+    "runtime_builder": {
+        "type": "kenning.runtimebuilders.zephyr.ZephyrRuntimeBuilder",
+        "parameters": {
+            "workspace": ".",
+            "board": "stm32f746g_disco",
+            "extra_targets": ["board-repl"],
+            "run_west_update": false,
+            "use_llext": true,
+            "output_path": "./output"
+        }
+    },
     "runtime": {
         "type": "kenning.runtimes.renode.RenodeRuntime",
         "parameters": {
-            "runtime_binary_path": "./build/zephyr/zephyr.elf",
+            "runtime_binary_path": "./output/zephyr/zephyr.elf",
             "platform_resc_path": "./renode/scripts/stm32f746g_disco.resc",
-            "resc_dependencies": [],
+            "resc_dependencies": ["./output/stm32f746g_disco.repl"],
             "runtime_log_uart": "/tmp/uart-log",
             "runtime_log_init_msg": "Inference server started",
-            "profiler_dump_path": "./build/profiler.dump",
-            "llext_binary_path": "./build/llext/tvm.llext"
+            "profiler_dump_path": "./output/profiler.dump",
+            "llext_binary_path": "./output/runtime.llext"
         }
     },
     "protocol": {

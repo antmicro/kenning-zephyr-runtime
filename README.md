@@ -273,6 +273,40 @@ west build -p always -b stm32f746g_disco app -- \
     -DCONFIG_KENNING_MODEL_PATH=\"https://dl.antmicro.com/kenning/models/classification/magic_wand.h5\"
 ```
 
+### Building the project with LLEXT runtime and evaluating models in Renode
+Kenning Zephyr Runtime uses LLEXT to support hot-swapping ML runtimes.
+The runtime can be built separately from the project and loaded into an already running KZR.
+
+#### Using LLEXT microTVM
+
+Build `kenning-zephyr-runtime` with LLEXT support using:
+```bash
+west build -p always -b stm32f746g_disco app -- -DEXTRA_CONF_FILE=llext.conf
+```
+then build the TVM extension:
+```bash
+west build app -t llext-tvm -- -DEXTRA_CONF_FILE="llext.conf;llext_tvm.conf"
+```
+
+Evaluate the model using scenario located in `kenning-scenarios/renode-zephyr-tvm-llext-magic-wand-inference.json`:
+```bash
+kenning optimize test report \
+    --json-cfg kenning-scenarios/renode-zephyr-tvm-llext-magic-wand-inference.json \
+    --measurements results.json --verbosity INFO \
+    --report-path reports/stm32-renode-tvm-llext-magic-wand/report.md \
+    --to-html \
+    --verbosity INFO
+```
+Alternatively, build and evaluation can be done in a single step:
+```bash
+kenning optimize test report \
+    --json-cfg kenning-scenarios/renode-zephyr-auto-tvm-llext-magic-wand-inference.json \
+    --measurements results.json --verbosity INFO \
+    --report-path reports/stm32-renode-auto-tvm-llext-magic-wand/report.md \
+    --to-html \
+    --verbosity INFO
+```
+
 ## Evaluating a model in Kenning using actual hardware
 
 Kenning can evaluate the runtime running on a physical device.
