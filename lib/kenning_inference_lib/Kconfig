@@ -47,6 +47,10 @@ config KENNING_COMMUNICATION_PROTOCOL_UART
 
 endchoice
 
+config KENNING_MESSAGE_BUFFER_SIZE
+        int "Size in kilobytes of the message buffer"
+        default 80
+
 choice KENNING_ML_RUNTIME
         prompt "ML runtime to be used"
         depends on KENNING_INFERENCE_LIB

@@ -20,7 +20,7 @@
         return KENNING_PROTOCOL_STATUS_CLIENT_DISCONNECTED;                 \
     }
 
-#define MAX_MESSAGE_SIZE_BYTES (80UL * 1024UL)
+#define MAX_MESSAGE_SIZE_BYTES (CONFIG_KENNING_MESSAGE_BUFFER_SIZE * 1024UL)
 
 #define MESSAGE_SIZE_PAYLOAD(msg_size) ((msg_size) - sizeof(message_type_t))
 #define MESSAGE_SIZE_FULL(msg_size) (sizeof(message_t) + MESSAGE_SIZE_PAYLOAD(msg_size))
