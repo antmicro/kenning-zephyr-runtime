@@ -58,7 +58,7 @@
         break;                                      \
     }
 
-/* breaks loop when the condition is true and logs provided message */
+/* breaks loop when `cond` is true and logs provided message */
 #define BREAK_ON_TRUE_LOG(cond, log_format, ...) \
     if ((cond))                                  \
     {                                            \
@@ -66,7 +66,7 @@
         break;                                   \
     }
 
-/* breaks loop when the condition is true and logs provided message */
+/* breaks loop when `cond` is true, logs provided message  and sets `status` to `error_code` */
 #define BREAK_ON_TRUE_LOG_SET_STATUS(status, error_code, cond, log_format, ...) \
     if ((cond))                                                                 \
     {                                                                           \
