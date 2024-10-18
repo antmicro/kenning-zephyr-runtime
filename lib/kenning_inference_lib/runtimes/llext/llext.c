@@ -33,55 +33,35 @@ status_t runtime_init()
     }
 
     gp_llext_runtime = llext_by_name("runtime");
-    CHECK_RUNTIME_LLEXT_LOADED_RET(gp_llext_runtime);
-
-    runtime_init_ptr_t p_func = llext_find_sym(&gp_llext_runtime->exp_tab, "runtime_init");
-
-    CHECK_RUNTIME_LLEXT_FUNC_LOADED_RET(p_func, "runtime_init")
+    FIND_P_FUNC(runtime_init)
 
     return p_func();
 }
 
 status_t runtime_load_model_weights(const uint8_t *model_weights_data, const size_t data_size)
 {
-    CHECK_RUNTIME_LLEXT_LOADED_RET(gp_llext_runtime);
+    FIND_P_FUNC(runtime_load_model_weights)
 
-    runtime_load_model_weights_ptr_t p_fun = llext_find_sym(&gp_llext_runtime->exp_tab, "runtime_load_model_weights");
-
-    CHECK_RUNTIME_LLEXT_FUNC_LOADED_RET(p_fun, "runtime_load_model_weights");
-
-    return p_fun(model_weights_data, data_size);
+    return p_func(model_weights_data, data_size);
 }
 
 status_t runtime_load_model_input(const uint8_t *model_input)
 {
-    CHECK_RUNTIME_LLEXT_LOADED_RET(gp_llext_runtime);
-
-    runtime_load_model_input_ptr_t p_func = llext_find_sym(&gp_llext_runtime->exp_tab, "runtime_load_model_input");
-
-    CHECK_RUNTIME_LLEXT_FUNC_LOADED_RET(p_func, "runtime_load_model_input");
+    FIND_P_FUNC(runtime_load_model_input)
 
     return p_func(model_input);
 }
 
 status_t runtime_run_model()
 {
-    CHECK_RUNTIME_LLEXT_LOADED_RET(gp_llext_runtime);
-
-    runtime_run_model_ptr_t p_func = llext_find_sym(&gp_llext_runtime->exp_tab, "runtime_run_model");
-
-    CHECK_RUNTIME_LLEXT_FUNC_LOADED_RET(p_func, "runtime_run_model");
+    FIND_P_FUNC(runtime_run_model)
 
     return p_func();
 }
 
 status_t runtime_get_model_output(uint8_t *model_output)
 {
-    CHECK_RUNTIME_LLEXT_LOADED_RET(gp_llext_runtime);
-
-    runtime_get_model_output_ptr_t p_func = llext_find_sym(&gp_llext_runtime->exp_tab, "runtime_get_model_output");
-
-    CHECK_RUNTIME_LLEXT_FUNC_LOADED_RET(p_func, "runtime_get_model_output");
+    FIND_P_FUNC(runtime_get_model_output)
 
     return p_func(model_output);
 }
@@ -89,11 +69,7 @@ status_t runtime_get_model_output(uint8_t *model_output)
 status_t runtime_get_statistics(const size_t statistics_buffer_size, uint8_t *statistics_buffer,
                                 size_t *statistics_size)
 {
-    CHECK_RUNTIME_LLEXT_LOADED_RET(gp_llext_runtime);
-
-    runtime_get_statistics_ptr_t p_func = llext_find_sym(&gp_llext_runtime->exp_tab, "runtime_get_statistics");
-
-    CHECK_RUNTIME_LLEXT_FUNC_LOADED_RET(p_func, "runtime_get_statistics");
+    FIND_P_FUNC(runtime_get_statistics)
 
     return p_func(statistics_buffer_size, statistics_buffer, statistics_size);
 }
