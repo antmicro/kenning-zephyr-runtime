@@ -5,16 +5,12 @@
  */
 
 #include "llext.h"
+#include "exports/exports.h"
 #include <kenning_inference_lib/core/runtime_wrapper.h>
-#include <math.h>
-#include <stdio.h>
+
 #include <zephyr/llext/buf_loader.h>
 #include <zephyr/llext/llext.h>
 #include <zephyr/llext/symbol.h>
-#include <zephyr/random/random.h>
-#include <zephyr/sys/printk.h>
-#include <zephyr/sys/reboot.h>
-#include <zephyr/timing/timing.h>
 
 #ifndef __UNIT_TEST__
 #include <zephyr/logging/log.h>
@@ -22,69 +18,9 @@
 #include "mocks/log.h"
 #endif
 
-extern MlModel g_model_struct;
-
-extern const char *_ctype_;
-extern int(vsnprintk)(char *, unsigned int, const char *, va_list);
-extern void(__aeabi_d2lz)(void);
-extern void(__aeabi_dadd)(void);
-extern void(__aeabi_dcmpeq)(void);
-extern void(__aeabi_dcmpge)(void);
-extern void(__aeabi_dcmpgt)(void);
-extern void(__aeabi_dcmple)(void);
-extern void(__aeabi_dcmpun)(void);
-extern void(__aeabi_ddiv)(void);
-extern void(__aeabi_dmul)(void);
-extern void(__aeabi_i2d)(void);
-extern void(__aeabi_ldivmod)(void);
-extern void(__aeabi_ul2d)(void);
-extern void(__assert_func)(void);
-
 LOG_MODULE_REGISTER(llext_runtime, CONFIG_MODEL_LOG_LEVEL);
 
 GENERATE_MODULE_STATUSES_STR(RUNTIME_WRAPPER);
-
-EXPORT_SYMBOL(__aeabi_d2lz);
-EXPORT_SYMBOL(__aeabi_dadd);
-EXPORT_SYMBOL(__aeabi_dcmpeq);
-EXPORT_SYMBOL(__aeabi_dcmpge);
-EXPORT_SYMBOL(__aeabi_dcmpgt);
-EXPORT_SYMBOL(__aeabi_dcmple);
-EXPORT_SYMBOL(__aeabi_dcmpun);
-EXPORT_SYMBOL(__aeabi_ddiv);
-EXPORT_SYMBOL(__aeabi_dmul);
-EXPORT_SYMBOL(__aeabi_i2d);
-EXPORT_SYMBOL(__aeabi_ldivmod);
-EXPORT_SYMBOL(__aeabi_ul2d);
-EXPORT_SYMBOL(__assert_func);
-EXPORT_SYMBOL(_ctype_);
-EXPORT_SYMBOL(_impure_ptr);
-EXPORT_SYMBOL(arch_timing_counter_get);
-EXPORT_SYMBOL(arch_timing_cycles_get);
-EXPORT_SYMBOL(arch_timing_cycles_to_ns);
-EXPORT_SYMBOL(expf);
-EXPORT_SYMBOL(fclose);
-EXPORT_SYMBOL(fprintf);
-EXPORT_SYMBOL(fwrite);
-EXPORT_SYMBOL(g_model_struct);
-EXPORT_SYMBOL(k_heap_alloc);
-EXPORT_SYMBOL(k_heap_free);
-EXPORT_SYMBOL(k_heap_init);
-EXPORT_SYMBOL(puts);
-EXPORT_SYMBOL(snprintf);
-EXPORT_SYMBOL(strtol);
-EXPORT_SYMBOL(strtoul);
-EXPORT_SYMBOL(sys_heap_init);
-EXPORT_SYMBOL(sys_heap_usable_size);
-EXPORT_SYMBOL(sys_reboot);
-EXPORT_SYMBOL(timing_init);
-EXPORT_SYMBOL(timing_start);
-EXPORT_SYMBOL(timing_stop);
-EXPORT_SYMBOL(vfprintf);
-EXPORT_SYMBOL(vsnprintf);
-EXPORT_SYMBOL(vsnprintk);
-EXPORT_SYMBOL(z_impl_sys_rand_get);
-EXPORT_SYMBOL(fputs);
 
 static bool g_runtime_initialized = false;
 static struct llext *gp_llext_runtime = NULL;
