@@ -86,7 +86,7 @@ config KENNING_ML_RUNTIME_IREE
 
 config KENNING_ML_RUNTIME_LLEXT
         bool
-        prompt "LLEXT runtime"
+        prompt "Loads Kenning Runtime from Linkable Loadable Extensions."
         select LLEXT
 
 endchoice
