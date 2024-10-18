@@ -15,7 +15,7 @@
 
 #include "tvm.h"
 
-LOG_MODULE_REGISTER(tvm_platform, CONFIG_KENNING_TVM_HEAP_SIZE);
+LOG_MODULE_REGISTER(tvm_platform, CONFIG_RUNTIME_WRAPPER_LOG_LEVEL);
 
 #if defined(EXTENSION_TVM)
 struct k_heap tvm_heap;
