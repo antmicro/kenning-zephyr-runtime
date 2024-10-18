@@ -229,12 +229,6 @@ status_t runtime_get_statistics(const size_t statistics_buffer_size, uint8_t *st
 
 status_t runtime_deinit() { return STATUS_OK; }
 
-#if defined(CONFIG_LLEXT)
-LL_EXTENSION_SYMBOL(runtime_init);
-LL_EXTENSION_SYMBOL(runtime_load_model_weights);
-LL_EXTENSION_SYMBOL(runtime_load_model_input);
-LL_EXTENSION_SYMBOL(runtime_run_model);
-LL_EXTENSION_SYMBOL(runtime_get_model_output);
-LL_EXTENSION_SYMBOL(runtime_get_statistics);
-LL_EXTENSION_SYMBOL(runtime_deinit);
-#endif // defined(CONFIG_LLEXT)
+#ifdef CONFIG_LLEXT
+RUNTIME_LL_EXTENSION_SYMBOLS
+#endif
