@@ -9,7 +9,6 @@
 
 #include <tvm/runtime/crt/module.h>
 #include <tvm/runtime/crt/packed_func.h>
-#include <cmsis_gcc.h>
 
 #define TVMGEN_FUNCTIONS(FUNC) {{TVMGEN_FUNCTIONS}}
 
