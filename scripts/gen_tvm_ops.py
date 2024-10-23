@@ -51,6 +51,7 @@ if __name__ == "__main__":
         target="zephyr",
         target_microtvm_board=args.board,
         zephyr_header_template=args.header_template_path,
+        conv2d_data_layout="NCHW",
     )
 
     compiler.compile(args.input_path)
