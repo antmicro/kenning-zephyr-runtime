@@ -25,9 +25,11 @@
 
 #include "tvm.h"
 
-#if defined(TVM_MODEL_MAGIC_WAND)
+#if defined(CONFIG_KENNING_TVM_MODEL_MAGIC_WAND)
 #include "generated/magic_wand.h"
-#elif defined(TVM_MODEL_MODEL_IMPL)
+#elif defined(CONFIG_KENNING_TVM_MODEL_MAGIC_WAND_INT8)
+#include "generated/magic_wand_int8.h"
+#elif defined(CONFIG_KENNING_TVM_MODEL_GEN)
 #include "generated/model_impl.h"
 #else
 #error "No model selected"
@@ -156,7 +158,11 @@ status_t runtime_load_model_input(const uint8_t *model_input)
 
     tensor_in.data = (void *)model_input;
 
-    TVMGraphExecutor_SetInput(gp_tvm_graph_executor, "input_1", &tensor_in);
+    // TVM does not allow setting input by index, so we need to retrieve its name
+    uint32_t input_node_id = gp_tvm_graph_executor->input_nodes[0];
+    char *input_name = gp_tvm_graph_executor->nodes[input_node_id].name;
+
+    TVMGraphExecutor_SetInput(gp_tvm_graph_executor, input_name, &tensor_in);
 
     return status;
 }
