@@ -36,7 +36,7 @@ static uint64_t g_total_allocated = 0;
 static uint64_t g_total_freed = 0;
 static uint64_t g_peak_allocated = 0;
 
-void k_sys_fatal_error_handler(unsigned int reason, const z_arch_esf_t *esf)
+void k_sys_fatal_error_handler(unsigned int reason, const struct arch_esf *esf)
 {
     for (;;)
         ;
