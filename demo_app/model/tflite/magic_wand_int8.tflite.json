@@ -1,0 +1,35 @@
+{
+    "input": [
+        {
+            "name": "input_1",
+            "shape": [
+                [1, 128, 3],
+                [1, 128, 3, 1]
+            ],
+            "dtype": "float32"
+        }
+    ],
+    "processed_input": [
+        {
+            "name": "input_1",
+            "shape": [1, 128, 3, 1],
+            "dtype": "int8",
+            "order": 0,
+            "scale": 16.0,
+            "zero_point": -1,
+            "prequantized_dtype": "float32"
+        }
+    ],
+    "output": [
+        {
+            "name": "StatefulPartitionedCall:0",
+            "shape": [1, 4],
+            "dtype": "int8",
+            "class_names": ["wing", "ring", "slope", "negative"],
+            "order": 0,
+            "scale": 0.00390625,
+            "zero_point": -128,
+            "prequantized_dtype": "float32"
+        }
+    ]
+}
