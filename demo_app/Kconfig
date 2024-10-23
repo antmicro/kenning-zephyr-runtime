@@ -6,6 +6,11 @@ menu "Zephyr"
 source "Kconfig.zephyr"
 endmenu
 
+config KENNING_DEMO_USE_QUANTIZED_MODEL
+        bool "Use quantized version of the model"
+        default 0
+        depends on KENNING_INFERENCE_LIB
+
 module = DEMO_APP
 module-str = demo_app
 source "subsys/logging/Kconfig.template.log_config"
