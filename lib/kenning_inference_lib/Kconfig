@@ -91,13 +91,28 @@ config KENNING_ML_RUNTIME_LLEXT
 
 endchoice
 
-config KENNING_TVM_MODEL
-        string "Model loaded by TVM"
-        default "magic_wand"
+choice KENNING_TVM_MODEL
+        prompt "TVM model to be loaded"
+        default KENNING_TVM_MODEL_GEN if KENNING_MODEL_PATH!=""
+        default KENNING_TVM_MODEL_MAGIC_WAND
         depends on KENNING_ML_RUNTIME_TVM || KENNING_ML_RUNTIME_LLEXT
         help
           This option select the ML model to be loaded by TVM runtime.
-          Available options: magic_wand
+          Available options: KENNING_TVM_MODEL_MAGIC_WAND, KENNING_TVM_MODE_MAGIC_WAND_INT8, KENNING_TVM_MODEL_GEN
+
+config KENNING_TVM_MODEL_MAGIC_WAND
+        bool
+        prompt "Magic Wand model"
+
+config KENNING_TVM_MODEL_MAGIC_WAND_INT8
+        bool
+        prompt "Quantized Magic Wand model"
+
+config KENNING_TVM_MODEL_GEN
+        bool
+        prompt "Load model from generated source"
+
+endchoice
 
 config KENNING_TVM_HEAP_SIZE
         int "Size in kilobytes of the heap used by TVM"
