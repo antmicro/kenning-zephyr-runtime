@@ -5,11 +5,18 @@
 zephyr_library_named(kenning_inference_lib)
 
 macro(appendTVMModel runtime_src)
-  if("${CONFIG_KENNING_TVM_MODEL}" STREQUAL "magic_wand")
+  if("${CONFIG_KENNING_TVM_MODEL_MAGIC_WAND}")
     list(APPEND ${runtime_src} "runtimes/tvm/generated/magic_wand.c")
     set_source_files_properties("runtimes/tvm/generated/magic_wand.c" PROPERTIES COMPILE_FLAGS "-Wno-unused-variable")
     add_compile_definitions(TVM_MODEL_MAGIC_WAND)
-  elseif("${CONFIG_KENNING_TVM_MODEL}" STREQUAL "gen_model")
+  elseif("${CONFIG_KENNING_TVM_MODEL_MAGIC_WAND_INT8}")
+    list(APPEND runtime_src "runtimes/tvm/generated/magic_wand_int8.c")
+    set_source_files_properties("runtimes/tvm/generated/magic_wand_int8.c" PROPERTIES COMPILE_FLAGS "-Wno-unused-variable")
+  elseif("${CONFIG_KENNING_TVM_MODEL_GEN}")
+    if("${CONFIG_KENNING_MODEL_PATH}" STREQUAL "")
+      message(FATAL_ERROR "Provide model path via CONFIG_KENNING_MODEL_PATH")
+    endif("${CONFIG_KENNING_MODEL_PATH}" STREQUAL "")
+
     add_custom_command(
       OUTPUT
         runtimes/tvm/generated/model_impl.c
@@ -18,18 +25,40 @@ macro(appendTVMModel runtime_src)
         python3 ${CMAKE_SOURCE_DIR}/../scripts/gen_tvm_ops.py
           --input-path ${CONFIG_KENNING_MODEL_PATH}
           --output-path runtimes/tvm/generated/model_impl.graph_data
-          --template-header-path ${CMAKE_CURRENT_SOURCE_DIR}/runtimes/tvm/generated/model_impl.h.template
+          --header-template-path ${CMAKE_CURRENT_SOURCE_DIR}/runtimes/tvm/generated/model_impl.h.template
           --board ${BOARD}
           ${CONFIG_KENNING_MODEL_COMPILER_ARGS}
     )
-    list(APPEND ${runtime_src} "runtimes/tvm/generated/model_impl.c")
-    set_source_files_properties("runtimes/tvm/generated/model_impl.c" PROPERTIES COMPILE_FLAGS "-Wno-unused-variable")
+    # temporary fix for failing vrinta instruction in Renode simulation
+    # it removes roundf that is applied after softmax (the output is cast
+    # into uint after that, so this should not break anything)
+    add_custom_command(
+      OUTPUT
+        "runtimes/tvm/generated/model_impl_no_round.c"
+      DEPENDS
+        "runtimes/tvm/generated/model_impl.c"
+      COMMAND
+        sed -e 's/roundf\(\(/\(\(/g' "runtimes/tvm/generated/model_impl.c" > "runtimes/tvm/generated/model_impl_no_round.c"
+    )
+    list(APPEND runtime_src "runtimes/tvm/generated/model_impl_no_round.c")
+    set_source_files_properties("runtimes/tvm/generated/model_impl_no_round.c" PROPERTIES COMPILE_FLAGS "-Wno-unused-variable")
+
     add_compile_definitions(TVM_MODEL_MODEL_IMPL)
     include_directories(${CMAKE_CURRENT_BINARY_DIR}/runtimes/tvm/)
   else()
-    message(FATAL_ERROR "Invalid TVM model selected: ${CONFIG_KENNING_TVM_MODEL}.")
+    message(FATAL_ERROR "Invalid TVM model selected")
   endif()
 endmacro()
+
+# if model path starts with "./" make it absolute
+if (CONFIG_KENNING_MODEL_PATH MATCHES "^\./.*")
+  set(CONFIG_KENNING_MODEL_PATH "${CMAKE_CURRENT_SOURCE_DIR}/../../${CONFIG_KENNING_MODEL_PATH}")
+endif (CONFIG_KENNING_MODEL_PATH MATCHES "^\./.*")
+
+# sometimes generated ARM instructions in C source are uppercase while compiler expects lowercase
+add_compile_definitions(__SEL=__sel)
+add_compile_definitions(__SSUB8=__ssub8)
+add_compile_definitions(__SMLAD=__smlad)
 
 set(core_src "")
 list(APPEND core_src "core/model.c")
@@ -55,7 +84,6 @@ elseif(${CONFIG_KENNING_ML_RUNTIME_TVM})
   list(APPEND runtime_src "runtimes/tvm/tvm.c")
   list(APPEND runtime_src "runtimes/tvm/platform.c")
   appendTVMModel(runtime_src)
-
 elseif(${CONFIG_KENNING_ML_RUNTIME_TFLITE})
   list(APPEND runtime_src "runtimes/tflite/tflite.cpp")
   list(APPEND runtime_src "runtimes/tflite/tflite.c")
