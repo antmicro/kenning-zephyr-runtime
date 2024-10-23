@@ -7,10 +7,50 @@ find_package(Zephyr REQUIRED HINTS $ENV{ZEPHYR_BASE})
 
 project(demo_app LANGUAGES C)
 
+# if model path starts with "./" make it absolute
+if(CONFIG_KENNING_MODEL_PATH MATCHES "^\./.*")
+  set(CONFIG_KENNING_MODEL_PATH "${CMAKE_CURRENT_SOURCE_DIR}/../${CONFIG_KENNING_MODEL_PATH}")
+endif(CONFIG_KENNING_MODEL_PATH MATCHES "^\./.*")
+
+if(${CONFIG_KENNING_DEMO_USE_QUANTIZED_MODEL})
+  execute_process(
+    COMMAND
+      jq ".processed_input[0].scale" "${CONFIG_KENNING_MODEL_PATH}.json"
+    OUTPUT_VARIABLE
+      QUANTIZATION_INPUT_SCALE
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+  )
+  execute_process(
+    COMMAND
+      jq ".processed_input[0].zero_point" "${CONFIG_KENNING_MODEL_PATH}.json"
+    OUTPUT_VARIABLE
+      QUANTIZATION_INPUT_ZERO_POINT
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+  )
+  execute_process(
+    COMMAND
+      jq ".output[0].scale" "${CONFIG_KENNING_MODEL_PATH}.json"
+    OUTPUT_VARIABLE
+      QUANTIZATION_OUTPUT_SCALE
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+  )
+  execute_process(
+    COMMAND
+      jq ".output[0].zero_point" "${CONFIG_KENNING_MODEL_PATH}.json"
+    OUTPUT_VARIABLE
+      QUANTIZATION_OUTPUT_ZERO_POINT
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+  )
+  configure_file(
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/quantization_params.h.in"
+    src/quantization_params.h
+  )
+endif(${CONFIG_KENNING_DEMO_USE_QUANTIZED_MODEL})
+
 if(${CONFIG_KENNING_ML_RUNTIME_TVM})
-  if("${CONFIG_KENNING_MODEL_PATH}" STREQUAL "")
-    set(model_graph_path ${CMAKE_CURRENT_SOURCE_DIR}/model/tvm/magic_wand_graph.json)
-    set(model_params_path ${CMAKE_CURRENT_SOURCE_DIR}/model/tvm/magic_wand_params.bin)
+  if("${CONFIG_KENNING_TVM_MODEL_MAGIC_WAND}" OR "${CONFIG_KENNING_TVM_MODEL_MAGIC_WAND_INT8}")
+    set(model_graph_path "${CONFIG_KENNING_MODEL_PATH}_graph.json")
+    set(model_params_path "${CONFIG_KENNING_MODEL_PATH}_params.bin")
 
     add_custom_command(
       OUTPUT
@@ -47,8 +87,7 @@ if(${CONFIG_KENNING_ML_RUNTIME_TVM})
     )
     unset(model_graph_path)
     unset(model_params_path)
-  else("${CONFIG_KENNING_MODEL_PATH}" STREQUAL "")
-    set(CONFIG_KENNING_TVM_MODEL "gen_model")
+  elseif(${CONFIG_KENNING_TVM_MODEL_GEN})
     add_custom_command(
       OUTPUT
         model_data
@@ -62,38 +101,27 @@ if(${CONFIG_KENNING_ML_RUNTIME_TVM})
       COMMAND
         cp model_impl.graph_data model_data
     )
-  endif("${CONFIG_KENNING_MODEL_PATH}" STREQUAL "")
-
+  else()
+    message(FATAL_ERROR "unsupported TVM model")
+  endif()
 elseif(${CONFIG_KENNING_ML_RUNTIME_TFLITE})
-  if("${CONFIG_KENNING_MODEL_PATH}" STREQUAL "")
-    set(model_path ${CMAKE_CURRENT_SOURCE_DIR}/model/tflite/magic_wand.tflite)
-  else("${CONFIG_KENNING_MODEL_PATH}" STREQUAL "")
-    set(model_path ${CONFIG_KENNING_MODEL_PATH})
-  endif("${CONFIG_KENNING_MODEL_PATH}" STREQUAL "")
-
   add_custom_command(
     OUTPUT
       model_data
     COMMAND
       cp
-        ${model_path}
+        ${CONFIG_KENNING_MODEL_PATH}
         model_data
   )
 elseif(${CONFIG_KENNING_ML_RUNTIME_IREE})
-  if("${CONFIG_KENNING_MODEL_PATH}" STREQUAL "")
-    set(tflite_model_path ${CMAKE_CURRENT_SOURCE_DIR}/model/tflite/magic_wand_no_softmax.tflite)
-  else("${CONFIG_KENNING_MODEL_PATH}" STREQUAL "")
-    set(tflite_model_path ${CONFIG_KENNING_MODEL_PATH})
-  endif("${CONFIG_KENNING_MODEL_PATH}" STREQUAL "")
-
-  set(model_path model.vmfb)
+  set(model_vmfb_path model.vmfb)
   set(import_path model.mlir)
 
   add_custom_command(
     OUTPUT
       ${import_path}
     COMMAND
-      iree-import-tflite -o ${import_path} ${tflite_model_path}
+      iree-import-tflite -o ${import_path} ${CONFIG_KENNING_MODEL_PATH}
   )
 
   set(target_cpu_features "")
@@ -124,20 +152,20 @@ elseif(${CONFIG_KENNING_ML_RUNTIME_IREE})
   if("${CONFIG_KENNING_IREE_LOADER_VMVX}")
     add_custom_command(
       OUTPUT
-        ${model_path}
+        ${model_vmfb_path}
       DEPENDS
         ${import_path}
       COMMAND
         iree-compile
           --iree-input-type=tosa
           --iree-hal-target-backends vmvx
-          -o ${model_path}
+          -o ${model_vmfb_path}
           ${import_path}
     )
   elseif("${CONFIG_KENNING_IREE_LOADER_EMBEDDED_ELF}")
     add_custom_command(
       OUTPUT
-        ${model_path}
+        ${model_vmfb_path}
       DEPENDS
         ${import_path}
       COMMAND
@@ -150,7 +178,7 @@ elseif(${CONFIG_KENNING_ML_RUNTIME_IREE})
           --iree-llvm-target-triple="${target_triple}"
           --iree-llvm-target-cpu="${target_cpu}"
           --iree-llvm-target-cpu-features="${target_cpu_features}"
-          -o ${model_path}
+          -o ${model_vmfb_path}
           ${import_path}
     )
   elseif()
@@ -161,10 +189,10 @@ elseif(${CONFIG_KENNING_ML_RUNTIME_IREE})
     OUTPUT
       model_data
     DEPENDS
-      ${model_path}
+      ${model_vmfb_path}
     COMMAND
       cp
-        ${model_path}
+        ${model_vmfb_path}
         model_data
   )
 endif()
@@ -179,6 +207,10 @@ add_custom_command(
       -i
       model_data
       src/model_data.h
+  COMMAND
+    sed -i -e 's/unsigned/const unsigned/g' src/model_data.h
+  COMMAND
+    sed -i -e 's/const unsigned char/const unsigned char __attribute((aligned(32)))/g' src/model_data.h
   COMMAND
     rm
       model_data
