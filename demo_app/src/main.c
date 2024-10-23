@@ -18,6 +18,16 @@ LOG_MODULE_REGISTER(demo_app, CONFIG_DEMO_APP_LOG_LEVEL);
 /* encode type string as uint32_t */
 #define ENCODE_TYPE(t0, t1, t2, t3) ((t0) | ((t1) << 8) | ((t2) << 16) | ((t3) << 24))
 
+#ifdef CONFIG_KENNING_DEMO_USE_QUANTIZED_MODEL
+#include <quantization_params.h>
+
+#define ELEM_TYPE ENCODE_TYPE('i', '8', 0, 0)
+#define ELEM_SIZE 1
+#else // CONFIG_KENNING_DEMO_USE_QUANTIZED_MODEL
+#define ELEM_TYPE ENCODE_TYPE('f', '3', '2', 0)
+#define ELEM_SIZE 4
+#endif // CONFIG_KENNING_DEMO_USE_QUANTIZED_MODEL
+
 /**
  * Struct with Magic Wand model params
  */
@@ -26,11 +36,11 @@ const MlModel model_struct = {
     .num_input_dim = {4},
     .input_shape = {{1, 128, 3, 1}},
     .input_length = {384},
-    .input_size_bytes = {4},
+    .input_size_bytes = {ELEM_SIZE},
     .num_output = 1,
     .output_length = {4},
-    .output_size_bytes = 4,
-    .hal_element_type = ENCODE_TYPE('f', '3', '2', 0),
+    .output_size_bytes = ELEM_SIZE,
+    .hal_element_type = ELEM_TYPE,
     .entry_func = "module.main",
     .model_name = "module",
 };
@@ -41,15 +51,28 @@ const MlModel model_struct = {
 const char *class_names[] = {"wing", "ring", "slope", "negative"};
 
 /**
+ * Helper function for preprocessing input
+ */
+void preprocess_input(float *data_in, uint8_t *data_out, size_t model_input_size);
+
+/**
+ * Helper function for postprocessing output
+ */
+void postprocess_output(uint8_t *data_in, float *data_out, size_t model_output_size);
+
+/**
  * Helper function for formatting model output
  */
-void format_output(uint8_t *buffer, const size_t buffer_size, uint8_t *model_output);
+void format_output(uint8_t *buffer, const size_t buffer_size, float *model_output);
 
 int main(void)
 {
     status_t status = STATUS_OK;
+    uint8_t *model_input = NULL;
     uint8_t *model_output = NULL;
+    size_t model_input_size = 0;
     size_t model_output_size = 0;
+    float predictions[4];
     uint8_t output_str[512];
     int64_t timer_start = 0;
     int64_t timer_end = 0;
@@ -72,7 +95,11 @@ int main(void)
         status = model_load_weights(model_data, model_data_len);
         BREAK_ON_ERROR_LOG(status, "Model weights load error 0x%x (%s)", status, get_status_str(status));
 
-        // allocate buffer for output;
+        // allocate buffer for input
+        model_get_input_size(&model_input_size);
+        model_input = malloc(model_input_size);
+
+        // allocate buffer for output
         model_get_output_size(&model_output_size);
         model_output = malloc(model_output_size);
 
@@ -80,7 +107,9 @@ int main(void)
         timer_start = k_uptime_get();
         for (size_t batch_index = 0; batch_index < sizeof(data) / sizeof(data[0]); ++batch_index)
         {
-            status = model_load_input((uint8_t *)data[batch_index], sizeof(data[0]));
+            preprocess_input((float *)data[batch_index], model_input, model_input_size);
+
+            status = model_load_input(model_input, model_input_size);
             BREAK_ON_ERROR_LOG(status, "Model input load error 0x%x (%s)", status, get_status_str(status));
 
             status = model_run();
@@ -89,7 +118,9 @@ int main(void)
             status = model_get_output(model_output_size, model_output, NULL);
             BREAK_ON_ERROR_LOG(status, "Model get output error 0x%x (%s)", status, get_status_str(status));
 
-            format_output(output_str, sizeof(output_str), model_output);
+            postprocess_output(model_output, predictions, model_output_size);
+
+            format_output(output_str, sizeof(output_str), predictions);
             LOG_INF("model output: %s", output_str);
         }
         timer_end = k_uptime_get();
@@ -99,6 +130,10 @@ int main(void)
     {
         free(model_output);
     }
+    if (IS_VALID_POINTER(model_input))
+    {
+        free(model_input);
+    }
     if (STATUS_OK == status)
     {
         LOG_INF("inference done in %lld ms (%lld ms per batch)", timer_end - timer_start,
@@ -107,19 +142,52 @@ int main(void)
     return 0;
 }
 
-void format_output(uint8_t *buffer, const size_t buffer_size, uint8_t *model_output)
+void format_output(uint8_t *buffer, const size_t buffer_size, float *model_output)
 {
     uint8_t *buffer_end = buffer + buffer_size;
 
     buffer += snprintf(buffer, buffer_end - buffer, "[");
-    for (int i = 0; i < model_struct.output_size_bytes * model_struct.output_length[0] / sizeof(float); ++i)
+    for (int i = 0; i < model_struct.output_length[0]; ++i)
     {
         if (i > 0)
         {
             buffer += snprintf(buffer, buffer_end - buffer, ", ");
         }
         buffer += snprintf(buffer, buffer_end - buffer, "%s: ", class_names[i]);
-        buffer += snprintf(buffer, buffer_end - buffer, "%f", ((float *)model_output)[i]);
+        buffer += snprintf(buffer, buffer_end - buffer, "%f", (double)model_output[i]);
     }
     buffer += snprintf(buffer, buffer_end - buffer, "]");
 }
+
+#ifndef CONFIG_KENNING_DEMO_USE_QUANTIZED_MODEL
+
+void preprocess_input(float *restrict data_in, uint8_t *restrict data_out, size_t model_input_size)
+{
+    memcpy(data_out, data_in, model_input_size);
+}
+
+void postprocess_output(uint8_t *restrict data_in, float *restrict data_out, size_t model_output_size)
+{
+    memcpy(data_out, data_in, model_output_size);
+}
+
+#else // CONFIG_KENNING_DEMO_USE_QUANTIZED_MODEL
+
+void preprocess_input(float *restrict data_in, uint8_t *restrict data_out, size_t model_input_size)
+{
+    for (int i = 0; i < model_input_size; ++i)
+    {
+        data_out[i] = (int8_t)(data_in[i] / (float)QUANTIZATION_INPUT_SCALE + (float)QUANTIZATION_INPUT_ZERO_POINT);
+    }
+}
+
+void postprocess_output(uint8_t *restrict data_in, float *restrict data_out, size_t model_output_size)
+{
+    for (int i = 0; i < model_output_size; ++i)
+    {
+        data_out[i] =
+            ((float)(int8_t)data_in[i] - (float)QUANTIZATION_OUTPUT_ZERO_POINT) * (float)QUANTIZATION_OUTPUT_SCALE;
+    }
+}
+
+#endif // CONFIG_KENNING_DEMO_USE_QUANTIZED_MODEL
