@@ -7,7 +7,6 @@ Python script for generating TVM ops for given model.
 """
 
 import argparse
-import re
 from pathlib import Path
 
 from kenning.optimizers.tvm import TVMCompiler
@@ -28,7 +27,7 @@ if __name__ == "__main__":
         "--output-path", "-o", type=Path, help="Path to compiled model", required=True
     )
     parser.add_argument(
-        "--template-header-path",
+        "--header-template-path",
         "-t",
         type=ResourceURI,
         help="Path to header template",
@@ -51,7 +50,7 @@ if __name__ == "__main__":
         model_framework="any",
         target="zephyr",
         target_microtvm_board=args.board,
-        zephyr_template_header=args.template_header_path,
+        zephyr_header_template=args.header_template_path,
     )
 
     compiler.compile(args.input_path)
