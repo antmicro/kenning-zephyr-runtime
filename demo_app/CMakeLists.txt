@@ -56,7 +56,7 @@ if(${CONFIG_KENNING_ML_RUNTIME_TVM})
         python3 ${CMAKE_SOURCE_DIR}/../scripts/gen_tvm_ops.py
           --input-path ${CONFIG_KENNING_MODEL_PATH}
           --output-path model_impl.graph_data
-          --template-header-path ${CMAKE_SOURCE_DIR}/../lib/kenning_inference_lib/runtimes/tvm/generated/model_impl.h.template
+          --header-template-path ${CMAKE_SOURCE_DIR}/../lib/kenning_inference_lib/runtimes/tvm/generated/model_impl.h.template
           --board ${BOARD}
           ${CONFIG_KENNING_MODEL_COMPILER_ARGS}
       COMMAND
