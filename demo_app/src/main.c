@@ -97,11 +97,11 @@ int main(void)
 
         // allocate buffer for input
         model_get_input_size(&model_input_size);
-        model_input = malloc(model_input_size);
+        model_input = k_aligned_alloc(32, model_input_size);
 
         // allocate buffer for output
         model_get_output_size(&model_output_size);
-        model_output = malloc(model_output_size);
+        model_output = k_aligned_alloc(32, model_output_size);
 
         // inference loop
         timer_start = k_uptime_get();
