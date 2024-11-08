@@ -421,7 +421,7 @@ To do it, you need to edit `model_struct` in `demo_app/src/main.c` to match the 
 Then, provide model input in `demo_app/src/input_data.h` and model path using `CONFIG_KENNING_MODEL_PATH` config variable (similarly as in [Building runtime with microTVM backend using custom model](#Building-runtime-with-microTVM-backend-using-custom-model)):
 ```bash
 west build -p always -b stm32f746g_disco demo_app -- \
-    -DEXTRA_CONF_FILE=tvm.conf \
+    -DEXTRA_CONF_FILE=tvm_gen.conf \
     -DCONFIG_KENNING_MODEL_PATH=\"https://dl.antmicro.com/kenning/models/classification/magic_wand.h5\"
 ```
 
