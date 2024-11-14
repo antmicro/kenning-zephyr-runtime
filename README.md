@@ -232,6 +232,17 @@ kenning optimize test report \
 The model performance report in Markdown will be available under `reports/stm32-renode-tflite-magic-wand/report.md`.
 The HTML version of the report will be accessible from `reports/stm32-renode-tflite-magic-wand/report/report.html`.
 
+The above two steps (`west build` and `kenning ...`) can be also performed by Kenning automatically using `ZephyrRuntimeBuilder` block, e.g. as in the scenario located in `kenning-scenarios/renode-zephyr-auto-tflite-magic-wand-inference.json`:
+
+```bash
+kenning optimize test report \
+    --json-cfg kenning-scenarios/renode-zephyr-auto-tflite-magic-wand-inference.json \
+    --measurements results.json --verbosity INFO \
+    --report-path reports/stm32-renode-auto-tflite-magic-wand/report.md \
+    --to-html \
+    --verbosity INFO
+```
+
 #### Using microTVM
 
 To build the `kenning-zephyr-runtime` app to work with microTVM runtime, set `-DEXTRA_CONF_FILE` to `tvm.conf`, e.g. by executing:
@@ -247,6 +258,17 @@ kenning optimize test report \
     --json-cfg kenning-scenarios/renode-zephyr-tvm-magic-wand-inference.json \
     --measurements results.json --verbosity INFO \
     --report-path reports/stm32-renode-tvm-magic-wand/report.md \
+    --to-html \
+    --verbosity INFO
+```
+
+The above two steps (`west build` and `kenning ...`) can be also performed by Kenning automatically using `ZephyrRuntimeBuilder` block:
+
+```bash
+kenning optimize test report \
+    --json-cfg kenning-scenarios/renode-zephyr-auto-tvm-magic-wand-inference.json \
+    --measurements results.json --verbosity INFO \
+    --report-path reports/stm32-renode-auto-tvm-magic-wand/report.md \
     --to-html \
     --verbosity INFO
 ```
@@ -298,6 +320,17 @@ kenning optimize test report \
     --verbosity INFO
 ```
 Alternatively, build and evaluation can be done in a single step:
+```bash
+kenning optimize test report \
+    --json-cfg kenning-scenarios/renode-zephyr-auto-tvm-llext-magic-wand-inference.json \
+    --measurements results.json --verbosity INFO \
+    --report-path reports/stm32-renode-auto-tvm-llext-magic-wand/report.md \
+    --to-html \
+    --verbosity INFO
+```
+
+The above two steps (`west build` and `kenning ...`) can be also performed by Kenning automatically using `ZephyrRuntimeBuilder`:
+
 ```bash
 kenning optimize test report \
     --json-cfg kenning-scenarios/renode-zephyr-auto-tvm-llext-magic-wand-inference.json \
