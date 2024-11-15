@@ -7,6 +7,8 @@
 #include <kenning_inference_lib/core/runtime_wrapper.h>
 #include <kenning_inference_lib/core/utils.h>
 
+#include <zephyr/logging/log.h>
+
 #include "iree.h"
 
 #include <iree/base/status.h>

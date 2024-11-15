@@ -9,6 +9,10 @@
 #include <iree/hal/drivers/local_sync/sync_device.h>
 #include <iree/hal/local/loaders/vmvx_module_loader.h>
 
+#include <zephyr/logging/log.h>
+
+LOG_MODULE_REGISTER(iree_runtime_vmvx, CONFIG_RUNTIME_WRAPPER_LOG_LEVEL);
+
 iree_status_t create_device(iree_vm_instance_t *instance, iree_allocator_t host_allocator,
                             iree_hal_device_t **out_device)
 {
