@@ -88,6 +88,16 @@ config KENNING_ML_RUNTIME_IREE
         prompt "IREE runtime"
         select ZEPHYR_IREE_MODULE
 
+config KENNING_IREE_MODEL_BUFFER_SIZE
+        int "Size in kilobytes of the IREE model buffer"
+        default 32
+        depends on KENNING_ML_RUNTIME_IREE
+
+config KENNING_IREE_INPUT_BUFFER_SIZE
+        int "Size in kilobytes of the IREE input buffer"
+        default 4
+        depends on KENNING_ML_RUNTIME_IREE
+
 config KENNING_ML_RUNTIME_LLEXT
         bool
         prompt "Loads Kenning Runtime from Linkable Loadable Extensions."

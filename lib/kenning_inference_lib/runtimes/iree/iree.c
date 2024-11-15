@@ -4,6 +4,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+#include "kenning_inference_lib/core/inference_server.h"
+#include "kenning_inference_lib/core/loaders.h"
 #include <kenning_inference_lib/core/runtime_wrapper.h>
 #include <kenning_inference_lib/core/utils.h>
 
@@ -16,11 +18,12 @@
 #include <iree/vm/bytecode_module.h>
 #include <iree/vm/ref.h>
 
-#include <zephyr/logging/log.h>
-
 LOG_MODULE_REGISTER(iree_runtime, CONFIG_RUNTIME_WRAPPER_LOG_LEVEL);
 
 GENERATE_MODULE_STATUSES_STR(RUNTIME_WRAPPER);
+
+static uint8_t __attribute__((aligned(8))) gp_ireeModelBuffer[CONFIG_KENNING_IREE_MODEL_BUFFER_SIZE * 1024];
+static uint8_t __attribute__((aligned(8))) gp_ireeInputBuffer[CONFIG_KENNING_IREE_INPUT_BUFFER_SIZE * 1024];
 
 static const iree_hal_element_type_t G_HAL_ELEM_DTYPE_TO_IREE_HAL_ELEM_TYPE[] = {
     IREE_HAL_ELEMENT_TYPE_INT_8,    /* HAL_ELEMENT_TYPE_INT_8 */
@@ -63,11 +66,6 @@ static iree_vm_list_t *gp_model_inputs = NULL;
 static iree_vm_list_t *gp_model_outputs = NULL;
 
 /**
- * Buffer for model weights
- */
-static uint8_t *gp_model_weights = NULL;
-
-/**
  * Struct describing model IO
  */
 extern MlModel g_model_struct;
@@ -82,11 +80,6 @@ static void release_context()
     {
         iree_vm_context_release(gp_context);
         gp_context = NULL;
-    }
-    if (NULL != gp_model_weights)
-    {
-        free(gp_model_weights);
-        gp_model_weights = NULL;
     }
 }
 
@@ -111,18 +104,9 @@ status_t create_context(const uint8_t *model_data, const size_t model_data_size)
     {
         iree_allocator_t host_allocator = iree_allocator_system();
 
-        // prepare model weights
-        gp_model_weights = aligned_alloc(8, model_data_size);
-        if (!IS_VALID_POINTER(gp_model_weights))
-        {
-            status = RUNTIME_WRAPPER_STATUS_INV_PTR;
-            break;
-        }
-        memcpy(gp_model_weights, model_data, model_data_size);
-
         // create bytecode module
         iree_status =
-            iree_vm_bytecode_module_create(gp_instance, iree_make_const_byte_span(gp_model_weights, model_data_size),
+            iree_vm_bytecode_module_create(gp_instance, iree_make_const_byte_span(model_data, model_data_size),
                                            iree_allocator_null(), host_allocator, &module);
         BREAK_ON_IREE_ERROR(iree_status);
 
@@ -258,8 +242,21 @@ static void release_output_buffer()
     }
 }
 
+status_t prepare_iree_ldr_table()
+{
+    static struct msg_loader msg_loader_model =
+        MSG_LOADER_BUF(gp_ireeModelBuffer, CONFIG_KENNING_IREE_MODEL_BUFFER_SIZE * 1024);
+    static struct msg_loader msg_loader_input =
+        MSG_LOADER_BUF(gp_ireeInputBuffer, CONFIG_KENNING_IREE_INPUT_BUFFER_SIZE * 1024);
+    memset(&g_ldr_tables[1], 0, NUM_MESSAGE_TYPES * sizeof(struct msg_loader *));
+    g_ldr_tables[1][MESSAGE_TYPE_MODEL] = &msg_loader_model;
+    g_ldr_tables[1][MESSAGE_TYPE_DATA] = &msg_loader_input;
+    return STATUS_OK;
+}
+
 status_t runtime_init()
 {
+    prepare_iree_ldr_table();
     status_t status = STATUS_OK;
     iree_status_t iree_status = iree_ok_status();
     iree_allocator_t host_allocator = iree_allocator_system();
@@ -299,32 +296,31 @@ status_t runtime_init()
     return status;
 }
 
-status_t runtime_load_model_weights(const uint8_t *model_weights_data, const size_t data_size)
+status_t runtime_init_weights()
 {
     status_t status = STATUS_OK;
 
-    RETURN_ERROR_IF_POINTER_INVALID(model_weights_data, RUNTIME_WRAPPER_STATUS_INV_PTR);
+    struct msg_loader *msg_loader_model = g_ldr_tables[1][MESSAGE_TYPE_MODEL];
 
     // free input/output resources
     release_output_buffer();
     release_input_buffer();
 
-    status = create_context(model_weights_data, data_size);
+    status = create_context(gp_ireeModelBuffer, msg_loader_model->written);
     RETURN_ON_ERROR(status, status);
 
     return STATUS_OK;
 }
-status_t runtime_load_model_input(const uint8_t *model_input)
+
+status_t runtime_init_input()
 {
     status_t status = STATUS_OK;
-
-    RETURN_ERROR_IF_POINTER_INVALID(model_input, RUNTIME_WRAPPER_STATUS_INV_PTR);
 
     // free resources
     release_input_buffer();
 
     // setup buffers for inputs
-    status = prepare_input_buffer(model_input);
+    status = prepare_input_buffer(gp_ireeInputBuffer);
     RETURN_ON_ERROR(status, status);
 
     return STATUS_OK;
