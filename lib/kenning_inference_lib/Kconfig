@@ -148,7 +148,7 @@ config KENNING_TVM_INPUT_BUFFER_SIZE
 config KENNING_TFLITE_BUFFER_SIZE
         int "Size in kilobytes of the buffer for tensor arena and model used by TFLite"
         default 64
-        depends on KENNING_ML_RUNTIME_TFLITE
+        depends on KENNING_ML_RUNTIME_TFLITE || KENNING_ML_RUNTIME_LLEXT
         help
           This option sets the size in bytes of the buffer for tensor arena and model used by TFLite.
 

@@ -10,6 +10,7 @@
 #include "arm.h"
 #include "kenning.h"
 #include "libc.h"
+#include "libcpp.h"
 #include "zephyr.h"
 
 #endif // KENNING_INFERENCE_LIB_RUNTIMES_LLEXT_EXPORTS_H_

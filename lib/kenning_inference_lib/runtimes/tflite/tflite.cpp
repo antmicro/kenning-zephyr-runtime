@@ -6,14 +6,18 @@
 
 extern "C"
 {
+#include "kenning_inference_lib/core/inference_server.h"
+#include "kenning_inference_lib/core/loaders.h"
 #include "kenning_inference_lib/core/runtime_wrapper.h"
 }
+
+#include <zephyr/kernel.h>
+#include <zephyr/logging/log.h>
 
 #include <tensorflow/lite/micro/micro_interpreter.h>
 #include <tensorflow/lite/micro/micro_mutable_op_resolver.h>
 #include <tensorflow/lite/micro/system_setup.h>
 #include <tensorflow/lite/schema/schema_generated.h>
-#include <zephyr/logging/log.h>
 
 #include "resolver.h"
 
@@ -26,22 +30,35 @@ static tflite::MicroInterpreter *gp_tflite_interpreter = nullptr;
 
 static uint8_t __attribute__((aligned(8))) g_tfliteBuffer[CONFIG_KENNING_TFLITE_BUFFER_SIZE * 1024];
 
+status_t prepare_tflite_ldr_table()
+{
+    static struct msg_loader msg_loader_model =
+        MSG_LOADER_BUF(g_tfliteBuffer, CONFIG_KENNING_TFLITE_BUFFER_SIZE * 1024);
+    static struct msg_loader msg_loader_input = MSG_LOADER_BUF(NULL, 0);
+    memset(&g_ldr_tables[1], 0, NUM_MESSAGE_TYPES * sizeof(struct msg_loader *));
+    g_ldr_tables[1][MESSAGE_TYPE_MODEL] = &msg_loader_model;
+    g_ldr_tables[1][MESSAGE_TYPE_DATA] = &msg_loader_input;
+    return STATUS_OK;
+}
+status_t runtime_deinit() { return STATUS_OK; }
+
 status_t runtime_init()
 {
+    prepare_tflite_ldr_table();
     tflite_initialize_resolver();
     return STATUS_OK;
 }
 
-status_t runtime_load_model_weights(const uint8_t *model_weights_data, const size_t model_size)
+status_t runtime_init_weights()
 {
+    struct msg_loader *msg_loader_model = g_ldr_tables[1][MESSAGE_TYPE_MODEL];
+    struct msg_loader *msg_loader_input = g_ldr_tables[1][MESSAGE_TYPE_DATA];
+
+    size_t model_size = msg_loader_model->written;
     uint8_t *modelWeights = g_tfliteBuffer;
     uint8_t *tensorArena = g_tfliteBuffer + model_size;
     size_t tensorArenaSize = CONFIG_KENNING_TFLITE_BUFFER_SIZE * 1024 - model_size;
 
-    if (model_size > CONFIG_KENNING_TFLITE_BUFFER_SIZE * 1024)
-        return RUNTIME_WRAPPER_STATUS_ERROR;
-
-    memcpy(modelWeights, model_weights_data, model_size);
     const tflite::Model *model = tflite::GetModel(modelWeights);
     if (model->version() != TFLITE_SCHEMA_VERSION)
     {
@@ -65,15 +82,14 @@ status_t runtime_load_model_weights(const uint8_t *model_weights_data, const siz
         return RUNTIME_WRAPPER_STATUS_ERROR;
     }
 
+    TfLiteTensor *input = gp_tflite_interpreter->input(0);
+    msg_loader_input->addr = input->data.data;
+    msg_loader_input->max_size = input->bytes;
+
     return STATUS_OK;
 }
 
-status_t runtime_load_model_input(const uint8_t *model_input)
-{
-    TfLiteTensor *input = gp_tflite_interpreter->input(0);
-    memcpy(input->data.data, model_input, input->bytes);
-    return STATUS_OK;
-}
+status_t runtime_init_input() { return STATUS_OK; }
 
 status_t runtime_run_model()
 {
@@ -96,4 +112,30 @@ status_t runtime_get_statistics(const size_t statistics_buffer_size, uint8_t *st
 {
     *statistics_size = 0;
     return STATUS_OK;
+}
+
+extern "C"
+{
+#if defined(CONFIG_LLEXT)
+
+    void __attribute__((optimize("O0"))) tflite_opt_entrypoint()
+    {
+        runtime_deinit();
+        runtime_init();
+        runtime_init_weights();
+        runtime_init_input();
+        runtime_run_model();
+        runtime_get_model_output(NULL);
+        runtime_get_statistics(0, NULL, NULL);
+        prepare_tflite_ldr_table();
+    }
+
+#endif
+}
+
+extern "C"
+{
+#if defined(CONFIG_LLEXT)
+    RUNTIME_LL_EXTENSION_SYMBOLS
+#endif // defined(CONFIG_LLEXT)
 }
