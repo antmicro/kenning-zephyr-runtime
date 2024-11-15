@@ -28,6 +28,7 @@
         "parameters": {
             "runtime_binary_path": "build/zephyr/zephyr.elf",
             "platform_resc_path": "renode/scripts/hifive_unmatched.resc",
+            "resc_dependencies": ["./build/stm32f746g_disco.repl"],
             "runtime_log_uart": "/tmp/uart-log",
             "runtime_log_init_msg": "I: Inference server started",
             "profiler_dump_path": "build/profiler.dump"

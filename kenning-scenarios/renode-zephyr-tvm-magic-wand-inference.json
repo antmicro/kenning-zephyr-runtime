@@ -30,6 +30,7 @@
             "runtime_binary_path": "build/zephyr/zephyr.elf",
             "platform_resc_path": "renode/scripts/stm32f746g_disco.resc",
             "runtime_log_init_msg": "I: Inference server started",
+            "resc_dependencies": ["./build/stm32f746g_disco.repl"],
             "profiler_dump_path": "build/profiler.dump",
             "runtime_log_uart": "/tmp/uart-log"
         }
