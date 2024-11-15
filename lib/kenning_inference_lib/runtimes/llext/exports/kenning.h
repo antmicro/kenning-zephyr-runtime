@@ -10,10 +10,18 @@
 #include <zephyr/llext/symbol.h>
 
 /* Kenning Zephyr Runtime exports */
+#include <kenning_inference_lib/core/inference_server.h>
+#include <kenning_inference_lib/core/loaders.h>
 #include <kenning_inference_lib/core/runtime_wrapper.h>
 
 extern MlModel g_model_struct;
 
 EXPORT_SYMBOL(g_model_struct);
+
+EXPORT_SYMBOL(g_ldr_tables);
+
+EXPORT_SYMBOL(buf_save);
+EXPORT_SYMBOL(buf_save_one);
+EXPORT_SYMBOL(buf_reset);
 
 #endif // KENNING_INFERENCE_LIB_RUNTIMES_LLEXT_EXPORTS_KENNING_H_
