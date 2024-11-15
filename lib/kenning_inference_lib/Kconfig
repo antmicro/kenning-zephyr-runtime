@@ -125,6 +125,16 @@ config KENNING_TVM_HEAP_SIZE
         help
           This option sets the size in kilobytes of the heap used by TVM.
 
+config KENNING_TVM_GRAPH_BUFFER_SIZE
+        int "Size in kilobytes of the TVM graph buffer"
+        default 32
+        depends on KENNING_ML_RUNTIME_TVM || KENNING_ML_RUNTIME_LLEXT
+
+config KENNING_TVM_INPUT_BUFFER_SIZE
+        int "Size in kilobytes of the TVM input buffer"
+        default 4
+        depends on KENNING_ML_RUNTIME_TVM || KENNING_ML_RUNTIME_LLEXT
+
 config KENNING_TFLITE_BUFFER_SIZE
         int "Size in kilobytes of the buffer for tensor arena and model used by TFLite"
         default 64
