@@ -11,32 +11,36 @@
 
 /* ARM architecture-specific exports */
 #if defined(CONFIG_ARM)
-extern void(__aeabi_d2lz)(void);
-extern void(__aeabi_dadd)(void);
-extern void(__aeabi_dcmpeq)(void);
-extern void(__aeabi_dcmpge)(void);
-extern void(__aeabi_dcmpgt)(void);
-extern void(__aeabi_dcmple)(void);
-extern void(__aeabi_dcmpun)(void);
-extern void(__aeabi_ddiv)(void);
-extern void(__aeabi_dmul)(void);
-extern void(__aeabi_i2d)(void);
-extern void(__aeabi_ldivmod)(void);
-extern void(__aeabi_ul2d)(void);
-extern void(__assert_func)(void);
 
-EXPORT_SYMBOL(__aeabi_d2lz);
-EXPORT_SYMBOL(__aeabi_dadd);
-EXPORT_SYMBOL(__aeabi_dcmpeq);
-EXPORT_SYMBOL(__aeabi_dcmpge);
-EXPORT_SYMBOL(__aeabi_dcmpgt);
-EXPORT_SYMBOL(__aeabi_dcmple);
-EXPORT_SYMBOL(__aeabi_dcmpun);
-EXPORT_SYMBOL(__aeabi_ddiv);
-EXPORT_SYMBOL(__aeabi_dmul);
-EXPORT_SYMBOL(__aeabi_i2d);
-EXPORT_SYMBOL(__aeabi_ldivmod);
-EXPORT_SYMBOL(__aeabi_ul2d);
+#define AEABI_EXPORT_SYMBOL(x) \
+    extern void(x)(void);      \
+    EXPORT_SYMBOL(x);
+
+AEABI_EXPORT_SYMBOL(__aeabi_atexit)
+AEABI_EXPORT_SYMBOL(__aeabi_d2f)
+AEABI_EXPORT_SYMBOL(__aeabi_d2iz)
+AEABI_EXPORT_SYMBOL(__aeabi_d2lz)
+AEABI_EXPORT_SYMBOL(__aeabi_d2ulz)
+AEABI_EXPORT_SYMBOL(__aeabi_dadd)
+AEABI_EXPORT_SYMBOL(__aeabi_dcmpeq)
+AEABI_EXPORT_SYMBOL(__aeabi_dcmpge)
+AEABI_EXPORT_SYMBOL(__aeabi_dcmpgt)
+AEABI_EXPORT_SYMBOL(__aeabi_dcmple)
+AEABI_EXPORT_SYMBOL(__aeabi_dcmplt)
+AEABI_EXPORT_SYMBOL(__aeabi_dcmpun)
+AEABI_EXPORT_SYMBOL(__aeabi_ddiv)
+AEABI_EXPORT_SYMBOL(__aeabi_dmul)
+AEABI_EXPORT_SYMBOL(__aeabi_dsub)
+AEABI_EXPORT_SYMBOL(__aeabi_f2d)
+AEABI_EXPORT_SYMBOL(__aeabi_i2d)
+AEABI_EXPORT_SYMBOL(__aeabi_l2d)
+AEABI_EXPORT_SYMBOL(__aeabi_ldivmod)
+AEABI_EXPORT_SYMBOL(__aeabi_ui2d)
+AEABI_EXPORT_SYMBOL(__aeabi_ul2d)
+AEABI_EXPORT_SYMBOL(__aeabi_uldivmod)
+
+#undef AEABI_EXPORT_SYMBOL
+
 #endif // CONFIG_ARM
 
 #endif // KENNING_INFERENCE_LIB_RUNTIMES_LLEXT_EXPORTS_ARM_H_
