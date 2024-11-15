@@ -11,6 +11,7 @@
 #include "kenning_inference_lib/core/protocol.h"
 
 #ifndef __UNIT_TEST__
+#include <zephyr/kernel.h>
 #include <zephyr/logging/log.h>
 #else // __UNIT_TEST__
 #include "mocks/log.h"
@@ -24,6 +25,22 @@ extern const char *const MESSAGE_TYPE_STR[];
 extern const callback_ptr_t g_msg_callback[];
 
 struct msg_loader *g_ldr_tables[LDR_TABLE_COUNT][NUM_MESSAGE_TYPES];
+
+#if defined(CONFIG_LLEXT)
+
+int alloc_reset(struct msg_loader *ldr, size_t n)
+{
+    extern struct k_heap llext_heap;
+    k_free(ldr->addr);
+    ldr->addr = NULL;
+    ldr->addr = k_heap_aligned_alloc(&llext_heap, 64, n, K_NO_WAIT);
+    ldr->written = 0;
+    ldr->max_size = (ldr->addr != NULL) ? n : 0;
+    return 0;
+}
+
+#endif // defined(CONFIG_LLEXT)
+
 status_t init_server()
 {
     status_t status = STATUS_OK;
@@ -46,7 +63,11 @@ status_t init_server()
 
 status_t prepare_main_ldr_table()
 {
-    status_t status = STATUS_OK;
+#if defined(CONFIG_LLEXT)
+    static struct msg_loader msg_loader_llext = {
+        .save = buf_save, .save_one = buf_save_one, .reset = alloc_reset, .written = 0, .max_size = 0, .addr = NULL};
+    g_ldr_tables[0][MESSAGE_TYPE_RUNTIME] = &msg_loader_llext;
+#endif
 
     static struct msg_loader msg_loader_iospec = MSG_LOADER_BUF((uint8_t *)(&g_model_struct), sizeof(MlModel));
     g_ldr_tables[0][MESSAGE_TYPE_IOSPEC] = &msg_loader_iospec;

@@ -38,18 +38,18 @@ status_t runtime_init()
     return p_func();
 }
 
-status_t runtime_load_model_weights(const uint8_t *model_weights_data, const size_t data_size)
+status_t runtime_init_weights()
 {
-    FIND_P_FUNC(runtime_load_model_weights)
+    FIND_P_FUNC(runtime_init_weights)
 
-    return p_func(model_weights_data, data_size);
+    return p_func();
 }
 
-status_t runtime_load_model_input(const uint8_t *model_input)
+status_t runtime_init_input()
 {
-    FIND_P_FUNC(runtime_load_model_input)
+    FIND_P_FUNC(runtime_init_input)
 
-    return p_func(model_input);
+    return p_func();
 }
 
 status_t runtime_run_model()
