@@ -34,4 +34,6 @@ add_custom_target(
     ${BOARD}.repl
 )
 
+add_dependencies(app board-repl)
+
 target_sources(app PRIVATE src/main.c)
