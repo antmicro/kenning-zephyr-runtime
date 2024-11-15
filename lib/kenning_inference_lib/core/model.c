@@ -5,6 +5,7 @@
  */
 
 #include "kenning_inference_lib/core/model.h"
+#include "kenning_inference_lib/core/inference_server.h"
 #include <string.h>
 
 #ifndef __UNIT_TEST__
@@ -39,24 +40,16 @@ status_t model_init()
     return status;
 }
 
-status_t model_load_struct(const uint8_t *model_struct_data, const size_t data_size)
+status_t model_load_struct()
 {
     status_t status = STATUS_OK;
 
-    RETURN_ERROR_IF_POINTER_INVALID(model_struct_data, MODEL_STATUS_INV_PTR);
+    struct msg_loader *msg_loader_iospec = g_ldr_tables[0][MESSAGE_TYPE_IOSPEC];
 
     if (g_model_state < MODEL_STATE_INITIALIZED)
     {
         return MODEL_STATUS_INV_STATE;
     }
-
-    if (sizeof(MlModel) != data_size)
-    {
-        LOG_ERR("Wrong model struct size: %zu. Should be: %zu.", data_size, sizeof(MlModel));
-        return MODEL_STATUS_INV_ARG;
-    }
-
-    g_model_struct = *((MlModel *)model_struct_data);
 
     // validate struct
     if (g_model_struct.num_input < 1 || g_model_struct.num_input > MAX_MODEL_INPUT_NUM ||
@@ -123,21 +116,19 @@ status_t model_load_struct(const uint8_t *model_struct_data, const size_t data_s
     return status;
 }
 
-status_t model_load_weights(const uint8_t *model_weights_data, const size_t data_size)
+status_t model_load_weights()
 {
     status_t status = STATUS_OK;
-
-    RETURN_ERROR_IF_POINTER_INVALID(model_weights_data, MODEL_STATUS_INV_PTR);
 
     if (g_model_state < MODEL_STATE_STRUCT_LOADED)
     {
         return MODEL_STATUS_INV_STATE;
     }
 
-    status = runtime_load_model_weights(model_weights_data, data_size);
+    status = runtime_init_weights();
     RETURN_ON_ERROR(status, status);
 
-    LOG_DBG("Loaded model weights");
+    LOG_DBG("Initialized model weights");
 
     g_model_state = MODEL_STATE_WEIGHTS_LOADED;
 
@@ -167,11 +158,9 @@ status_t model_get_input_size(size_t *model_input_size)
     return status;
 }
 
-status_t model_load_input(const uint8_t *model_input, const size_t model_input_size)
+status_t model_load_input()
 {
     status_t status = STATUS_OK;
-
-    RETURN_ERROR_IF_POINTER_INVALID(model_input, MODEL_STATUS_INV_PTR);
 
     if (g_model_state < MODEL_STATE_WEIGHTS_LOADED)
     {
@@ -183,14 +172,7 @@ status_t model_load_input(const uint8_t *model_input, const size_t model_input_s
     status = model_get_input_size(&expected_size);
     RETURN_ON_ERROR(status, status);
 
-    if (model_input_size != expected_size)
-    {
-        LOG_ERR("Invalid model input size: %zu. Expected size: %zu", model_input_size, expected_size);
-        return MODEL_STATUS_INV_ARG;
-    }
-
-    // setup buffers for inputs
-    status = runtime_load_model_input(model_input);
+    status = runtime_init_input();
 
     RETURN_ON_ERROR(status, status);
 

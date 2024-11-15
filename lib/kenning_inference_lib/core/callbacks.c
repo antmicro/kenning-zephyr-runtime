@@ -5,6 +5,7 @@
  */
 
 #include <kenning_inference_lib/core/callbacks.h>
+#include <kenning_inference_lib/core/inference_server.h>
 #include <kenning_inference_lib/core/model.h>
 #include <kenning_inference_lib/core/runtime_wrapper.h>
 #include <kenning_inference_lib/core/utils.h>
@@ -39,16 +40,13 @@ extern const char *const MESSAGE_TYPE_STR[];
  *
  * @returns error status of the callback
  */
-status_t unsupported_callback(message_t **request)
+status_t unsupported_callback(message_hdr_t *hdr, resp_message_t *resp)
 {
     status_t status = STATUS_OK;
 
-    RETURN_ERROR_IF_POINTER_INVALID(request, CALLBACKS_STATUS_INV_PTR);
+    LOG_WRN("Unsupported message received: %d (%s)", hdr->message_type, MESSAGE_TYPE_STR[hdr->message_type]);
 
-    LOG_WRN("Unsupported message received: %d (%s)", (*request)->message_type,
-            MESSAGE_TYPE_STR[(*request)->message_type]);
-
-    status = protocol_prepare_fail_resp(request);
+    status = protocol_prepare_fail_resp(resp);
     RETURN_ON_ERROR(status, status);
 
     return STATUS_OK;
@@ -62,13 +60,14 @@ status_t unsupported_callback(message_t **request)
  *
  * @returns error status of the callback
  */
-status_t ok_callback(message_t **request)
+status_t ok_callback(message_hdr_t *hdr, resp_message_t *resp)
 {
-    VALIDATE_REQUEST(MESSAGE_TYPE_OK, request);
+    status_t status = STATUS_OK;
+    VALIDATE_HEADER(MESSAGE_TYPE_OK, hdr);
 
     LOG_WRN("Unexpected message received: MESSAGE_TYPE_OK");
-    *request = NULL;
-    return STATUS_OK;
+    status = protocol_prepare_fail_resp(resp);
+    return status;
 }
 
 /**
@@ -79,13 +78,14 @@ status_t ok_callback(message_t **request)
  *
  * @returns error status of the callback
  */
-status_t error_callback(message_t **request)
+status_t error_callback(message_hdr_t *hdr, resp_message_t *resp)
 {
-    VALIDATE_REQUEST(MESSAGE_TYPE_ERROR, request);
+    status_t status = STATUS_OK;
+    VALIDATE_HEADER(MESSAGE_TYPE_ERROR, hdr);
 
     LOG_WRN("Unexpected message received: MESSAGE_TYPE_ERROR");
-    *request = NULL;
-    return STATUS_OK;
+    status = protocol_prepare_fail_resp(resp);
+    return status;
 }
 
 /**
@@ -97,20 +97,18 @@ status_t error_callback(message_t **request)
  *
  * @returns error status of the callback
  */
-status_t data_callback(message_t **request)
+status_t data_callback(message_hdr_t *hdr, resp_message_t *resp) // TODO
 {
     status_t status = STATUS_OK;
 
-    VALIDATE_REQUEST(MESSAGE_TYPE_DATA, request);
+    VALIDATE_HEADER(MESSAGE_TYPE_DATA, hdr);
 
-    status = model_load_input((*request)->payload, MESSAGE_SIZE_PAYLOAD((*request)->message_size));
+    status = model_load_input();
 
-    CHECK_STATUS_LOG(status, request, "model_load_input returned 0x%x (%s)", status, get_status_str(status));
+    CHECK_STATUS_LOG(status, resp, "model_load_input returned 0x%x (%s)", status, get_status_str(status));
 
-    status = protocol_prepare_success_resp(request);
-    RETURN_ON_ERROR(status, status);
-
-    return STATUS_OK;
+    status = protocol_prepare_success_resp(resp);
+    return status;
 }
 
 /**
@@ -122,17 +120,17 @@ status_t data_callback(message_t **request)
  *
  * @returns error status of the callback
  */
-status_t model_callback(message_t **request)
+status_t model_callback(message_hdr_t *hdr, resp_message_t *resp)
 {
     status_t status = STATUS_OK;
 
-    VALIDATE_REQUEST(MESSAGE_TYPE_MODEL, request);
+    VALIDATE_HEADER(MESSAGE_TYPE_MODEL, hdr);
 
-    status = model_load_weights((*request)->payload, MESSAGE_SIZE_PAYLOAD((*request)->message_size));
+    status = model_load_weights();
 
-    CHECK_STATUS_LOG(status, request, "model_load_weights returned 0x%x (%s)", status, get_status_str(status));
+    CHECK_STATUS_LOG(status, resp, "model_load_weights returned 0x%x (%s)", status, get_status_str(status));
 
-    status = protocol_prepare_success_resp(request);
+    status = protocol_prepare_success_resp(resp);
     RETURN_ON_ERROR(status, status);
 
     return STATUS_OK;
@@ -146,20 +144,18 @@ status_t model_callback(message_t **request)
  *
  * @returns error status of the callback
  */
-status_t process_callback(message_t **request)
+status_t process_callback(message_hdr_t *hdr, resp_message_t *resp)
 {
     status_t status = STATUS_OK;
 
-    VALIDATE_REQUEST(MESSAGE_TYPE_PROCESS, request);
+    VALIDATE_HEADER(MESSAGE_TYPE_PROCESS, hdr);
 
     status = model_run();
 
-    CHECK_STATUS_LOG(status, request, "model_run returned 0x%x (%s)", status, get_status_str(status));
+    CHECK_STATUS_LOG(status, resp, "model_run returned 0x%x (%s)", status, get_status_str(status));
 
-    status = protocol_prepare_success_resp(request);
-    RETURN_ON_ERROR(status, status);
-
-    return STATUS_OK;
+    status = protocol_prepare_success_resp(resp);
+    return status;
 }
 
 /**
@@ -170,19 +166,19 @@ status_t process_callback(message_t **request)
  *
  * @returns error status of the callback
  */
-status_t output_callback(message_t **request)
+status_t output_callback(message_hdr_t *hdr, resp_message_t *resp)
 {
     status_t status = STATUS_OK;
     size_t model_output_size = 0;
 
-    VALIDATE_REQUEST(MESSAGE_TYPE_OUTPUT, request);
+    VALIDATE_HEADER(MESSAGE_TYPE_OUTPUT, hdr);
 
-    status = model_get_output(MAX_MESSAGE_SIZE_BYTES - sizeof(message_t), (*request)->payload, &model_output_size);
+    status = model_get_output(CONFIG_KENNING_RESPONSE_PAYLOAD_SIZE, resp->payload, &model_output_size);
 
-    CHECK_STATUS_LOG(status, request, "model_get_output returned 0x%x (%s)", status, get_status_str(status));
+    CHECK_STATUS_LOG(status, resp, "model_get_output returned 0x%x (%s)", status, get_status_str(status));
 
-    (*request)->message_size = model_output_size + sizeof(message_type_t);
-    (*request)->message_type = MESSAGE_TYPE_OK;
+    resp->hdr.message_size = model_output_size + sizeof(message_type_t);
+    resp->hdr.message_type = MESSAGE_TYPE_OK;
 
     return STATUS_OK;
 }
@@ -195,20 +191,19 @@ status_t output_callback(message_t **request)
  *
  * @returns error status of the callback
  */
-status_t stats_callback(message_t **request)
+status_t stats_callback(message_hdr_t *hdr, resp_message_t *resp)
 {
     status_t status = STATUS_OK;
     size_t statistics_length = 0;
 
-    VALIDATE_REQUEST(MESSAGE_TYPE_STATS, request);
+    VALIDATE_HEADER(MESSAGE_TYPE_STATS, hdr);
 
-    status = model_get_statistics(MAX_MESSAGE_SIZE_BYTES - sizeof(message_t), (uint8_t *)&(*request)->payload,
-                                  &statistics_length);
+    status = model_get_statistics(CONFIG_KENNING_RESPONSE_PAYLOAD_SIZE, resp->payload, &statistics_length);
 
-    CHECK_STATUS_LOG(status, request, "model_get_statistics returned 0x%x (%s)", status, get_status_str(status));
+    CHECK_STATUS_LOG(status, resp, "model_get_statistics returned 0x%x (%s)", status, get_status_str(status));
 
-    (*request)->message_size = statistics_length + sizeof(message_type_t);
-    (*request)->message_type = MESSAGE_TYPE_OK;
+    resp->hdr.message_size = statistics_length + sizeof(message_type_t);
+    resp->hdr.message_type = MESSAGE_TYPE_OK;
 
     return STATUS_OK;
 }
@@ -221,17 +216,17 @@ status_t stats_callback(message_t **request)
  *
  * @returns error status of the callback
  */
-status_t iospec_callback(message_t **request)
+status_t iospec_callback(message_hdr_t *hdr, resp_message_t *resp)
 {
     status_t status = STATUS_OK;
 
-    VALIDATE_REQUEST(MESSAGE_TYPE_IOSPEC, request);
+    VALIDATE_HEADER(MESSAGE_TYPE_IOSPEC, hdr);
 
-    status = model_load_struct((*request)->payload, MESSAGE_SIZE_PAYLOAD((*request)->message_size));
+    status = model_load_struct();
 
-    CHECK_STATUS_LOG(status, request, "model_load_struct returned 0x%x (%s)", status, get_status_str(status));
+    CHECK_STATUS_LOG(status, resp, "model_load_struct returned 0x%x (%s)", status, get_status_str(status));
 
-    status = protocol_prepare_success_resp(request);
+    status = protocol_prepare_success_resp(resp);
     RETURN_ON_ERROR(status, status);
 
     return STATUS_OK;
@@ -246,18 +241,18 @@ status_t iospec_callback(message_t **request)
  *
  * @returns error status of the callback
  */
-status_t runtime_callback(message_t **request)
+status_t runtime_callback(message_hdr_t *hdr, resp_message_t *resp)
 {
     status_t status = STATUS_OK;
     int llext_status = 0;
 
-    VALIDATE_REQUEST(MESSAGE_TYPE_RUNTIME, request);
+    VALIDATE_HEADER(MESSAGE_TYPE_RUNTIME, hdr);
 
-    size_t llext_size = MESSAGE_SIZE_PAYLOAD((*request)->message_size);
+    struct msg_loader *msg_loader_llext = g_ldr_tables[0][MESSAGE_TYPE_RUNTIME];
+    size_t llext_size = MESSAGE_SIZE_PAYLOAD(hdr->message_size);
 
     LOG_INF("Attempting to load %d", llext_size);
-
-    struct llext_buf_loader buf_loader = LLEXT_BUF_LOADER((*request)->payload, llext_size);
+    struct llext_buf_loader buf_loader = LLEXT_BUF_LOADER(msg_loader_llext->addr, llext_size);
     struct llext_loader *loader = &buf_loader.loader;
     struct llext_load_param ldr_param = LLEXT_LOAD_PARAM_DEFAULT;
 

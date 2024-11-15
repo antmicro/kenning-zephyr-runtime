@@ -17,51 +17,47 @@
 
 GENERATE_MODULE_STATUSES(CALLBACKS);
 
-#define VALIDATE_REQUEST(callback_message_type, request)           \
-    do                                                             \
-    {                                                              \
-        if (!IS_VALID_POINTER(request))                            \
-        {                                                          \
-            return CALLBACKS_STATUS_INV_PTR;                       \
-        }                                                          \
-        if ((callback_message_type) != (*(request))->message_type) \
-        {                                                          \
-            return CALLBACKS_STATUS_INV_MSG_TYPE;                  \
-        }                                                          \
+#define VALIDATE_HEADER(callback_message_type, hdr)         \
+    do                                                      \
+    {                                                       \
+        if ((callback_message_type) != (hdr)->message_type) \
+        {                                                   \
+            return CALLBACKS_STATUS_INV_MSG_TYPE;           \
+        }                                                   \
     } while (0);
 
-#define CHECK_STATUS_LOG(status, response, log_format, log_args...)     \
-    do                                                                  \
-    {                                                                   \
-        if (STATUS_OK != status)                                        \
-        {                                                               \
-            LOG_ERR(log_format, ##log_args);                            \
-            status_t resp_status = protocol_prepare_fail_resp(request); \
-            RETURN_ON_ERROR(resp_status, resp_status);                  \
-            return status;                                              \
-        }                                                               \
-        LOG_DBG(log_format, ##log_args);                                \
+#define CHECK_STATUS_LOG(status, response, log_format, log_args...)      \
+    do                                                                   \
+    {                                                                    \
+        if (STATUS_OK != status)                                         \
+        {                                                                \
+            LOG_ERR(log_format, ##log_args);                             \
+            status_t resp_status = protocol_prepare_fail_resp(response); \
+            RETURN_ON_ERROR(resp_status, resp_status);                   \
+            return status;                                               \
+        }                                                                \
+        LOG_DBG(log_format, ##log_args);                                 \
     } while (0);
 
-#define PREPARE_RESPONSE(status)                                  \
-    do                                                            \
-    {                                                             \
-        status_t resp_status = STATUS_OK;                         \
-        if (STATUS_OK == status)                                  \
-        {                                                         \
-            resp_status = protocol_prepare_success_resp(request); \
-            RETURN_ON_ERROR(resp_status, resp_status);            \
-        }                                                         \
-        else                                                      \
-        {                                                         \
-            resp_status = protocol_prepare_fail_resp(request);    \
-            RETURN_ON_ERROR(resp_status, resp_status);            \
-        }                                                         \
+#define PREPARE_RESPONSE(status)                               \
+    do                                                         \
+    {                                                          \
+        status_t resp_status = STATUS_OK;                      \
+        if (STATUS_OK == status)                               \
+        {                                                      \
+            resp_status = protocol_prepare_success_resp(resp); \
+            RETURN_ON_ERROR(resp_status, resp_status);         \
+        }                                                      \
+        else                                                   \
+        {                                                      \
+            resp_status = protocol_prepare_fail_resp(resp);    \
+            RETURN_ON_ERROR(resp_status, resp_status);         \
+        }                                                      \
     } while (0);
 /**
  * Type of callback function
  */
-typedef status_t (*callback_ptr_t)(message_t **);
+typedef status_t (*callback_ptr_t)(message_hdr_t *, resp_message_t *);
 
 #if !defined(CONFIG_LLEXT) && !defined(CONFIG_ZTEST)
 #define runtime_callback unsupported_callback
@@ -84,7 +80,7 @@ typedef status_t (*callback_ptr_t)(message_t **);
     ENTRY(MESSAGE_TYPE_OPTIMIZE_MODEL, unsupported_callback) \
     ENTRY(MESSAGE_TYPE_RUNTIME, runtime_callback)
 
-#define ENTRY(msg_type, callback_func) status_t callback_func(message_t **);
+#define ENTRY(msg_type, callback_func) status_t callback_func(message_hdr_t *, resp_message_t *);
 CALLBACKS_TABLE(ENTRY)
 #undef ENTRY
 

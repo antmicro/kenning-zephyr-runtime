@@ -7,6 +7,7 @@
 #ifndef KENNING_INFERENCE_LIB_CORE_KENNING_PROTOCOL_H_
 #define KENNING_INFERENCE_LIB_CORE_KENNING_PROTOCOL_H_
 
+#include "kenning_inference_lib/core/loaders.h"
 #include "kenning_inference_lib/core/protocol.h"
 
 #define CHECK_PROTOCOL_STATUS(status)                                       \
@@ -20,10 +21,9 @@
         return KENNING_PROTOCOL_STATUS_CLIENT_DISCONNECTED;                 \
     }
 
-#define MAX_MESSAGE_SIZE_BYTES (CONFIG_KENNING_MESSAGE_BUFFER_SIZE * 1024UL)
-
 #define MESSAGE_SIZE_PAYLOAD(msg_size) ((msg_size) - sizeof(message_type_t))
-#define MESSAGE_SIZE_FULL(msg_size) (sizeof(message_t) + MESSAGE_SIZE_PAYLOAD(msg_size))
+#define MESSAGE_SIZE_FULL(msg_size) (sizeof(message_hdr_t) + MESSAGE_SIZE_PAYLOAD(msg_size))
+#define RESP_MESSAGE_BUFFER_SIZE 128
 
 /**
  * An enum that describes message type
@@ -65,15 +65,20 @@ GENERATE_MODULE_STATUSES(KENNING_PROTOCOL);
 typedef uint32_t message_size_t;
 typedef uint16_t message_type_t;
 
-/**
- * A struct that contains all parameters describing single message
- */
 typedef struct __attribute__((packed))
 {
     message_size_t message_size;
     message_type_t message_type;
-    uint8_t payload[0];
-} message_t;
+} message_hdr_t;
+
+/**
+ * A struct that contains all parameters describing single message
+ */
+typedef struct
+{
+    message_hdr_t hdr;
+    uint8_t *payload;
+} resp_message_t;
 
 /* Max length of LLEXT name */
 #define LLEXT_NAME_MAX_LEN 32
@@ -85,7 +90,7 @@ typedef struct __attribute__((packed))
  *
  * @returns status of the protocol
  */
-status_t protocol_recv_msg(message_t **msg);
+status_t protocol_recv_msg(message_hdr_t *hdr);
 /**
  * Sends given message
  *
@@ -93,7 +98,7 @@ status_t protocol_recv_msg(message_t **msg);
  *
  * @returns status of the protocol
  */
-status_t protocol_send_msg(const message_t *msg);
+status_t protocol_send_msg(const resp_message_t *msg);
 /**
  * Create a message that indicates an successful action. The message type is OK
  * and the paylaod is empty
@@ -102,7 +107,7 @@ status_t protocol_send_msg(const message_t *msg);
  *
  * @returns status of the protocol
  */
-status_t protocol_prepare_success_resp(message_t **response);
+status_t protocol_prepare_success_resp(resp_message_t *response);
 /**
  * Create a message that indicates an error. The message type is ERROR and the
  * payload is empty
@@ -111,6 +116,10 @@ status_t protocol_prepare_success_resp(message_t **response);
  *
  * @returns status of the protocol
  */
-status_t protocol_prepare_fail_resp(message_t **response);
+status_t protocol_prepare_fail_resp(resp_message_t *response);
+
+status_t protocol_recv_msg_content(struct msg_loader *ldr, size_t n);
+
+status_t protocol_recv_msg_hdr(message_hdr_t *hdr);
 
 #endif // KENNING_INFERENCE_LIB_CORE_KENNING_PROTOCOL_H_

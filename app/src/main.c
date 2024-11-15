@@ -19,11 +19,11 @@ int main(void)
     // main runtime loop
     while (1)
     {
-        message_t *msg = NULL;
+        message_hdr_t hdr;
 
-        if (STATUS_OK == wait_for_message(&msg))
+        if (STATUS_OK == wait_for_message(&hdr))
         {
-            handle_message(msg);
+            handle_message(&hdr);
         }
     }
     return 0;

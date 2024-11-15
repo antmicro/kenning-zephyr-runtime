@@ -102,7 +102,7 @@ status_t runtime_init();
  *
  * @returns status of the runtime
  */
-status_t runtime_load_model_weights(const uint8_t *model_weights_data, const size_t data_size);
+status_t runtime_init_weights();
 
 /**
  * Loads model input using wrapped runtime
@@ -111,7 +111,7 @@ status_t runtime_load_model_weights(const uint8_t *model_weights_data, const siz
  *
  * @returns status of the runtime
  */
-status_t runtime_load_model_input(const uint8_t *model_input);
+status_t runtime_init_input();
 
 /**
  * Runs model inference using wrapped runtime
@@ -151,13 +151,13 @@ status_t runtime_deinit();
 /*
  * Creates LLEXT symbols for runtime methods
  */
-#define RUNTIME_LL_EXTENSION_SYMBOLS                 \
-    LL_EXTENSION_SYMBOL(runtime_init);               \
-    LL_EXTENSION_SYMBOL(runtime_load_model_weights); \
-    LL_EXTENSION_SYMBOL(runtime_load_model_input);   \
-    LL_EXTENSION_SYMBOL(runtime_run_model);          \
-    LL_EXTENSION_SYMBOL(runtime_get_model_output);   \
-    LL_EXTENSION_SYMBOL(runtime_get_statistics);     \
+#define RUNTIME_LL_EXTENSION_SYMBOLS               \
+    LL_EXTENSION_SYMBOL(runtime_init);             \
+    LL_EXTENSION_SYMBOL(runtime_init_weights);     \
+    LL_EXTENSION_SYMBOL(runtime_init_input);       \
+    LL_EXTENSION_SYMBOL(runtime_run_model);        \
+    LL_EXTENSION_SYMBOL(runtime_get_model_output); \
+    LL_EXTENSION_SYMBOL(runtime_get_statistics);   \
     LL_EXTENSION_SYMBOL(runtime_deinit);
 
 #endif // KENNING_INFERENCE_LIB_CORE_RUNTIME_WRAPPER_H_
