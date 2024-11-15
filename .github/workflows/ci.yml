@@ -2,9 +2,9 @@ name: Kenning Zephyr runtime tests
 
 on:
     push:
-        branches: [main]
+        branches: [main, fix-gha]
     pull_request:
-        branches: [main]
+        branches: [main, fix-gha]
 
 jobs:
     readme-tests:
@@ -14,6 +14,24 @@ jobs:
         steps:
             - name: Checkout sources
               uses: actions/checkout@v4
+            - name: Increase disk space
+              run: |
+                echo "Before cleanup"
+                df -H
+                rm -rf /__t/CodeQL
+                rm -rf /__t/Java_Temurin-Hotspot_jdk
+                rm -rf /__t/Java_Temurin-Hotspot_jdk
+                rm -rf /__t/PyPy
+                rm -rf /__t/Python/3.10.*
+                rm -rf /__t/Python/3.11.*
+                rm -rf /__t/Python/3.9.*
+                rm -rf /__t/Python/3.8.*
+                rm -rf /__t/Python/3.7.*
+                rm -rf /__t/Ruby
+                rm -rf /__t/go
+                rm -rf /__t/node
+                echo "After cleanup"
+                df -H
             - name: Install tuttest dependencies
               run: |
                   apt-get update -qqy
