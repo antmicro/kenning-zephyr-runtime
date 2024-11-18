@@ -21,6 +21,7 @@ RUN apt-get update && $INST \
     libsdl2-dev \
     make \
     ninja-build \
+    patch \
     python3-dev \
     python3-pip \
     python3-setuptools \
