@@ -17,6 +17,10 @@
 #include "mocks/log.h"
 #endif
 
+#if defined(CONFIG_LLEXT)
+#include "zephyr/llext/llext.h"
+#endif // defined(CONFIG_LLEXT)
+
 LOG_MODULE_REGISTER(inference_server, CONFIG_INFERENCE_SERVER_LOG_LEVEL);
 
 GENERATE_MODULE_STATUSES_STR(INFERENCE_SERVER);
@@ -24,22 +28,57 @@ GENERATE_MODULE_STATUSES_STR(INFERENCE_SERVER);
 extern const char *const MESSAGE_TYPE_STR[];
 extern const callback_ptr_t g_msg_callback[];
 
-struct msg_loader *g_ldr_tables[LDR_TABLE_COUNT][NUM_MESSAGE_TYPES];
-
 #if defined(CONFIG_LLEXT)
 
-int alloc_reset(struct msg_loader *ldr, size_t n)
+int reset_runtime_alloc(struct msg_loader *ldr, size_t n)
 {
+    int status;
     extern struct k_heap llext_heap;
-    k_free(ldr->addr);
+    struct llext *ext = llext_by_name("runtime");
+    if (NULL != ext)
+    {
+        status = llext_teardown(ext);
+        LOG_ERR("LLEXT runtime teardown error: %d", status);
+        RETURN_ON_ERROR(status, status);
+
+        status = llext_unload(&ext);
+        LOG_ERR("LLEXT runtime unload error: %d", status);
+        RETURN_ON_ERROR(status, status);
+    }
+    k_heap_free(&llext_heap, ldr->addr);
     ldr->addr = NULL;
     ldr->addr = k_heap_aligned_alloc(&llext_heap, 64, n, K_NO_WAIT);
     ldr->written = 0;
-    ldr->max_size = (ldr->addr != NULL) ? n : 0;
+
+    if (ldr->addr == NULL)
+    {
+        ldr->max_size = 0;
+        LOG_ERR("Couldn't allocate ELF buffer on LLEXT heap");
+        return -1;
+    }
+
+    ldr->max_size = n;
     return 0;
 }
 
 #endif // defined(CONFIG_LLEXT)
+
+status_t prepare_main_ldr_table()
+{
+#if defined(CONFIG_LLEXT)
+    static struct msg_loader msg_loader_llext = {.save = buf_save,
+                                                 .save_one = buf_save_one,
+                                                 .reset = reset_runtime_alloc,
+                                                 .written = 0,
+                                                 .max_size = 0,
+                                                 .addr = NULL};
+    g_ldr_tables[0][LOADER_TYPE_RUNTIME] = &msg_loader_llext;
+#endif
+
+    static struct msg_loader msg_loader_iospec = MSG_LOADER_BUF((uint8_t *)(&g_model_struct), sizeof(MlModel));
+    g_ldr_tables[0][LOADER_TYPE_IOSPEC] = &msg_loader_iospec;
+    return STATUS_OK;
+}
 
 status_t init_server()
 {
@@ -58,19 +97,6 @@ status_t init_server()
     prepare_main_ldr_table();
 
     LOG_INF("Inference server started");
-    return STATUS_OK;
-}
-
-status_t prepare_main_ldr_table()
-{
-#if defined(CONFIG_LLEXT)
-    static struct msg_loader msg_loader_llext = {
-        .save = buf_save, .save_one = buf_save_one, .reset = alloc_reset, .written = 0, .max_size = 0, .addr = NULL};
-    g_ldr_tables[0][MESSAGE_TYPE_RUNTIME] = &msg_loader_llext;
-#endif
-
-    static struct msg_loader msg_loader_iospec = MSG_LOADER_BUF((uint8_t *)(&g_model_struct), sizeof(MlModel));
-    g_ldr_tables[0][MESSAGE_TYPE_IOSPEC] = &msg_loader_iospec;
     return STATUS_OK;
 }
 

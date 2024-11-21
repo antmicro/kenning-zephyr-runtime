@@ -266,13 +266,8 @@ status_t runtime_callback(message_hdr_t *hdr, resp_message_t *resp)
         struct llext *p_llext = llext_by_name("runtime");
         if (IS_VALID_POINTER(p_llext))
         {
-            llext_status = llext_teardown(p_llext);
-            BREAK_ON_TRUE_LOG_SET_STATUS(status, CALLBACKS_STATUS_ERROR, llext_status,
-                                         "LLEXT runtime teardown error: %d", llext_status);
-
-            llext_status = llext_unload(&p_llext);
-            BREAK_ON_TRUE_LOG_SET_STATUS(status, CALLBACKS_STATUS_ERROR, llext_status, "LLEXT runtime unload error: %d",
-                                         llext_status);
+            LOG_ERR("LLEXT already exists (%x). This should never happen", p_llext);
+            return CALLBACKS_STATUS_ERROR;
         }
 
         // load LLEXT

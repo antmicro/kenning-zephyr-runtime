@@ -76,7 +76,8 @@ status_t protocol_recv_msg_content(struct msg_loader *ldr, size_t n)
     status_t status = STATUS_OK;
     const int buffer_size = sizeof(msg_recv_buffer);
 
-    ldr->reset(ldr, n);
+    status = ldr->reset(ldr, n);
+    RETURN_ON_ERROR(status, KENNING_PROTOCOL_STATUS_INTERNAL_ERROR);
 
     while (n)
     {
@@ -89,7 +90,6 @@ status_t protocol_recv_msg_content(struct msg_loader *ldr, size_t n)
         }
         n -= to_read;
     }
-#undef BUFF_SIZE
     return status;
 }
 status_t protocol_send_msg(const resp_message_t *msg)
