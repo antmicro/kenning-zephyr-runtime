@@ -5,7 +5,7 @@
  */
 
 #include "kenning_inference_lib/core/model.h"
-#include "kenning_inference_lib/core/inference_server.h"
+#include "kenning_inference_lib/core/loaders.h"
 #include <string.h>
 
 #ifndef __UNIT_TEST__
@@ -44,11 +44,17 @@ status_t model_load_struct()
 {
     status_t status = STATUS_OK;
 
-    struct msg_loader *msg_loader_iospec = g_ldr_tables[0][MESSAGE_TYPE_IOSPEC];
+    struct msg_loader *msg_loader_iospec = g_ldr_tables[0][LOADER_TYPE_IOSPEC];
 
     if (g_model_state < MODEL_STATE_INITIALIZED)
     {
         return MODEL_STATUS_INV_STATE;
+    }
+
+    if (sizeof(MlModel) != msg_loader_iospec->written)
+    {
+        LOG_ERR("Wrong model struct size: %zu. Should be: %zu.", msg_loader_iospec->written, sizeof(MlModel));
+        return MODEL_STATUS_INV_ARG;
     }
 
     // validate struct

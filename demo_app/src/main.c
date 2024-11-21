@@ -5,6 +5,7 @@
  */
 
 #include <input_data.h>
+#include <kenning_inference_lib/core/loaders.h>
 #include <kenning_inference_lib/core/model.h>
 #include <kenning_inference_lib/core/utils.h>
 #include <model_data.h> /* header with model weights generated during build from ./model/<runtime>/ */
@@ -65,6 +66,16 @@ void postprocess_output(uint8_t *data_in, float *data_out, size_t model_output_s
  */
 void format_output(uint8_t *buffer, const size_t buffer_size, float *model_output);
 
+/**
+ * Initialize main loader table
+ */
+status_t prepare_main_ldr_table()
+{
+    static struct msg_loader msg_loader_iospec = MSG_LOADER_BUF((uint8_t *)(&g_model_struct), sizeof(MlModel));
+    g_ldr_tables[0][LOADER_TYPE_IOSPEC] = &msg_loader_iospec;
+    return STATUS_OK;
+}
+
 int main(void)
 {
     status_t status = STATUS_OK;
@@ -77,6 +88,8 @@ int main(void)
     int64_t timer_start = 0;
     int64_t timer_end = 0;
 
+    prepare_main_ldr_table();
+
     do
     {
         // initialize model
@@ -87,12 +100,25 @@ int main(void)
             break;
         }
 
+        // retrieve loaders
+        struct msg_loader *msg_loader_model = g_ldr_tables[1][LOADER_TYPE_MODEL];
+        struct msg_loader *msg_loader_data = g_ldr_tables[1][LOADER_TYPE_DATA];
+        struct msg_loader *msg_loader_iospec = g_ldr_tables[0][LOADER_TYPE_IOSPEC];
+
         // load model structure
-        status = model_load_struct((uint8_t *)&model_struct, sizeof(MlModel));
+        msg_loader_iospec->reset(msg_loader_iospec, 0);
+        status = msg_loader_iospec->save(msg_loader_iospec, (uint8_t *)(&model_struct), sizeof(MlModel));
+        BREAK_ON_ERROR_LOG(status, "iospec loader failed.");
+
+        status = model_load_struct();
         BREAK_ON_ERROR_LOG(status, "Model struct load error 0x%x (%s)", status, get_status_str(status));
 
         // load model weights
-        status = model_load_weights(model_data, model_data_len);
+        msg_loader_model->reset(msg_loader_model, 0);
+        status = msg_loader_model->save(msg_loader_model, model_data, model_data_len);
+        BREAK_ON_ERROR_LOG(status, "Model loader failed.");
+
+        status = model_load_weights();
         BREAK_ON_ERROR_LOG(status, "Model weights load error 0x%x (%s)", status, get_status_str(status));
 
         // allocate buffer for input
@@ -109,7 +135,11 @@ int main(void)
         {
             preprocess_input((float *)data[batch_index], model_input, model_input_size);
 
-            status = model_load_input(model_input, model_input_size);
+            msg_loader_data->reset(msg_loader_data, 0);
+            status = msg_loader_data->save(msg_loader_data, model_input, model_input_size);
+            BREAK_ON_ERROR_LOG(status, "Data loader failed.");
+
+            status = model_load_input();
             BREAK_ON_ERROR_LOG(status, "Model input load error 0x%x (%s)", status, get_status_str(status));
 
             status = model_run();

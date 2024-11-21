@@ -33,3 +33,5 @@ int buf_reset(struct msg_loader *ldr, size_t n)
     ldr->written = 0;
     return 0;
 }
+
+struct msg_loader *g_ldr_tables[LDR_TABLE_COUNT][NUM_LOADER_TYPES];

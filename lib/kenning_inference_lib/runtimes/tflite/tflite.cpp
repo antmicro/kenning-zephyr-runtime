@@ -6,7 +6,6 @@
 
 extern "C"
 {
-#include "kenning_inference_lib/core/inference_server.h"
 #include "kenning_inference_lib/core/loaders.h"
 #include "kenning_inference_lib/core/runtime_wrapper.h"
 }
@@ -35,9 +34,9 @@ status_t prepare_tflite_ldr_table()
     static struct msg_loader msg_loader_model =
         MSG_LOADER_BUF(g_tfliteBuffer, CONFIG_KENNING_TFLITE_BUFFER_SIZE * 1024);
     static struct msg_loader msg_loader_input = MSG_LOADER_BUF(NULL, 0);
-    memset(&g_ldr_tables[1], 0, NUM_MESSAGE_TYPES * sizeof(struct msg_loader *));
-    g_ldr_tables[1][MESSAGE_TYPE_MODEL] = &msg_loader_model;
-    g_ldr_tables[1][MESSAGE_TYPE_DATA] = &msg_loader_input;
+    memset(&g_ldr_tables[1], 0, NUM_LOADER_TYPES * sizeof(struct msg_loader *));
+    g_ldr_tables[1][LOADER_TYPE_MODEL] = &msg_loader_model;
+    g_ldr_tables[1][LOADER_TYPE_DATA] = &msg_loader_input;
     return STATUS_OK;
 }
 status_t runtime_deinit() { return STATUS_OK; }
@@ -51,8 +50,8 @@ status_t runtime_init()
 
 status_t runtime_init_weights()
 {
-    struct msg_loader *msg_loader_model = g_ldr_tables[1][MESSAGE_TYPE_MODEL];
-    struct msg_loader *msg_loader_input = g_ldr_tables[1][MESSAGE_TYPE_DATA];
+    struct msg_loader *msg_loader_model = g_ldr_tables[1][LOADER_TYPE_MODEL];
+    struct msg_loader *msg_loader_input = g_ldr_tables[1][LOADER_TYPE_DATA];
 
     size_t model_size = msg_loader_model->written;
     uint8_t *modelWeights = g_tfliteBuffer;

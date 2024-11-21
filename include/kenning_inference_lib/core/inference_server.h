@@ -10,8 +10,6 @@
 #include "kenning_inference_lib/core/kenning_protocol.h"
 #include "kenning_inference_lib/core/utils.h"
 
-#define LDR_TABLE_COUNT 2
-
 /**
  * Runtime custom error codes
  */
@@ -54,7 +52,5 @@ status_t wait_for_message(message_hdr_t *hdr);
  * @returns status of message handling
  */
 status_t handle_message(message_hdr_t *hdr);
-
-extern struct msg_loader *g_ldr_tables[LDR_TABLE_COUNT][NUM_MESSAGE_TYPES];
 
 #endif // KENNING_INFERENCE_LIB_CORE_INFERENCE_SERVER_H_

@@ -4,7 +4,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include "kenning_inference_lib/core/inference_server.h"
 #include "kenning_inference_lib/core/loaders.h"
 #include <kenning_inference_lib/core/runtime_wrapper.h>
 #include <kenning_inference_lib/core/utils.h>
@@ -248,9 +247,9 @@ status_t prepare_iree_ldr_table()
         MSG_LOADER_BUF(gp_ireeModelBuffer, CONFIG_KENNING_IREE_MODEL_BUFFER_SIZE * 1024);
     static struct msg_loader msg_loader_input =
         MSG_LOADER_BUF(gp_ireeInputBuffer, CONFIG_KENNING_IREE_INPUT_BUFFER_SIZE * 1024);
-    memset(&g_ldr_tables[1], 0, NUM_MESSAGE_TYPES * sizeof(struct msg_loader *));
-    g_ldr_tables[1][MESSAGE_TYPE_MODEL] = &msg_loader_model;
-    g_ldr_tables[1][MESSAGE_TYPE_DATA] = &msg_loader_input;
+    memset(&g_ldr_tables[1], 0, NUM_LOADER_TYPES * sizeof(struct msg_loader *));
+    g_ldr_tables[1][LOADER_TYPE_MODEL] = &msg_loader_model;
+    g_ldr_tables[1][LOADER_TYPE_DATA] = &msg_loader_input;
     return STATUS_OK;
 }
 
@@ -300,7 +299,7 @@ status_t runtime_init_weights()
 {
     status_t status = STATUS_OK;
 
-    struct msg_loader *msg_loader_model = g_ldr_tables[1][MESSAGE_TYPE_MODEL];
+    struct msg_loader *msg_loader_model = g_ldr_tables[1][LOADER_TYPE_MODEL];
 
     // free input/output resources
     release_output_buffer();

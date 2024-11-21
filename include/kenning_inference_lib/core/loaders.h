@@ -7,6 +7,8 @@
 #ifndef KENNING_INFERENCE_LIB_CORE_LOADERS_H_
 #define KENNING_INFERENCE_LIB_CORE_LOADERS_H_
 
+#include "kenning_inference_lib/core/utils.h"
+
 #include <stddef.h>
 #include <stdint.h>
 #include <string.h>
@@ -32,5 +34,21 @@ int buf_reset(struct msg_loader *ldr, size_t n);
         .save = buf_save, .save_one = buf_save_one, .reset = buf_reset, .written = 0, .max_size = (_max_size), \
         .addr = (_addr)                                                                                        \
     }
+
+#define LOADER_TYPES(TYPE)    \
+    TYPE(LOADER_TYPE_NONE)    \
+    TYPE(LOADER_TYPE_DATA)    \
+    TYPE(LOADER_TYPE_MODEL)   \
+    TYPE(LOADER_TYPE_IOSPEC)  \
+    TYPE(LOADER_TYPE_RUNTIME) \
+    TYPE(NUM_LOADER_TYPES)
+
+typedef enum
+{
+    LOADER_TYPES(GENERATE_ENUM)
+} LOADER_TYPE;
+
+#define LDR_TABLE_COUNT 2
+extern struct msg_loader *g_ldr_tables[LDR_TABLE_COUNT][NUM_LOADER_TYPES];
 
 #endif // KENNING_INFERENCE_LIB_CORE_LOADERS_H_

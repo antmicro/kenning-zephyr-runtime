@@ -249,7 +249,7 @@ if(CONFIG_LLEXT)
     )
 
     llext_compile_options("llext-tflite" -ffunction-sections)
-    llext_link_options("llext-tflite" -Wl,--gc-sections -Wl,-e tflite_opt_entrypoint -Wl,runtimes/llext/keep_ext.ld)
+    llext_link_options("llext-tflite" -Wl,--gc-sections -Wl,-e tflite_opt_entrypoint -Wl,${CMAKE_CURRENT_SOURCE_DIR}/runtimes/llext/keep_ext.ld)
 
     llext_compile_options("llext-tflite" -O3 -Os)
     llext_link_options("llext-tflite" -O3 -Os)

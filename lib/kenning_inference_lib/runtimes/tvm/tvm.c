@@ -4,7 +4,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include "kenning_inference_lib/core/inference_server.h"
 #include "kenning_inference_lib/core/loaders.h"
 #include "kenning_inference_lib/core/runtime_wrapper.h"
 
@@ -79,9 +78,9 @@ status_t prepare_tvm_ldr_table()
         MSG_LOADER_BUF(gp_tvmGraphBuffer, CONFIG_KENNING_TVM_GRAPH_BUFFER_SIZE * 1024);
     static struct msg_loader msg_loader_input =
         MSG_LOADER_BUF(gp_tvmInputBuffer, CONFIG_KENNING_TVM_INPUT_BUFFER_SIZE * 1024);
-    memset(&g_ldr_tables[1], 0, NUM_MESSAGE_TYPES * sizeof(struct msg_loader *));
-    g_ldr_tables[1][MESSAGE_TYPE_MODEL] = &msg_loader_model;
-    g_ldr_tables[1][MESSAGE_TYPE_DATA] = &msg_loader_input;
+    memset(&g_ldr_tables[1], 0, NUM_LOADER_TYPES * sizeof(struct msg_loader *));
+    g_ldr_tables[1][LOADER_TYPE_MODEL] = &msg_loader_model;
+    g_ldr_tables[1][LOADER_TYPE_DATA] = &msg_loader_input;
     return STATUS_OK;
 }
 
@@ -109,7 +108,7 @@ status_t runtime_init()
 
 status_t runtime_init_weights()
 {
-    struct msg_loader *msg_loader_model = g_ldr_tables[1][MESSAGE_TYPE_MODEL];
+    struct msg_loader *msg_loader_model = g_ldr_tables[1][LOADER_TYPE_MODEL];
     status_t status = STATUS_OK;
     int tvm_status = 0;
 
@@ -157,7 +156,7 @@ status_t runtime_init_weights()
 
 status_t runtime_init_input()
 {
-    struct msg_loader *msg_loader_input = g_ldr_tables[1][MESSAGE_TYPE_DATA];
+    struct msg_loader *msg_loader_input = g_ldr_tables[1][LOADER_TYPE_DATA];
     status_t status = STATUS_OK;
     DLTensor tensor_in;
 

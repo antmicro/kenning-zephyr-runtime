@@ -5,7 +5,6 @@
  */
 
 #include "kenning_inference_lib/core/kenning_protocol.h"
-#include "kenning_inference_lib/core/inference_server.h"
 #include "kenning_inference_lib/core/loaders.h"
 
 #ifndef __UNIT_TEST__
@@ -18,6 +17,8 @@ LOG_MODULE_REGISTER(kenning_protocol, CONFIG_KENNING_PROTOCOL_LOG_LEVEL);
 
 GENERATE_MODULE_STATUSES_STR(KENNING_PROTOCOL);
 const char *const MESSAGE_TYPE_STR[] = {MESSAGE_TYPES(GENERATE_STR)};
+
+LOADER_TYPE g_msg_ldr_map[NUM_MESSAGE_TYPES] = PREPARE_MSG_LDR_MAP;
 
 status_t protocol_recv_msg(message_hdr_t *hdr)
 {
@@ -42,7 +43,7 @@ status_t protocol_recv_msg(message_hdr_t *hdr)
 
     for (int i = 0; i < LDR_TABLE_COUNT; i++)
     {
-        struct msg_loader *n_ldr = g_ldr_tables[i][hdr->message_type];
+        struct msg_loader *n_ldr = g_ldr_tables[i][MSGT_TO_LDRT(hdr->message_type)];
         if (n_ldr != NULL)
         {
             ldr = n_ldr;
