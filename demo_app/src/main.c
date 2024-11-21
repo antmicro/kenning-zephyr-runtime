@@ -108,15 +108,15 @@ int main(void)
         // load model structure
         msg_loader_iospec->reset(msg_loader_iospec, 0);
         status = msg_loader_iospec->save(msg_loader_iospec, (uint8_t *)(&model_struct), sizeof(MlModel));
-        BREAK_ON_ERROR_LOG(status, "iospec loader failed.");
+        BREAK_ON_ERROR_LOG(status, "iospec loader failed: %d", status);
 
         status = model_load_struct();
         BREAK_ON_ERROR_LOG(status, "Model struct load error 0x%x (%s)", status, get_status_str(status));
 
         // load model weights
         msg_loader_model->reset(msg_loader_model, 0);
-        status = msg_loader_model->save(msg_loader_model, model_data, model_data_len);
-        BREAK_ON_ERROR_LOG(status, "Model loader failed.");
+        status = msg_loader_model->save(msg_loader_model, (uint8_t *)model_data, model_data_len);
+        BREAK_ON_ERROR_LOG(status, "Model loader failed: %d", status);
 
         status = model_load_weights();
         BREAK_ON_ERROR_LOG(status, "Model weights load error 0x%x (%s)", status, get_status_str(status));
@@ -137,7 +137,7 @@ int main(void)
 
             msg_loader_data->reset(msg_loader_data, 0);
             status = msg_loader_data->save(msg_loader_data, model_input, model_input_size);
-            BREAK_ON_ERROR_LOG(status, "Data loader failed.");
+            BREAK_ON_ERROR_LOG(status, "Data loader failed: %d", status);
 
             status = model_load_input();
             BREAK_ON_ERROR_LOG(status, "Model input load error 0x%x (%s)", status, get_status_str(status));
