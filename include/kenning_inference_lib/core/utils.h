@@ -43,6 +43,14 @@
         return err_code;                  \
     }
 
+/* returns on error */
+#define RETURN_ON_ERROR_LOG(status, err_code, log_format, ...) \
+    if (STATUS_OK != (status))                                 \
+    {                                                          \
+        LOG_ERR(log_format, __VA_ARGS__);                      \
+        return err_code;                                       \
+    }
+
 /* breaks loop on error */
 #define BREAK_ON_ERROR(status) \
     if (STATUS_OK != (status)) \

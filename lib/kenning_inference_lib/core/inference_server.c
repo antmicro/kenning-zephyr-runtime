@@ -38,12 +38,10 @@ int reset_runtime_alloc(struct msg_loader *ldr, size_t n)
     if (NULL != ext)
     {
         status = llext_teardown(ext);
-        LOG_ERR("LLEXT runtime teardown error: %d", status);
-        RETURN_ON_ERROR(status, status);
+        RETURN_ON_ERROR_LOG(status, status, "LLEXT runtime teardown error: %d", status);
 
         status = llext_unload(&ext);
-        LOG_ERR("LLEXT runtime unload error: %d", status);
-        RETURN_ON_ERROR(status, status);
+        RETURN_ON_ERROR_LOG(status, status, "LLEXT runtime unload error: %d", status);
     }
     k_heap_free(&llext_heap, ldr->addr);
     ldr->addr = NULL;
