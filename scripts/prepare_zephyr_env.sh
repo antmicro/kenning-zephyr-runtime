@@ -35,12 +35,22 @@ fi
 # setup SDK
 if [ ! -d "$ZEPHYR_SDK_PATH" ]; then
     cd /tmp
-    for SDK_IDX in 0 1 2
-    do
-        # determine latest SDK version
-        ZEPHYR_SDK_VERSION=$(curl "https://api.github.com/repos/zephyrproject-rtos/sdk-ng/tags" | jq -r "[.[].name | select(.|test(\"-\")|not)][$SDK_IDX]" | sed "/v0.16.6/d")
-        ZEPHYR_SDK_VERSION="${ZEPHYR_SDK_VERSION:1}"
 
+    # determine latest SDK version
+    while true
+    do
+        ZEPHYR_SDK_VERSIONS=$(curl "https://api.github.com/repos/zephyrproject-rtos/sdk-ng/tags" | jq -r "[.[].name | select(.|test(\"-\")|not)][:3][]" | sed "/v0.16.6/d")
+        if [ -n "$ZEPHYR_SDK_VERSIONS" ]
+        then
+            break
+        fi
+        echo "Couldn't determine the lastest SDK version. Retrying in 60 seconds..."
+        sleep 60s
+    done
+
+    for ZEPHYR_SDK_VERSION in $ZEPHYR_SDK_VERSIONS
+    do
+        ZEPHYR_SDK_VERSION="${ZEPHYR_SDK_VERSION:1}"
         ZEPHYR_SDK_ARCHIVE="zephyr-sdk-${ZEPHYR_SDK_VERSION}_linux-x86_64_minimal.tar.xz"
 
         WGET_RETVAL=0
