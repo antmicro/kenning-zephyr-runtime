@@ -40,7 +40,8 @@
             "platform_resc_path": "renode/scripts/stm32f746g_disco.resc",
             "runtime_log_init_msg": "I: Inference server started",
             "profiler_dump_path": "output/profiler.dump",
-            "runtime_log_uart": "/tmp/uart-log"
+            "runtime_log_uart": "/tmp/uart-log",
+            "resc_dependencies": ["./output/stm32f746g_disco.repl"]
         }
     },
     "protocol": {
