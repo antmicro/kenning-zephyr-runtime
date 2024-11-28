@@ -57,7 +57,7 @@ status_t model_init();
  *
  * @returns status of the model
  */
-status_t model_load_struct();
+status_t model_load_struct(const uint8_t *model_struct_data, const size_t data_size);
 
 /**
  * Loads model weights from given buffer
@@ -67,7 +67,7 @@ status_t model_load_struct();
  *
  * @returns status of the model
  */
-status_t model_load_weights();
+status_t model_load_weights(const uint8_t *model_weights_data, const size_t data_size);
 
 /**
  * Calculates model input size based on data from model struct
@@ -86,7 +86,13 @@ status_t model_get_input_size(size_t *model_input_size);
  *
  * @returns status of the model
  */
-status_t model_load_input();
+status_t model_load_input(const uint8_t *model_input, const size_t model_input_size);
+
+status_t model_load_struct_from_loader();
+
+status_t model_load_weights_from_loader();
+
+status_t model_load_input_from_loader();
 
 /**
  * Runs model inference

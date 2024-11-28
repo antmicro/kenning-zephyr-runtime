@@ -59,11 +59,8 @@ int reset_runtime_alloc(struct msg_loader *ldr, size_t n)
     return 0;
 }
 
-#endif // defined(CONFIG_LLEXT)
-
-status_t prepare_main_ldr_table()
+status_t prepare_llext_loader()
 {
-#if defined(CONFIG_LLEXT)
     static struct msg_loader msg_loader_llext = {.save = buf_save,
                                                  .save_one = buf_save_one,
                                                  .reset = reset_runtime_alloc,
@@ -71,12 +68,9 @@ status_t prepare_main_ldr_table()
                                                  .max_size = 0,
                                                  .addr = NULL};
     g_ldr_tables[0][LOADER_TYPE_RUNTIME] = &msg_loader_llext;
-#endif
-
-    static struct msg_loader msg_loader_iospec = MSG_LOADER_BUF((uint8_t *)(&g_model_struct), sizeof(MlModel));
-    g_ldr_tables[0][LOADER_TYPE_IOSPEC] = &msg_loader_iospec;
-    return STATUS_OK;
 }
+
+#endif // defined(CONFIG_LLEXT)
 
 status_t init_server()
 {
@@ -90,10 +84,9 @@ status_t init_server()
 #if !defined(CONFIG_LLEXT)
     status = model_init();
     CHECK_INIT_STATUS_RET(status, "model_init returned 0x%x (%s)", status, get_status_str(status));
+#else
+    prepare_llext_loader();
 #endif
-
-    prepare_main_ldr_table();
-
     LOG_INF("Inference server started");
     return STATUS_OK;
 }

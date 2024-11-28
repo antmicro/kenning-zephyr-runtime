@@ -103,7 +103,7 @@ status_t data_callback(message_hdr_t *hdr, resp_message_t *resp) // TODO
 
     VALIDATE_HEADER(MESSAGE_TYPE_DATA, hdr);
 
-    status = model_load_input();
+    status = model_load_input_from_loader();
 
     CHECK_STATUS_LOG(status, resp, "model_load_input returned 0x%x (%s)", status, get_status_str(status));
 
@@ -126,7 +126,7 @@ status_t model_callback(message_hdr_t *hdr, resp_message_t *resp)
 
     VALIDATE_HEADER(MESSAGE_TYPE_MODEL, hdr);
 
-    status = model_load_weights();
+    status = model_load_weights_from_loader();
 
     CHECK_STATUS_LOG(status, resp, "model_load_weights returned 0x%x (%s)", status, get_status_str(status));
 
@@ -222,7 +222,7 @@ status_t iospec_callback(message_hdr_t *hdr, resp_message_t *resp)
 
     VALIDATE_HEADER(MESSAGE_TYPE_IOSPEC, hdr);
 
-    status = model_load_struct();
+    status = model_load_struct_from_loader();
 
     CHECK_STATUS_LOG(status, resp, "model_load_struct returned 0x%x (%s)", status, get_status_str(status));
 

@@ -26,21 +26,30 @@ MODEL_STATE model_get_state() { return g_model_state; }
 
 void model_reset_state() { g_model_state = MODEL_STATE_UNINITIALIZED; }
 
+status_t prepare_iospec_loader()
+{
+    static struct msg_loader msg_loader_iospec = MSG_LOADER_BUF((uint8_t *)(&g_model_struct), sizeof(MlModel));
+    g_ldr_tables[0][LOADER_TYPE_IOSPEC] = &msg_loader_iospec;
+    return STATUS_OK;
+}
+
 status_t model_init()
 {
     status_t status = STATUS_OK;
 
     status = runtime_init();
+    RETURN_ON_ERROR(status, status);
 
     if (STATUS_OK == status)
     {
         g_model_state = MODEL_STATE_INITIALIZED;
     }
 
+    status = prepare_iospec_loader();
     return status;
 }
 
-status_t model_load_struct()
+status_t model_load_struct_from_loader()
 {
     status_t status = STATUS_OK;
 
@@ -122,7 +131,7 @@ status_t model_load_struct()
     return status;
 }
 
-status_t model_load_weights()
+status_t model_load_weights_from_loader()
 {
     status_t status = STATUS_OK;
 
@@ -164,7 +173,7 @@ status_t model_get_input_size(size_t *model_input_size)
     return status;
 }
 
-status_t model_load_input()
+status_t model_load_input_from_loader()
 {
     status_t status = STATUS_OK;
 
@@ -187,6 +196,42 @@ status_t model_load_input()
     g_model_state = MODEL_STATE_INPUT_LOADED;
 
     return status;
+}
+
+status_t model_load_weights(const uint8_t *model_weights_data, const size_t data_size)
+{
+    status_t status = STATUS_OK;
+    struct msg_loader *msg_loader_model = g_ldr_tables[1][LOADER_TYPE_MODEL];
+
+    msg_loader_model->reset(msg_loader_model, 0);
+    status = msg_loader_model->save(msg_loader_model, (uint8_t *)model_weights_data, data_size);
+    RETURN_ON_ERROR_LOG(status, status, "Model loader failed: %d", status);
+
+    return model_load_weights_from_loader();
+}
+
+status_t model_load_struct(const uint8_t *model_struct_data, const size_t data_size)
+{
+    status_t status = STATUS_OK;
+    struct msg_loader *msg_loader_iospec = g_ldr_tables[0][LOADER_TYPE_IOSPEC];
+
+    msg_loader_iospec->reset(msg_loader_iospec, 0);
+    status = msg_loader_iospec->save(msg_loader_iospec, model_struct_data, data_size);
+    RETURN_ON_ERROR_LOG(status, status, "iospec loader failed: %d", status);
+
+    return model_load_struct_from_loader();
+}
+
+status_t model_load_input(const uint8_t *model_input, const size_t model_input_size)
+{
+    status_t status = STATUS_OK;
+    struct msg_loader *msg_loader_data = g_ldr_tables[1][LOADER_TYPE_DATA];
+
+    msg_loader_data->reset(msg_loader_data, 0);
+    status = msg_loader_data->save(msg_loader_data, model_input, model_input_size);
+    RETURN_ON_ERROR_LOG(status, status, "Data loader failed: %d", status);
+
+    return model_load_input_from_loader();
 }
 
 status_t model_run()
