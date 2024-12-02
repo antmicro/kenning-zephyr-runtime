@@ -19,7 +19,7 @@ image: $CI_IMAGE
         BOARDS: >
             b_u585i_iot02a
             stm32f746g_disco
-            hifive_unleashed
+            hifive_unleashed/fu540/e51
     before_script:
         - mkdir -p $HOME/.local/opt
         - tar xzf env.tar.gz
@@ -159,7 +159,7 @@ build-demo-iree-vmvx:
         RUNTIME: iree_vmvx
         BOARDS: >
             b_u585i_iot02a
-            hifive_unleashed
+            hifive_unleashed/fu540/e51
 
 build-demo-iree-embedded-elf:
     extends: .build-demo
