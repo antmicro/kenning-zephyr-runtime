@@ -19,7 +19,7 @@ manifest:
   projects:
     - name: zephyr
       remote: zephyrproject-rtos
-      revision: v4.0-branch
+      revision: main
       import:
         path-allowlist:
           - modules/debug/*
