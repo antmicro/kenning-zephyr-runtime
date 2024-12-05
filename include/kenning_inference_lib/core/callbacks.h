@@ -20,6 +20,10 @@ GENERATE_MODULE_STATUSES(CALLBACKS);
 #define VALIDATE_HEADER(callback_message_type, hdr)         \
     do                                                      \
     {                                                       \
+        if ((hdr) == NULL)                                  \
+        {                                                   \
+            return CALLBACKS_STATUS_INV_PTR;                \
+        }                                                   \
         if ((callback_message_type) != (hdr)->message_type) \
         {                                                   \
             return CALLBACKS_STATUS_INV_MSG_TYPE;           \
