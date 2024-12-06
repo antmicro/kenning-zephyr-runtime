@@ -9,13 +9,19 @@
 #include <zephyr/ztest.h>
 
 #include <kenning_inference_lib/core/kenning_protocol.h>
+#include <kenning_inference_lib/core/loaders.h>
 
 #include "utils.h"
 
-extern uint8_t g_message_buffer[];
-message_t *gp_message = NULL;
-uint8_t *gp_protocol_buffer = NULL;
-size_t g_protocol_data_read = 0;
+#define MOCK_BUFFER_SIZE 8192
+static uint8_t mock_write_buffer[MOCK_BUFFER_SIZE];
+static uint8_t mock_read_buffer[MOCK_BUFFER_SIZE];
+static uint8_t mock_loader_buffer[MOCK_BUFFER_SIZE];
+static int mock_write_buffer_idx;
+static int mock_read_buffer_idx;
+static int mock_loader_buffer_idx;
+
+struct msg_loader *g_ldr_tables[LDR_TABLE_COUNT][NUM_LOADER_TYPES];
 
 // ========================================================
 // mocks
@@ -37,14 +43,7 @@ status_t protocol_write_data_mock(const uint8_t *data, size_t data_length);
 // helper functions declarations
 // ========================================================
 
-/**
- * Prepares message of given type and payload and store result in gp_message
- *
- * @param msg_type type of the message
- * @param payload payload of the message
- * @param payload_size size of the payload
- */
-void prepare_message(message_type_t msg_type, uint8_t *payload, size_t payload_size);
+void prepare_message_in_buffer(message_type_t message_type, size_t payload_size);
 
 // ========================================================
 // setup
@@ -53,367 +52,113 @@ void prepare_message(message_type_t msg_type, uint8_t *payload, size_t payload_s
 static void kenning_protocol_tests_setup_f()
 {
     MOCKS(RESET_MOCK);
-
-    g_protocol_data_read = 0;
+    memset(mock_write_buffer, 0, MOCK_BUFFER_SIZE);
+    memset(mock_read_buffer, 0, MOCK_BUFFER_SIZE);
+    memset(mock_loader_buffer, 0, MOCK_BUFFER_SIZE);
+    mock_write_buffer_idx = 0;
+    mock_read_buffer_idx = 0;
+    mock_loader_buffer_idx = 0;
 }
 
-static void kenning_protocol_tests_teardown_f()
-{
-    if (IS_VALID_POINTER(gp_message))
-    {
-        free(gp_message);
-    }
-    if (IS_VALID_POINTER(gp_protocol_buffer))
-    {
-        free(gp_protocol_buffer);
-    }
-}
+static void kenning_protocol_tests_teardown_f() {}
 
 ZTEST_SUITE(kenning_inference_lib_test_kenning_protocol, NULL, NULL, kenning_protocol_tests_setup_f, NULL,
             kenning_protocol_tests_teardown_f);
 
 // ========================================================
-// receive_message
-// ========================================================
-
-/**
- * Tests if protocol receive message reads message without payload properly
- */
-ZTEST(kenning_inference_lib_test_kenning_protocol, test_protocol_receive_message_without_payload)
-{
-    status_t status = STATUS_OK;
-    message_t *msg;
-
-    protocol_read_data_fake.custom_fake = protocol_read_data_mock;
-
-#define TEST_PROTOCOL_RECV_MSG(_message_type)                   \
-    prepare_message(_message_type, NULL, 0);                    \
-                                                                \
-    status = protocol_recv_msg(&msg);                           \
-                                                                \
-    zassert_equal(KENNING_PROTOCOL_STATUS_DATA_READY, status);  \
-    zassert_equal(gp_message->message_size, msg->message_size); \
-    zassert_equal(gp_message->message_type, msg->message_type);
-
-    TEST_PROTOCOL_RECV_MSG(MESSAGE_TYPE_OK);
-    TEST_PROTOCOL_RECV_MSG(MESSAGE_TYPE_ERROR);
-    TEST_PROTOCOL_RECV_MSG(MESSAGE_TYPE_PROCESS);
-    TEST_PROTOCOL_RECV_MSG(MESSAGE_TYPE_OUTPUT);
-
-#undef TEST_PROTOCOL_RECV_MSG
-}
-
-/**
- * Tests if protocol receive message reads message with payload properly
- */
-ZTEST(kenning_inference_lib_test_kenning_protocol, test_protocol_receive_message_with_payload)
-{
-    status_t status = STATUS_OK;
-    uint8_t msg_payload[] = "some data";
-    message_t *msg;
-
-    protocol_read_data_fake.custom_fake = protocol_read_data_mock;
-
-#define TEST_PROTOCOL_RECV_MSG(_message_type)                         \
-    prepare_message(_message_type, msg_payload, sizeof(msg_payload)); \
-                                                                      \
-    status = protocol_recv_msg(&msg);                                 \
-                                                                      \
-    zassert_equal(KENNING_PROTOCOL_STATUS_DATA_READY, status);        \
-    zassert_equal(gp_message->message_size, msg->message_size);       \
-    zassert_equal(gp_message->message_type, msg->message_type);       \
-    zassert_mem_equal(gp_message->payload, msg->payload, MESSAGE_SIZE_PAYLOAD(gp_message->message_size));
-
-    TEST_PROTOCOL_RECV_MSG(MESSAGE_TYPE_DATA);
-    TEST_PROTOCOL_RECV_MSG(MESSAGE_TYPE_MODEL);
-    TEST_PROTOCOL_RECV_MSG(MESSAGE_TYPE_STATS);
-    TEST_PROTOCOL_RECV_MSG(MESSAGE_TYPE_IOSPEC);
-
-#undef TEST_PROTOCOL_RECV_MSG
-}
-
-/**
- * Tests if protocol receive message fails for invalid pointer
- */
-ZTEST(kenning_inference_lib_test_kenning_protocol, test_protocol_receive_message_invalid_pointer)
-{
-    status_t status = STATUS_OK;
-    uint8_t message_data[] = "some data";
-
-    protocol_read_data_fake.custom_fake = protocol_read_data_mock;
-    prepare_message(MESSAGE_TYPE_DATA, message_data, sizeof(message_data));
-
-    status = protocol_recv_msg(NULL);
-
-    zassert_equal(KENNING_PROTOCOL_STATUS_INV_PTR, status);
-}
-
-/**
- * Tests if protocol receive message fails if message size is too big
- */
-ZTEST(kenning_inference_lib_test_kenning_protocol, test_protocol_receive_message_too_big)
-{
-    status_t status = STATUS_OK;
-    uint8_t message_data[MAX_MESSAGE_SIZE_BYTES + 1] = {0};
-    message_t *msg;
-
-    protocol_read_data_fake.custom_fake = protocol_read_data_mock;
-    prepare_message(MESSAGE_TYPE_DATA, message_data, sizeof(message_data));
-
-    status = protocol_recv_msg(&msg);
-
-    zassert_equal(KENNING_PROTOCOL_STATUS_MSG_TOO_BIG, status);
-}
-
-/**
- * Tests if protocol receive message fails if protocol read fails
- */
-ZTEST(kenning_inference_lib_test_kenning_protocol, test_protocol_receive_message_read_error)
-{
-    status_t status = STATUS_OK;
-    uint8_t message_payload[] = "some data";
-    message_t *msg;
-
-    protocol_read_data_fake.return_val = PROTOCOL_STATUS_RECV_ERROR_BUSY;
-    prepare_message(MESSAGE_TYPE_DATA, message_payload, sizeof(message_payload));
-
-    status = protocol_recv_msg(&msg);
-
-    zassert_equal(KENNING_PROTOCOL_STATUS_CLIENT_DISCONNECTED, status);
-}
-
-/**
- * Tests if protocol receive message hits timeout if protocol read does so
- */
-ZTEST(kenning_inference_lib_test_kenning_protocol, test_protocol_receive_message_timeout)
-{
-    status_t status = STATUS_OK;
-    uint8_t message_payload[] = "some data";
-    message_t *msg;
-
-    protocol_read_data_fake.return_val = PROTOCOL_STATUS_TIMEOUT;
-    prepare_message(MESSAGE_TYPE_DATA, message_payload, sizeof(message_payload));
-
-    status = protocol_recv_msg(&msg);
-
-    zassert_equal(KENNING_PROTOCOL_STATUS_TIMEOUT, status);
-}
-
-// ========================================================
-// send_message
-// ========================================================
-
-/**
- * Tests if protocol send message writes properly message without payload
- */
-ZTEST(kenning_inference_lib_test_kenning_protocol, test_protocol_send_message_without_payload)
-{
-    status_t status = STATUS_OK;
-    message_t *msg_from_buffer;
-
-    protocol_write_data_fake.custom_fake = protocol_write_data_mock;
-
-#define TEST_PROTOCOL_SEND_MSG(_message_type)                               \
-    prepare_message(_message_type, NULL, 0);                                \
-                                                                            \
-    status = protocol_send_msg(gp_message);                                 \
-                                                                            \
-    msg_from_buffer = (message_t *)gp_protocol_buffer;                      \
-                                                                            \
-    zassert_equal(STATUS_OK, status);                                       \
-    zassert_equal(gp_message->message_size, msg_from_buffer->message_size); \
-    zassert_equal(gp_message->message_type, msg_from_buffer->message_type);
-
-    TEST_PROTOCOL_SEND_MSG(MESSAGE_TYPE_OK);
-    TEST_PROTOCOL_SEND_MSG(MESSAGE_TYPE_ERROR);
-    TEST_PROTOCOL_SEND_MSG(MESSAGE_TYPE_PROCESS);
-    TEST_PROTOCOL_SEND_MSG(MESSAGE_TYPE_OUTPUT);
-
-#undef TEST_PROTOCOL_SEND_MSG
-}
-
-/**
- * Tests if protocol send message writes properly message with payload
- */
-ZTEST(kenning_inference_lib_test_kenning_protocol, test_protocol_send_message_with_payload)
-{
-    status_t status = STATUS_OK;
-    uint8_t msg_payload[128] = {0};
-    message_t *msg_from_buffer;
-
-    protocol_write_data_fake.custom_fake = protocol_write_data_mock;
-
-#define TEST_PROTOCOL_SEND_MSG(_message_type)                               \
-    prepare_message(_message_type, msg_payload, sizeof(msg_payload));       \
-                                                                            \
-    status = protocol_send_msg(gp_message);                                 \
-                                                                            \
-    msg_from_buffer = (message_t *)gp_protocol_buffer;                      \
-                                                                            \
-    zassert_equal(STATUS_OK, status);                                       \
-    zassert_equal(gp_message->message_size, msg_from_buffer->message_size); \
-    zassert_equal(gp_message->message_type, msg_from_buffer->message_type); \
-    zassert_mem_equal(gp_message->payload, msg_from_buffer->payload, MESSAGE_SIZE_PAYLOAD(gp_message->message_size));
-
-    TEST_PROTOCOL_SEND_MSG(MESSAGE_TYPE_OK);
-    TEST_PROTOCOL_SEND_MSG(MESSAGE_TYPE_ERROR);
-    TEST_PROTOCOL_SEND_MSG(MESSAGE_TYPE_PROCESS);
-    TEST_PROTOCOL_SEND_MSG(MESSAGE_TYPE_OUTPUT);
-
-#undef TEST_PROTOCOL_SEND_MSG
-}
-
-/**
- * Tests if protocol send message fails if message pointer is invalid
- */
-ZTEST(kenning_inference_lib_test_kenning_protocol, test_protocol_send_message_invalid_pointer)
-{
-    status_t status = STATUS_OK;
-
-    status = protocol_send_msg(NULL);
-
-    zassert_equal(KENNING_PROTOCOL_STATUS_INV_PTR, status);
-}
-
-/**
- * Tests if protocol send message fails if UART write fails
- */
-ZTEST(kenning_inference_lib_test_kenning_protocol, test_protocol_send_message_protocol_fail)
-{
-    status_t status = STATUS_OK;
-
-    protocol_write_data_fake.return_val = PROTOCOL_STATUS_RECV_ERROR;
-    prepare_message(MESSAGE_TYPE_OK, NULL, 0);
-
-    status = protocol_send_msg(gp_message);
-
-    zassert_equal(KENNING_PROTOCOL_STATUS_CLIENT_DISCONNECTED, status);
-}
-
-// ========================================================
-// prepare_success_response
-// ========================================================
-
-/**
- * Tests if protocol prepare success message properly creates empty OK message
- */
-ZTEST(kenning_inference_lib_test_kenning_protocol, test_prepare_success_response)
-{
-    status_t status = STATUS_OK;
-    message_t *msg;
-
-    status = protocol_prepare_success_resp(&msg);
-
-    zassert_equal(STATUS_OK, status);
-    zassert_equal(MESSAGE_TYPE_OK, msg->message_type);
-    zassert_equal(sizeof(message_type_t), msg->message_size);
-}
-
-/**
- * Tests if protocol prepare success message fails if message pointer is invalid
- */
-ZTEST(kenning_inference_lib_test_kenning_protocol, test_prepare_success_response_invalid_pointer)
-{
-    status_t status = STATUS_OK;
-
-    status = protocol_prepare_success_resp(NULL);
-
-    zassert_equal(KENNING_PROTOCOL_STATUS_INV_PTR, status);
-}
-
-// ========================================================
-// prepare_failure_response
-// ========================================================
-
-/**
- * Tests if protocol prepare failure message properly creates empty ERROR message
- */
-ZTEST(kenning_inference_lib_test_kenning_protocol, test_prepare_fail_response)
-{
-    status_t status = STATUS_OK;
-    message_t *msg;
-
-    status = protocol_prepare_fail_resp(&msg);
-
-    zassert_equal(STATUS_OK, status);
-    zassert_equal(MESSAGE_TYPE_ERROR, msg->message_type);
-    zassert_equal(sizeof(message_type_t), msg->message_size);
-}
-
-/**
- * Tests if protocol prepare failure message fails if message pointer is invalid
- */
-ZTEST(kenning_inference_lib_test_kenning_protocol, test_prepare_fail_response_invalid_pointer)
-{
-    status_t status = STATUS_OK;
-
-    status = protocol_prepare_fail_resp(NULL);
-
-    zassert_equal(KENNING_PROTOCOL_STATUS_INV_PTR, status);
-}
-
-// ========================================================
 // mocks definitions
 // ========================================================
 
-const char *get_status_str_mock(status_t status) { return "STATUS_STR"; }
+// TODO: out of bounds checks
 
 status_t protocol_read_data_mock(uint8_t *data, size_t data_length)
 {
-    switch (g_protocol_data_read)
+    if (data != NULL)
     {
-    case 0:
-        if (data != NULL)
-            memcpy(data, &gp_message->message_size, sizeof(message_size_t));
-        g_protocol_data_read += data_length;
-        break;
-    case sizeof(message_size_t):
-        if (data != NULL)
-            memcpy(data, &gp_message->message_type, sizeof(message_type_t));
-        g_protocol_data_read += data_length;
-        break;
-    case sizeof(message_t):
-        if (data != NULL)
-            memcpy(data, &gp_message->payload, gp_message->message_size);
-        g_protocol_data_read = 0;
-        break;
-    default:
-        return PROTOCOL_STATUS_RECV_ERROR;
+        memcpy(data, mock_read_buffer + mock_read_buffer_idx, data_length);
     }
-
+    mock_read_buffer_idx += data_length;
     return STATUS_OK;
 }
 
 status_t protocol_write_data_mock(const uint8_t *data, size_t data_length)
 {
-    if (IS_VALID_POINTER(gp_protocol_buffer))
+    if (data == NULL)
     {
-        free(gp_protocol_buffer);
-        gp_protocol_buffer = NULL;
+        return PROTOCOL_STATUS_INV_PTR;
     }
-
-    gp_protocol_buffer = malloc(data_length);
-    memcpy(gp_protocol_buffer, data, data_length);
-
+    memcpy(mock_write_buffer + mock_write_buffer_idx, data, data_length);
+    mock_write_buffer_idx += data_length;
     return STATUS_OK;
+}
+
+int loader_reset_mock(struct msg_loader *ldr, size_t n)
+{
+    mock_loader_buffer_idx = 0;
+    return 0;
+}
+
+int loader_save_mock(struct msg_loader *ldr, uint8_t *src, size_t n)
+{
+    memcpy(mock_loader_buffer + mock_loader_buffer_idx, src, n);
+    mock_loader_buffer_idx += n;
+    return 0;
+}
+
+struct msg_loader *prepare_loader()
+{
+    static struct msg_loader ldr = {
+        .save = loader_save_mock,
+        .reset = loader_reset_mock,
+    };
+    return &ldr;
+}
+
+ZTEST(kenning_inference_lib_test_kenning_protocol, test_protocol_recv_msg_hdr)
+{
+    status_t status = STATUS_OK;
+    message_hdr_t hdr = {0};
+
+    protocol_read_data_fake.custom_fake = protocol_read_data_mock;
+    prepare_message_in_buffer(MESSAGE_TYPE_IOSPEC, 0x123);
+
+    status = protocol_recv_msg_hdr(&hdr);
+
+    zassert_equal(status, STATUS_OK);
+    zassert_equal(hdr.message_size, MESSAGE_SIZE_FULL(0x123));
+    zassert_equal(hdr.message_type, MESSAGE_TYPE_IOSPEC);
+    zassert_equal(mock_read_buffer_idx, sizeof(message_hdr_t));
+    zassert_equal(mock_write_buffer_idx, 0);
+}
+
+ZTEST(kenning_inference_lib_test_kenning_protocol, test_protocol_recv_msg_content)
+{
+    status_t status = STATUS_OK;
+    message_hdr_t hdr = {0};
+
+    protocol_read_data_fake.custom_fake = protocol_read_data_mock;
+    prepare_message_in_buffer(MESSAGE_TYPE_IOSPEC, 0x123);
+    protocol_read_data_mock(NULL, sizeof(message_hdr_t));
+
+    struct msg_loader *ldr = prepare_loader();
+
+    status = protocol_recv_msg_content(ldr, 0x123);
+    int expected_size = mock_read_buffer_idx - sizeof(message_hdr_t) + sizeof(MESSAGE_TYPE_IOSPEC);
+
+    zassert_equal(status, STATUS_OK);
+    zassert_equal(expected_size, MESSAGE_SIZE_FULL(0x123));
+    zassert_equal(mock_write_buffer_idx, 0);
 }
 
 // ========================================================
 // helper functions
 // ========================================================
-
-void prepare_message(message_type_t msg_type, uint8_t *payload, size_t payload_size)
+void prepare_message_in_buffer(message_type_t message_type, size_t payload_size)
 {
-    if (IS_VALID_POINTER(gp_message))
-    {
-        free(gp_message);
-        gp_message = NULL;
-    }
-    gp_message = malloc(sizeof(message_t) + payload_size);
-    gp_message->message_size = sizeof(message_type_t) + payload_size;
-    gp_message->message_type = msg_type;
-    if (payload_size > 0)
-    {
-        memcpy(gp_message->payload, payload, payload_size);
-    }
+    message_hdr_t hdr_to_read = {
+        .message_type = message_type,
+        .message_size = MESSAGE_SIZE_FULL(payload_size),
+    };
+    memcpy(mock_read_buffer, &hdr_to_read, sizeof(message_hdr_t));
+    memset(mock_read_buffer + sizeof(message_hdr_t), 'x', payload_size);
 }
