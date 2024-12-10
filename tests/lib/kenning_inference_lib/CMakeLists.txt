@@ -11,6 +11,7 @@ add_compile_definitions(__UNIT_TEST__=1)
 if ("${TESTED_MODULE}" STREQUAL "MODEL")
   target_sources(testbinary PRIVATE
     src/core/test_model.c
+    ../../../lib/kenning_inference_lib/core/loaders.c
     ../../../lib/kenning_inference_lib/core/model.c
   )
 

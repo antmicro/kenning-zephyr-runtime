@@ -7,6 +7,7 @@
 #include <zephyr/fff.h>
 #include <zephyr/ztest.h>
 
+#include <kenning_inference_lib/core/loaders.h>
 #include <kenning_inference_lib/core/model.h>
 
 #include "utils.h"
@@ -26,12 +27,12 @@ extern MODEL_STATE g_model_state;
 // ========================================================
 DEFINE_FFF_GLOBALS;
 
-#define MOCKS(MOCK)                                                           \
-    MOCK(status_t, runtime_init)                                              \
-    MOCK(status_t, runtime_load_model_weights, const uint8_t *, const size_t) \
-    MOCK(status_t, runtime_load_model_input, const uint8_t *)                 \
-    MOCK(status_t, runtime_run_model)                                         \
-    MOCK(status_t, runtime_get_model_output, uint8_t *)                       \
+#define MOCKS(MOCK)                                     \
+    MOCK(status_t, runtime_init)                        \
+    MOCK(status_t, runtime_init_weights)                \
+    MOCK(status_t, runtime_init_input)                  \
+    MOCK(status_t, runtime_run_model)                   \
+    MOCK(status_t, runtime_get_model_output, uint8_t *) \
     MOCK(status_t, runtime_get_statistics, const size_t, uint8_t *, size_t *)
 
 MOCKS(DECLARE_MOCK);
@@ -491,7 +492,7 @@ ZTEST(kenning_inference_lib_test_model, test_model_load_weights_runtime_fail)
     uint8_t model_weights[128] = {0};
 
     g_model_state = MODEL_STATE_STRUCT_LOADED;
-    runtime_load_model_weights_fake.return_val = RUNTIME_WRAPPER_STATUS_ERROR;
+    runtime_init_weights_fake.return_val = RUNTIME_WRAPPER_STATUS_ERROR;
 
     status = model_load_weights(model_weights, sizeof(model_weights));
 
@@ -587,7 +588,7 @@ ZTEST(kenning_inference_lib_test_model, test_model_load_input_runtime_fail)
     uint8_t model_input[MODEL_STRUCT_INPUT_LEN * MODEL_STRUCT_INPUT_SIZE] = {0};
 
     g_model_state = MODEL_STATE_WEIGHTS_LOADED;
-    runtime_load_model_input_fake.return_val = RUNTIME_WRAPPER_STATUS_ERROR;
+    runtime_init_input_fake.return_val = RUNTIME_WRAPPER_STATUS_ERROR;
 
     status = model_load_input(model_input, sizeof(model_input));
 
