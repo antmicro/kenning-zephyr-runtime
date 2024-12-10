@@ -16,11 +16,16 @@
 #define MODEL_STRUCT_INPUT_SIZE (4)
 #define MODEL_STRUCT_OUTPUT_LEN (10)
 #define MODEL_STRUCT_OUTPUT_SIZE (4)
+#define MODEL_SIZE (8)
+#define MODEL_INPUT_SIZE (MODEL_STRUCT_INPUT_LEN * MODEL_STRUCT_INPUT_SIZE)
 
 #define VALID_HAL_ELEMENT_TYPE ("f32")
 
 extern MlModel g_model_struct;
 extern MODEL_STATE g_model_state;
+
+static uint8_t __attribute__((aligned(8))) gp_modelBuffer[MODEL_SIZE * 1024];
+static uint8_t __attribute__((aligned(8))) gp_inputBuffer[MODEL_INPUT_SIZE * 1024];
 
 // ========================================================
 // mocks
@@ -60,6 +65,11 @@ static void model_tests_setup_f()
 
     g_model_struct = get_model_struct_data(VALID_HAL_ELEMENT_TYPE);
     g_model_state = MODEL_STATE_UNINITIALIZED;
+
+    static struct msg_loader msg_loader_model = MSG_LOADER_BUF(gp_modelBuffer, MODEL_SIZE * 1024);
+    static struct msg_loader msg_loader_input = MSG_LOADER_BUF(gp_inputBuffer, MODEL_INPUT_SIZE * 1024);
+    g_ldr_tables[1][LOADER_TYPE_MODEL] = &msg_loader_model;
+    g_ldr_tables[1][LOADER_TYPE_DATA] = &msg_loader_input;
 }
 
 ZTEST_SUITE(kenning_inference_lib_test_model, NULL, NULL, model_tests_setup_f, NULL, NULL);
