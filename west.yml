@@ -33,7 +33,7 @@ manifest:
 
     - name: tvm
       remote: apache
-      revision: main
+      revision: v0.18.0
 
     - name: dlpack
       remote: dmlc
