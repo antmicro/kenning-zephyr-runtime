@@ -65,6 +65,8 @@ status_t protocol_recv_msg_hdr(message_hdr_t *hdr)
 {
     status_t status = STATUS_OK;
 
+    RETURN_ERROR_IF_POINTER_INVALID(hdr, KENNING_PROTOCOL_STATUS_INV_PTR);
+
     status = protocol_read_data((uint8_t *)hdr, sizeof(message_hdr_t));
     CHECK_PROTOCOL_STATUS(status);
     return status;
@@ -75,6 +77,8 @@ status_t protocol_recv_msg_content(struct msg_loader *ldr, size_t n)
     static uint8_t __attribute__((aligned(4))) msg_recv_buffer[CONFIG_KENNING_MESSAGE_RECV_BUFFER_SIZE];
     status_t status = STATUS_OK;
     const int buffer_size = sizeof(msg_recv_buffer);
+
+    RETURN_ERROR_IF_POINTER_INVALID(ldr, KENNING_PROTOCOL_STATUS_INV_PTR);
 
     status = ldr->reset(ldr, n);
     RETURN_ON_ERROR(status, KENNING_PROTOCOL_STATUS_INTERNAL_ERROR);
