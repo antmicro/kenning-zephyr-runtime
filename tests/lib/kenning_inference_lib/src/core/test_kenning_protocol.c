@@ -22,6 +22,7 @@ static int mock_read_buffer_idx;
 static int mock_loader_buffer_idx;
 
 struct msg_loader *g_ldr_tables[LDR_TABLE_COUNT][NUM_LOADER_TYPES];
+resp_message_t *resp_message;
 
 // ========================================================
 // mocks
@@ -221,6 +222,59 @@ ZTEST(kenning_inference_lib_test_kenning_protocol, test_protocol_receive_message
 // ========================================================
 
 /**
+ * Tests if protocol send message writes properly message without payload
+ */
+ZTEST(kenning_inference_lib_test_kenning_protocol, test_protocol_send_message_without_payload)
+{
+    status_t status = STATUS_OK;
+
+    protocol_write_data_fake.custom_fake = protocol_write_data_mock;
+
+#define TEST_PROTOCOL_SEND_MSG(_message_type)                              \
+    prepare_send_message(_message_type, NULL, 0);                          \
+                                                                           \
+    status = protocol_send_msg(resp_message);                              \
+                                                                           \
+    zassert_equal(STATUS_OK, status);                                      \
+    zassert_equal(resp_message->hdr.message_size, sizeof(message_type_t)); \
+    zassert_equal(resp_message->hdr.message_type, _message_type);
+
+    TEST_PROTOCOL_SEND_MSG(MESSAGE_TYPE_OK);
+    TEST_PROTOCOL_SEND_MSG(MESSAGE_TYPE_ERROR);
+    TEST_PROTOCOL_SEND_MSG(MESSAGE_TYPE_PROCESS);
+    TEST_PROTOCOL_SEND_MSG(MESSAGE_TYPE_OUTPUT);
+
+#undef TEST_PROTOCOL_SEND_MSG
+}
+
+/**
+ * Tests if protocol send message writes properly message with payload
+ */
+ZTEST(kenning_inference_lib_test_kenning_protocol, test_protocol_send_message_with_payload)
+{
+    status_t status = STATUS_OK;
+    uint8_t msg_payload[128] = {0};
+
+    protocol_write_data_fake.custom_fake = protocol_write_data_mock;
+
+#define TEST_PROTOCOL_SEND_MSG(_message_type)                                                    \
+    prepare_send_message(_message_type, msg_payload, sizeof(msg_payload));                       \
+                                                                                                 \
+    status = protocol_send_msg(resp_message);                                                    \
+                                                                                                 \
+    zassert_equal(STATUS_OK, status);                                                            \
+    zassert_equal(resp_message->hdr.message_size, sizeof(message_type_t) + sizeof(msg_payload)); \
+    zassert_equal(resp_message->hdr.message_type, _message_type);
+
+    TEST_PROTOCOL_SEND_MSG(MESSAGE_TYPE_OK);
+    TEST_PROTOCOL_SEND_MSG(MESSAGE_TYPE_ERROR);
+    TEST_PROTOCOL_SEND_MSG(MESSAGE_TYPE_PROCESS);
+    TEST_PROTOCOL_SEND_MSG(MESSAGE_TYPE_OUTPUT);
+
+#undef TEST_PROTOCOL_SEND_MSG
+}
+
+/**
  * Tests if protocol send message fails if message pointer is invalid
  */
 ZTEST(kenning_inference_lib_test_kenning_protocol, test_protocol_send_message_invalid_pointer)
@@ -328,4 +382,24 @@ void prepare_message_in_buffer(message_type_t message_type, size_t payload_size)
     };
     memcpy(mock_read_buffer, &hdr_to_read, sizeof(message_hdr_t));
     memset(mock_read_buffer + sizeof(message_hdr_t), 'x', payload_size);
+}
+
+void prepare_send_message(message_type_t msg_type, uint8_t *payload, size_t payload_size)
+{
+    if (IS_VALID_POINTER(resp_message))
+    {
+        free(resp_message);
+        resp_message = NULL;
+    }
+    message_hdr_t hdr = {
+        .message_type = msg_type,
+        .message_size = sizeof(message_type_t) + payload_size,
+    };
+    resp_message = malloc(sizeof(resp_message_t));
+    resp_message->payload = malloc(payload_size);
+    resp_message->hdr = hdr;
+    if (payload_size > 0)
+    {
+        memcpy(resp_message->payload, payload, payload_size);
+    }
 }
