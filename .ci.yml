@@ -239,7 +239,6 @@ unit-tests:
         paths:
             - twister-out/unit_testing/lib/kenning_inference_lib/**/*.log
         when: always
-    allow_failure: true
 
 tuttest:
     <<: *ace
