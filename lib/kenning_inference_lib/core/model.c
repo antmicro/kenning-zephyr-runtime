@@ -173,7 +173,7 @@ status_t model_get_input_size(size_t *model_input_size)
     return status;
 }
 
-status_t model_load_input_from_loader()
+status_t model_load_input_from_loader(const size_t expected_size)
 {
     status_t status = STATUS_OK;
 
@@ -183,9 +183,14 @@ status_t model_load_input_from_loader()
     }
 
     // validate size of received data
-    size_t expected_size = 0;
-    status = model_get_input_size(&expected_size);
+    size_t computed_size = 0;
+    status = model_get_input_size(&computed_size);
+
     RETURN_ON_ERROR(status, status);
+    if (computed_size != expected_size)
+    {
+        return MODEL_STATUS_INV_ARG;
+    }
 
     status = runtime_init_input();
 
@@ -237,7 +242,7 @@ status_t model_load_input(const uint8_t *model_input, const size_t model_input_s
     msg_loader_data->reset(msg_loader_data, 0);
     status = msg_loader_data->save(msg_loader_data, model_input, model_input_size);
 
-    return model_load_input_from_loader();
+    return model_load_input_from_loader(model_input_size);
 }
 
 status_t model_run()
