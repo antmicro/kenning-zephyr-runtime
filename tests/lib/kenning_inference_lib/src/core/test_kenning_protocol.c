@@ -114,6 +114,13 @@ struct msg_loader *prepare_loader()
     return &ldr;
 }
 
+// ========================================================
+// receive_message
+// ========================================================
+
+/**
+ * Tests if protocol receive message reads message header properly
+ */
 ZTEST(kenning_inference_lib_test_kenning_protocol, test_protocol_recv_msg_hdr)
 {
     status_t status = STATUS_OK;
@@ -131,6 +138,9 @@ ZTEST(kenning_inference_lib_test_kenning_protocol, test_protocol_recv_msg_hdr)
     zassert_equal(mock_write_buffer_idx, 0);
 }
 
+/**
+ * Tests if protocol receive message reads message content properly
+ */
 ZTEST(kenning_inference_lib_test_kenning_protocol, test_protocol_recv_msg_content)
 {
     status_t status = STATUS_OK;
@@ -148,6 +158,163 @@ ZTEST(kenning_inference_lib_test_kenning_protocol, test_protocol_recv_msg_conten
     zassert_equal(status, STATUS_OK);
     zassert_equal(expected_size, MESSAGE_SIZE_FULL(0x123));
     zassert_equal(mock_write_buffer_idx, 0);
+}
+
+/**
+ * Tests if protocol receive message header fails for invalid pointer
+ */
+ZTEST(kenning_inference_lib_test_kenning_protocol, test_protocol_recv_msg_hdr_invalid_pointer)
+{
+    status_t status = STATUS_OK;
+
+    status = protocol_recv_msg_hdr(NULL);
+
+    zassert_equal(KENNING_PROTOCOL_STATUS_INV_PTR, status);
+}
+
+/**
+ * Tests if protocol receive message content fails for invalid pointer
+ */
+ZTEST(kenning_inference_lib_test_kenning_protocol, test_protocol_recv_msg_content_invalid_pointer)
+{
+    status_t status = STATUS_OK;
+
+    status = protocol_recv_msg_content(NULL, 0);
+
+    zassert_equal(KENNING_PROTOCOL_STATUS_INV_PTR, status);
+}
+
+/**
+ * Tests if protocol receive message fails if protocol read fails
+ */
+ZTEST(kenning_inference_lib_test_kenning_protocol, test_protocol_receive_message_read_error)
+{
+    status_t status = STATUS_OK;
+    uint8_t message_payload[] = "some data";
+    message_hdr_t hdr = {0};
+
+    protocol_read_data_fake.return_val = PROTOCOL_STATUS_RECV_ERROR_BUSY;
+
+    status = protocol_recv_msg(&hdr);
+
+    zassert_equal(KENNING_PROTOCOL_STATUS_CLIENT_DISCONNECTED, status);
+}
+
+/**
+ * Tests if protocol receive message hits timeout if protocol read does so
+ */
+ZTEST(kenning_inference_lib_test_kenning_protocol, test_protocol_receive_message_timeout)
+{
+    status_t status = STATUS_OK;
+    uint8_t message_payload[] = "some data";
+    message_hdr_t hdr = {0};
+
+    protocol_read_data_fake.return_val = PROTOCOL_STATUS_TIMEOUT;
+
+    status = protocol_recv_msg(&hdr);
+
+    zassert_equal(KENNING_PROTOCOL_STATUS_TIMEOUT, status);
+}
+
+// ========================================================
+// send_message
+// ========================================================
+
+/**
+ * Tests if protocol send message fails if message pointer is invalid
+ */
+ZTEST(kenning_inference_lib_test_kenning_protocol, test_protocol_send_message_invalid_pointer)
+{
+    status_t status = STATUS_OK;
+
+    status = protocol_send_msg(NULL);
+
+    zassert_equal(KENNING_PROTOCOL_STATUS_INV_PTR, status);
+}
+
+/**
+ * Tests if protocol send message fails if UART write fails
+ */
+ZTEST(kenning_inference_lib_test_kenning_protocol, test_protocol_send_message_protocol_fail)
+{
+    status_t status = STATUS_OK;
+    message_hdr_t hdr;
+    resp_message_t msg = {
+        .hdr = hdr,
+        .payload = 0,
+    };
+
+    protocol_write_data_fake.return_val = PROTOCOL_STATUS_RECV_ERROR;
+
+    status = protocol_send_msg(&msg);
+
+    zassert_equal(KENNING_PROTOCOL_STATUS_CLIENT_DISCONNECTED, status);
+}
+
+// ========================================================
+// prepare_success_response
+// ========================================================
+
+/**
+ * Tests if protocol prepare success message properly creates empty OK message
+ */
+ZTEST(kenning_inference_lib_test_kenning_protocol, test_prepare_success_response)
+{
+    status_t status = STATUS_OK;
+    message_hdr_t hdr;
+    resp_message_t response;
+    response.hdr = hdr;
+
+    status = protocol_prepare_success_resp(&response);
+
+    zassert_equal(STATUS_OK, status);
+    zassert_equal(MESSAGE_TYPE_OK, response.hdr.message_type);
+    zassert_equal(sizeof(message_type_t), response.hdr.message_size);
+}
+
+/**
+ * Tests if protocol prepare success message fails if message pointer is invalid
+ */
+ZTEST(kenning_inference_lib_test_kenning_protocol, test_prepare_success_response_invalid_pointer)
+{
+    status_t status = STATUS_OK;
+
+    status = protocol_prepare_success_resp(NULL);
+
+    zassert_equal(KENNING_PROTOCOL_STATUS_INV_PTR, status);
+}
+
+// ========================================================
+// prepare_failure_response
+// ========================================================
+
+/**
+ * Tests if protocol prepare failure message properly creates empty ERROR message
+ */
+ZTEST(kenning_inference_lib_test_kenning_protocol, test_prepare_fail_response)
+{
+    status_t status = STATUS_OK;
+    message_hdr_t hdr;
+    resp_message_t response;
+    response.hdr = hdr;
+
+    status = protocol_prepare_fail_resp(&response);
+
+    zassert_equal(STATUS_OK, status);
+    zassert_equal(MESSAGE_TYPE_ERROR, response.hdr.message_type);
+    zassert_equal(sizeof(message_type_t), response.hdr.message_size);
+}
+
+/**
+ * Tests if protocol prepare failure message fails if message pointer is invalid
+ */
+ZTEST(kenning_inference_lib_test_kenning_protocol, test_prepare_fail_response_invalid_pointer)
+{
+    status_t status = STATUS_OK;
+
+    status = protocol_prepare_fail_resp(NULL);
+
+    zassert_equal(KENNING_PROTOCOL_STATUS_INV_PTR, status);
 }
 
 // ========================================================
