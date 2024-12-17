@@ -209,6 +209,32 @@ ZTEST(kenning_inference_lib_test_inference_server, test_wait_for_message_protoco
 // ========================================================
 
 /**
+ * Tests if handle message calls proper callback for messages without response
+ */
+ZTEST(kenning_inference_lib_test_inference_server, test_handle_message_without_response)
+{
+    status_t status = STATUS_OK;
+    message_hdr_t hdr;
+
+    protocol_send_msg_fake.custom_fake = protocol_send_msg_mock;
+
+#define TEST_HANDLE_MESSAGE(_message_type)                          \
+    protocol_send_msg_fake.call_count = 0;                          \
+    hdr = prepare_message_header(_message_type, 0);                 \
+    g_msg_callback[_message_type] = callback_without_response_mock; \
+                                                                    \
+    status = handle_message(&hdr);                                  \
+                                                                    \
+    zassert_equal(STATUS_OK, status);                               \
+    zassert_equal(protocol_send_msg_fake.call_count, 1);
+
+    TEST_HANDLE_MESSAGE(MESSAGE_TYPE_OK);
+    TEST_HANDLE_MESSAGE(MESSAGE_TYPE_ERROR);
+
+#undef TEST_HANDLE_MESSAGE
+}
+
+/**
  * Tests if handle message calls proper callback for messages with success response without payload
  */
 ZTEST(kenning_inference_lib_test_inference_server, test_handle_message_with_success_response_without_payload)
@@ -358,6 +384,8 @@ status_t protocol_send_msg_mock(const resp_message_t *msg)
 
     return STATUS_OK;
 }
+
+status_t callback_without_response_mock(message_hdr_t *hdr, resp_message_t *resp) { return STATUS_OK; }
 
 status_t callback_with_ok_response_mock(message_hdr_t *hdr, resp_message_t *resp)
 {

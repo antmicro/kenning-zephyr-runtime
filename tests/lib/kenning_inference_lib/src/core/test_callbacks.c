@@ -24,6 +24,9 @@ const char *const MESSAGE_TYPE_STR[] = {MESSAGE_TYPES(GENERATE_STR)};
 
 struct msg_loader *g_ldr_tables[LDR_TABLE_COUNT][NUM_LOADER_TYPES];
 
+#define MODEL_OUTPUT_SIZE 10
+#define STATISTICS_SIZE 10
+
 // ========================================================
 // mocks
 // ========================================================
@@ -49,7 +52,6 @@ DEFINE_FFF_GLOBALS;
 MOCKS(DECLARE_MOCK);
 
 const char *get_status_str_mock(status_t);
-int llext_load_success_mock(struct llext_loader *, const char *, struct llext **, struct llext_load_param *);
 status_t model_get_output_mock(const size_t buffer_size, uint8_t *model_output, size_t *model_output_size);
 
 status_t model_get_statistics_mock(const size_t statistics_buffer_size, uint8_t *statistics_buffer,
@@ -87,6 +89,9 @@ static void callbacks_tests_setup_f()
 
     protocol_prepare_success_resp_fake.return_val = STATUS_OK;
     protocol_prepare_fail_resp_fake.return_val = STATUS_OK;
+
+    static struct msg_loader msg_loader_llext = {0};
+    g_ldr_tables[0][LOADER_TYPE_RUNTIME] = &msg_loader_llext;
 }
 
 ZTEST_SUITE(kenning_inference_lib_test_callbacks, NULL, NULL, callbacks_tests_setup_f, NULL, NULL);
@@ -510,7 +515,7 @@ ZTEST(kenning_inference_lib_test_callbacks, test_output_callback)
 
     zassert_equal(STATUS_OK, status);
     zassert_equal(model_get_output_fake.call_count, 1);
-    zassert_equal(resp.hdr.message_size, 10 + sizeof(message_type_t));
+    zassert_equal(resp.hdr.message_size, MODEL_OUTPUT_SIZE + sizeof(message_type_t));
     zassert_equal(model_get_output_fake.arg1_val, resp.payload);
     zassert_equal(resp.hdr.message_type, MESSAGE_TYPE_OK);
 }
@@ -595,7 +600,7 @@ ZTEST(kenning_inference_lib_test_callbacks, test_stats_callback)
 
     zassert_equal(STATUS_OK, status);
     zassert_equal(model_get_statistics_fake.call_count, 1);
-    zassert_equal(resp.hdr.message_size, 10 + sizeof(message_type_t));
+    zassert_equal(resp.hdr.message_size, STATISTICS_SIZE + sizeof(message_type_t));
     zassert_equal(model_get_statistics_fake.arg1_val, resp.payload);
     zassert_equal(resp.hdr.message_type, MESSAGE_TYPE_OK);
 }
@@ -864,14 +869,14 @@ struct llext *prepare_llext_replacement()
 // ========================================================
 status_t model_get_output_mock(const size_t buffer_size, uint8_t *model_output, size_t *model_output_size)
 {
-    *model_output_size = 10;
+    *model_output_size = MODEL_OUTPUT_SIZE;
     return STATUS_OK;
 }
 
 status_t model_get_statistics_mock(const size_t statistics_buffer_size, uint8_t *statistics_buffer,
                                    size_t *statistics_size)
 {
-    *statistics_size = 10;
+    *statistics_size = STATISTICS_SIZE;
     return STATUS_OK;
 }
 

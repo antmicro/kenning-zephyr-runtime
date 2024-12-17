@@ -17,17 +17,14 @@
 
 GENERATE_MODULE_STATUSES(CALLBACKS);
 
-#define VALIDATE_HEADER(callback_message_type, hdr)         \
-    do                                                      \
-    {                                                       \
-        if ((hdr) == NULL)                                  \
-        {                                                   \
-            return CALLBACKS_STATUS_INV_PTR;                \
-        }                                                   \
-        if ((callback_message_type) != (hdr)->message_type) \
-        {                                                   \
-            return CALLBACKS_STATUS_INV_MSG_TYPE;           \
-        }                                                   \
+#define VALIDATE_HEADER(callback_message_type, hdr)                     \
+    do                                                                  \
+    {                                                                   \
+        RETURN_ERROR_IF_POINTER_INVALID(hdr, CALLBACKS_STATUS_INV_PTR); \
+        if ((callback_message_type) != (hdr)->message_type)             \
+        {                                                               \
+            return CALLBACKS_STATUS_INV_MSG_TYPE;                       \
+        }                                                               \
     } while (0);
 
 #define CHECK_STATUS_LOG(status, response, log_format, log_args...)      \
