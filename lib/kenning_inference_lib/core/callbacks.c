@@ -248,7 +248,6 @@ status_t runtime_callback(message_hdr_t *hdr, resp_message_t *resp)
 
     VALIDATE_HEADER(MESSAGE_TYPE_RUNTIME, hdr);
 
-    struct msg_loader *msg_loader_llext = g_ldr_tables[0][LOADER_TYPE_RUNTIME];
     size_t llext_size = MESSAGE_SIZE_PAYLOAD(hdr->message_size);
 
     LOG_INF("Attempting to load %d", llext_size);

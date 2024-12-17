@@ -212,7 +212,8 @@ status_t model_load_weights(const uint8_t *model_weights_data, const size_t data
     RETURN_ERROR_IF_POINTER_INVALID(msg_loader_model, MODEL_STATUS_INV_PTR);
 
     msg_loader_model->reset(msg_loader_model, 0);
-    status = msg_loader_model->save(msg_loader_model, (uint8_t *)model_weights_data, data_size);
+    status = msg_loader_model->save(msg_loader_model, model_weights_data, data_size);
+    RETURN_ON_ERROR_LOG(status, status, "Model loader failed: %d", status);
 
     return model_load_weights_from_loader();
 }
@@ -227,6 +228,7 @@ status_t model_load_struct(const uint8_t *model_struct_data, const size_t data_s
 
     msg_loader_iospec->reset(msg_loader_iospec, 0);
     status = msg_loader_iospec->save(msg_loader_iospec, model_struct_data, data_size);
+    RETURN_ON_ERROR_LOG(status, status, "iospec loader failed: %d", status);
 
     return model_load_struct_from_loader();
 }
@@ -241,6 +243,7 @@ status_t model_load_input(const uint8_t *model_input, const size_t model_input_s
 
     msg_loader_data->reset(msg_loader_data, 0);
     status = msg_loader_data->save(msg_loader_data, model_input, model_input_size);
+    RETURN_ON_ERROR_LOG(status, status, "Data loader failed: %d", status);
 
     return model_load_input_from_loader(model_input_size);
 }

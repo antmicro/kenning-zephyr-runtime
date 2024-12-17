@@ -94,7 +94,9 @@ status_t runtime_run_model()
 {
     TfLiteStatus status = gp_tflite_interpreter->Invoke();
     if (status == kTfLiteOk)
+    {
         return STATUS_OK;
+    }
 
     return RUNTIME_WRAPPER_STATUS_ERROR;
 }

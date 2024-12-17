@@ -158,10 +158,12 @@
 #ifdef NO_KENNING_COMM
 #define MODULES(MODULE) \
     MODULE(MODEL)       \
+    MODULE(LOADERS)     \
     MODULE(RUNTIME_WRAPPER)
 #else // NO_KENNING_COMM
 #define MODULES(MODULE)      \
     MODULE(CALLBACKS)        \
+    MODULE(LOADERS)          \
     MODULE(INFERENCE_SERVER) \
     MODULE(KENNING_PROTOCOL) \
     MODULE(MODEL)            \

@@ -403,7 +403,7 @@ ZTEST(kenning_inference_lib_test_model, test_model_load_struct_invalid_size)
                                                                           \
     status = model_load_struct((uint8_t *)&model_struct, (_struct_size)); \
                                                                           \
-    zassert_equal(MODEL_STATUS_INV_ARG, status);                          \
+    zassert_equal(LOADERS_STATUS_NOT_ENOUGH_MEMORY, status);              \
     zassert_equal(MODEL_STATE_INITIALIZED, g_model_state);
 
     TEST_LOAD_STRUCT(sizeof(MlModel) - 1);

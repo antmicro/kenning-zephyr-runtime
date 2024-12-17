@@ -9,13 +9,17 @@
 
 #include "kenning_inference_lib/core/utils.h"
 
+#define LOADERS_STATUSES(STATUS) STATUS(LOADERS_STATUS_NOT_ENOUGH_MEMORY)
+
+GENERATE_MODULE_STATUSES(LOADERS);
+
 #include <stddef.h>
 #include <stdint.h>
 #include <string.h>
 
 struct msg_loader
 {
-    int (*save)(struct msg_loader *, uint8_t *, size_t);
+    int (*save)(struct msg_loader *, const uint8_t *, size_t);
     int (*save_one)(struct msg_loader *, uint8_t, size_t);
     int (*reset)(struct msg_loader *, size_t);
     size_t written;
@@ -23,7 +27,7 @@ struct msg_loader
     void *addr;
 };
 
-int buf_save(struct msg_loader *ldr, uint8_t *src, size_t n);
+int buf_save(struct msg_loader *ldr, const uint8_t *src, size_t n);
 
 int buf_save_one(struct msg_loader *ldr, uint8_t c, size_t n);
 
