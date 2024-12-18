@@ -251,7 +251,7 @@ status_t runtime_callback(message_hdr_t *hdr, resp_message_t *resp)
     size_t llext_size = MESSAGE_SIZE_PAYLOAD(hdr->message_size);
 
     LOG_INF("Attempting to load %d", llext_size);
-    struct llext_buf_loader buf_loader = LLEXT_BUF_LOADER(msg_loader_llext->addr, llext_size);
+    struct llext_buf_loader buf_loader = LLEXT_BUF_LOADER(g_ldr_tables[0][LOADER_TYPE_RUNTIME]->addr, llext_size);
     struct llext_loader *loader = &buf_loader.loader;
     struct llext_load_param ldr_param = LLEXT_LOAD_PARAM_DEFAULT;
 
