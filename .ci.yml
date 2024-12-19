@@ -237,7 +237,7 @@ unit-tests:
         - prepare-env
     artifacts:
         paths:
-            - twister-out/unit_testing/lib/kenning_inference_lib/**/*.log
+            - twister-out
         when: always
 
 tuttest:
