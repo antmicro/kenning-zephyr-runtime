@@ -103,7 +103,7 @@ status_t data_callback(message_hdr_t *hdr, resp_message_t *resp) // TODO
 
     VALIDATE_HEADER(MESSAGE_TYPE_DATA, hdr);
 
-    status = model_load_input_from_loader();
+    status = model_load_input_from_loader(MESSAGE_SIZE_PAYLOAD(hdr->message_size));
 
     CHECK_STATUS_LOG(status, resp, "model_load_input returned 0x%x (%s)", status, get_status_str(status));
 

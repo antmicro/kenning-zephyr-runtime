@@ -92,7 +92,7 @@ status_t model_load_struct_from_loader();
 
 status_t model_load_weights_from_loader();
 
-status_t model_load_input_from_loader();
+status_t model_load_input_from_loader(const size_t expected_size);
 
 /**
  * Runs model inference
