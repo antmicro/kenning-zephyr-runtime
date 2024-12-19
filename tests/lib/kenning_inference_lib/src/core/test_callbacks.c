@@ -38,7 +38,7 @@ DEFINE_FFF_GLOBALS;
     MOCK(status_t, protocol_prepare_fail_resp, resp_message_t *)                                           \
     MOCK(status_t, model_load_struct_from_loader)                                                          \
     MOCK(status_t, model_load_weights_from_loader)                                                         \
-    MOCK(status_t, model_load_input_from_loader)                                                           \
+    MOCK(status_t, model_load_input_from_loader, const size_t)                                             \
     MOCK(status_t, model_run)                                                                              \
     MOCK(status_t, model_get_output, const size_t, uint8_t *, size_t *)                                    \
     MOCK(status_t, model_get_statistics, const size_t, uint8_t *, size_t *)                                \
