@@ -116,11 +116,17 @@ status_t runtime_init_weights()
     {
         const tvm_graph_t *tvm_graph = (tvm_graph_t *)gp_tvmGraphBuffer;
 
-        if (NULL != gp_tvm_graph_executor)
+        if (IS_VALID_POINTER(gp_tvm_graph_executor))
         {
             tvm_status = TVMGraphExecutor_Release(&gp_tvm_graph_executor);
             CHECK_TVM_STATUS_BREAK(status, tvm_status, "Release graph executor error 0x%x", tvm_status);
             gp_tvm_graph_executor = NULL;
+        }
+        if (IS_VALID_POINTER(g_tvm_module_handle))
+        {
+            tvm_status = TVMModFree(g_tvm_module_handle);
+            CHECK_TVM_STATUS_BREAK(status, tvm_status, "Release TVM module error 0x%x", tvm_status);
+            g_tvm_module_handle = NULL;
         }
 
         if (msg_loader_model->written !=
