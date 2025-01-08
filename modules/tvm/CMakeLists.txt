@@ -18,8 +18,14 @@ if(CONFIG_ZEPHYR_TVM_MODULE)
 
   apply_patch(
     ${TVM_DIR}/src/runtime/crt/graph_executor/graph_executor.c
-    ${TVM_DIR}/src/runtime/crt/graph_executor/graph_executor_patched.c
+    ${TVM_DIR}/src/runtime/crt/graph_executor/graph_executor_patched_1.c
     ${CMAKE_CURRENT_SOURCE_DIR}/nop.patch
+  )
+
+  apply_patch(
+    ${TVM_DIR}/src/runtime/crt/graph_executor/graph_executor_patched_1.c
+    ${TVM_DIR}/src/runtime/crt/graph_executor/graph_executor_patched_2.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/memory_leak_fix.patch
   )
 
   zephyr_library()
@@ -35,7 +41,7 @@ if(CONFIG_ZEPHYR_TVM_MODULE)
     ${TVM_DIR}/src/runtime/crt/common/func_registry.c
     ${TVM_DIR}/src/runtime/crt/common/ndarray.c
     ${TVM_DIR}/src/runtime/crt/common/packed_func.c
-    ${TVM_DIR}/src/runtime/crt/graph_executor/graph_executor_patched.c
+    ${TVM_DIR}/src/runtime/crt/graph_executor/graph_executor_patched_2.c
     ${TVM_DIR}/src/runtime/crt/graph_executor/load_json.c
     ${TVM_DIR}/src/runtime/crt/memory/page_allocator.c
     ${TVM_DIR}/src/runtime/crt/memory/stack_allocator.c
