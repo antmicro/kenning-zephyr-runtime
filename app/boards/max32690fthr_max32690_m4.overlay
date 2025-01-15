@@ -1,0 +1,13 @@
+&uart0 {
+    current-speed = < 9600 >;
+};
+
+&uart2 {
+    current-speed = < 9600 >;
+};
+
+/ {
+    aliases {
+        kcomms = &uart2;
+    };
+};
