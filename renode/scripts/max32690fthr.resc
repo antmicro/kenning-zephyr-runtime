@@ -1,0 +1,14 @@
+mach create "max32690fthr_max32690_m4"
+
+machine LoadPlatformDescription $ORIGIN/../../build/max32690fthr.repl
+
+# Enable UART connection
+emulation CreateUartPtyTerminal "term-log" "/tmp/uart-log"
+connector Connect sysbus.uart0 term-log
+
+emulation CreateUartPtyTerminal "term" "/tmp/uart"
+connector Connect sysbus.uart2 term
+
+sysbus.cpu0 EnableOpcodesCounting true
+
+sysbus LoadELF $bin
