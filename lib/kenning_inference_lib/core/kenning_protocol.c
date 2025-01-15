@@ -33,6 +33,11 @@ status_t protocol_recv_msg(message_hdr_t *hdr)
     {
         protocol_read_data(NULL, MESSAGE_SIZE_PAYLOAD(hdr->message_size));
         LOG_ERR("Invalid message type: %u", hdr->message_type);
+    }
+
+    if (hdr->message_size == 0)
+    {
+        LOG_ERR("Invalid message size: %u", hdr->message_size);
         return KENNING_PROTOCOL_STATUS_DATA_INV;
     }
 

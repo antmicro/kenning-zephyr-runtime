@@ -21,7 +21,7 @@
         return KENNING_PROTOCOL_STATUS_CLIENT_DISCONNECTED;                 \
     }
 
-#define MESSAGE_SIZE_PAYLOAD(msg_size) ((msg_size) - sizeof(message_type_t))
+#define MESSAGE_SIZE_PAYLOAD(msg_size) ((msg_size > 0) ? (msg_size) - sizeof(message_type_t) : 0)
 #define MESSAGE_SIZE_FULL(msg_size) (sizeof(message_hdr_t) + MESSAGE_SIZE_PAYLOAD(msg_size))
 #define RESP_MESSAGE_BUFFER_SIZE 128
 
