@@ -128,6 +128,11 @@ config KENNING_TVM_MODEL_GEN
 
 endchoice
 
+config KENNING_TVM_TARGET_ATTRS
+        string "Attributes of TVM target"
+        default ""
+        depends on KENNING_ML_RUNTIME_TVM || KENNING_ML_RUNTIME_LLEXT
+
 config KENNING_TVM_HEAP_SIZE
         int "Size in kilobytes of the heap used by TVM"
         default 128

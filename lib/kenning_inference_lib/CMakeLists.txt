@@ -27,6 +27,7 @@ macro(appendTVMModel runtime_src)
           --output-path runtimes/tvm/generated/model_impl.graph_data
           --header-template-path ${CMAKE_CURRENT_SOURCE_DIR}/runtimes/tvm/generated/model_impl.h.template
           --board ${BOARD}
+          --conf '${CONFIG_KENNING_TVM_TARGET_ATTRS}'
           ${CONFIG_KENNING_MODEL_COMPILER_ARGS}
     )
     # temporary fix for failing vrinta instruction in Renode simulation

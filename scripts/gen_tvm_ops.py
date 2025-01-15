@@ -34,6 +34,7 @@ if __name__ == "__main__":
         required=True,
     )
     parser.add_argument("--board", "-b", type=str, help="Target board", required=True)
+    parser.add_argument("--conf", "-c", type=str, help="Target config", default="")
     parser.add_argument(
         "--verbosity", "-v", type=str, help="Logging verbosity", default="INFO"
     )
@@ -49,6 +50,7 @@ if __name__ == "__main__":
         compiled_model_path=args.output_path,
         model_framework="any",
         target="zephyr",
+        target_attrs=args.conf,
         target_microtvm_board=args.board,
         zephyr_header_template=args.header_template_path,
         conv2d_data_layout="NCHW",
