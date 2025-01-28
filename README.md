@@ -1,6 +1,6 @@
 # Zephyr runtime for Kenning
 
-Copyright (c) 2023-2024 [Antmicro](https://www.antmicro.com)
+Copyright (c) 2023-2025 [Antmicro](https://www.antmicro.com)
 
 This project provides a Zephyr library for the [Kenning](https://github.com/antmicro/kenning) runtime API, along with an application for model evaluation.
 Its aim is to simplify adoption and switching between existing runtime implementations.
