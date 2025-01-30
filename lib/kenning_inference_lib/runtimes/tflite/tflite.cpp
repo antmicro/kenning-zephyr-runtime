@@ -18,7 +18,7 @@ extern "C"
 #include <tensorflow/lite/micro/system_setup.h>
 #include <tensorflow/lite/schema/schema_generated.h>
 
-#include "resolver.h"
+#include "generated/ops_resolver.h"
 
 LOG_MODULE_REGISTER(tflite_runtime, CONFIG_RUNTIME_WRAPPER_LOG_LEVEL);
 

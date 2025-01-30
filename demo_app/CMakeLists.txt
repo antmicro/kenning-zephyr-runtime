@@ -109,9 +109,11 @@ elseif(${CONFIG_KENNING_ML_RUNTIME_TFLITE})
     OUTPUT
       model_data
     COMMAND
-      cp
-        ${CONFIG_KENNING_MODEL_PATH}
-        model_data
+      python3 ${CMAKE_SOURCE_DIR}/../scripts/build_tflite.py
+        --model-path ${CONFIG_KENNING_MODEL_PATH}
+        --output-model-path model_impl.tflite
+    COMMAND
+      cp model_impl.tflite model_data
   )
 elseif(${CONFIG_KENNING_ML_RUNTIME_IREE})
   set(model_vmfb_path model.vmfb)

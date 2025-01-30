@@ -157,6 +157,22 @@ config KENNING_TFLITE_BUFFER_SIZE
         help
           This option sets the size in bytes of the buffer for tensor arena and model used by TFLite.
 
+config KENNING_TFLITE_OPS
+        string "Names of operators to be added to TFLite Micro runtime."
+        default ""
+        depends on KENNING_ML_RUNTIME_TFLITE
+        help
+          This option provides op names to include in the TFLite Micro resolver.
+          If only KENNING_MODEL_PATH is provided, ops are retrieved from the TFLite model
+          provided in the path.
+          If only KENNING_TFLITE_OPS is provided, ops from this option are used.
+          If both settings are provided, ops from model and KENNING_TFLITE_OPS are used.
+          If none of those two options are provided, default set of ops is used:
+
+          Conv2D,FullyConnected,MaxPool2D,Reshape,Softmax
+
+          Ops in KENNING_TFLITE_OPS should be provided as comma-separated list of ops' names, as above.
+
 choice KENNING_IREE_LOADER
         prompt "loader to be used by IREE"
         depends on KENNING_ML_RUNTIME_IREE

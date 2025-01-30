@@ -51,6 +51,46 @@ macro(appendTVMModel runtime_src)
   endif()
 endmacro()
 
+macro(generateTFLiteOpsResolver runtime_src)
+  if(NOT "${CONFIG_KENNING_MODEL_PATH}" STREQUAL "")
+    add_custom_command(
+      OUTPUT
+        runtimes/tflite/generated/model.tflite
+        runtimes/tflite/generated/ops_resolver.h
+      COMMAND
+        python3 ${CMAKE_SOURCE_DIR}/../scripts/build_tflite.py
+          --model-path ${CONFIG_KENNING_MODEL_PATH}
+          --ops-list "${CONFIG_KENNING_TFLITE_OPS}"
+          --output-resolver-path runtimes/tflite/generated/ops_resolver.h
+          --output-model-path runtimes/tflite/generated/model.tflite
+    )
+  elseif(NOT "${CONFIG_KENNING_TFLITE_OPS}" STREQUAL "")
+    add_custom_command(
+      OUTPUT
+        runtimes/tflite/generated/model.tflite
+        runtimes/tflite/generated/ops_resolver.h
+      COMMAND
+        python3 ${CMAKE_SOURCE_DIR}/../scripts/build_tflite.py
+          --ops-list "${CONFIG_KENNING_TFLITE_OPS}"
+          --output-resolver-path runtimes/tflite/generated/ops_resolver.h
+          --output-model-path runtimes/tflite/generated/model.tflite
+    )
+  else()
+    add_custom_command(
+      OUTPUT
+        runtimes/tflite/generated/model.tflite
+        runtimes/tflite/generated/ops_resolver.h
+      COMMAND
+        python3 ${CMAKE_SOURCE_DIR}/../scripts/build_tflite.py
+          --ops-list "Conv2D,FullyConnected,MaxPool2D,Reshape,Softmax"
+          --output-resolver-path runtimes/tflite/generated/ops_resolver.h
+          --output-model-path runtimes/tflite/generated/model.tflite
+    )
+  endif()
+  list(APPEND runtime_src "runtimes/tflite/generated/ops_resolver.h")
+  include_directories(${CMAKE_CURRENT_BINARY_DIR}/runtimes/tflite/)
+endmacro()
+
 # if model path starts with "./" make it absolute
 if (CONFIG_KENNING_MODEL_PATH MATCHES "^\./.*")
   set(CONFIG_KENNING_MODEL_PATH "${CMAKE_CURRENT_SOURCE_DIR}/../../${CONFIG_KENNING_MODEL_PATH}")
@@ -89,7 +129,7 @@ elseif(${CONFIG_KENNING_ML_RUNTIME_TVM})
 elseif(${CONFIG_KENNING_ML_RUNTIME_TFLITE})
   list(APPEND runtime_src "runtimes/tflite/tflite.cpp")
   list(APPEND runtime_src "runtimes/tflite/tflite.c")
-  list(APPEND runtime_src "runtimes/tflite/resolver.cpp")
+  generateTFLiteOpsResolver(runtime_src)
 elseif(${CONFIG_KENNING_ML_RUNTIME_IREE})
   set(IREE_DIR ${ZEPHYR_CURRENT_MODULE_DIR}/../iree)
   set(ZEPHYR_CONFIG_HEADER "${IREE_DIR}/zephyr/zephyr_config.h")
@@ -239,7 +279,8 @@ if(CONFIG_LLEXT)
 
     list(APPEND tflite_runtime_src "runtimes/tflite/tflite.cpp")
     list(APPEND tflite_runtime_src "runtimes/tflite/tflite.c")
-    list(APPEND tflite_runtime_src "runtimes/tflite/resolver.cpp")
+
+    generateTFLiteOpsResolver(tflite_runtime_src)
 
     add_compile_definitions(EXTENSION_TVM)
 
