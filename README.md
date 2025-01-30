@@ -243,6 +243,25 @@ kenning optimize test report \
     --verbosity INFO
 ```
 
+##### Adding supported layer types to TFLite Micro resolver
+
+By default, only a minimal set of layer types is enabled in the TFLite Micro runtime - `Conv2D`, `FullyConnected`, `MaxPool2D`, `Reshape` and `Softmax`.
+
+There are two possible ways to change this list of enabled ops in the global `tflite::MicroMutableOpResolver`:
+
+* Providing an actual/reference TFLite model via `CONFIG_KENNING_MODEL_PATH`:
+  ```bash
+  west build -p always -b stm32f746g_disco app -- \
+      -DEXTRA_CONF_FILE=tflite.conf \
+      -DCONFIG_KENNING_MODEL_PATH=\"https://dl.antmicro.com/kenning/models/classification/magic_wand.h5\"
+  ```
+* Providing list of ops manually in a comma-separated format in `CONFIG_TFLITE_MICRO_OPS`:
+  ```bash
+  west build -p always -b stm32f746g_disco app -- \
+      -DEXTRA_CONF_FILE=tflite.conf \
+      -DCONFIG_KENNING_TFLITE_OPS=\"Conv2D,FullyConnected,MaxPool2D,Reshape,Softmax\"
+  ```
+
 #### Using microTVM
 
 To build the `kenning-zephyr-runtime` app to work with microTVM runtime, set `-DEXTRA_CONF_FILE` to `tvm.conf`, e.g. by executing:
