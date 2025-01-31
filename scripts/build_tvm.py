@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 """
-Python script for generating TVM ops for given model.
+Python script for generating TVM implementation for a given model.
 """
 
 import argparse

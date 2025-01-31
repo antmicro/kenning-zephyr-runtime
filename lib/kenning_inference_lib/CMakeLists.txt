@@ -22,7 +22,7 @@ macro(appendTVMModel runtime_src)
         runtimes/tvm/generated/model_impl.c
         runtimes/tvm/generated/model_impl.h
       COMMAND
-        python3 ${CMAKE_SOURCE_DIR}/../scripts/gen_tvm_ops.py
+        python3 ${CMAKE_SOURCE_DIR}/../scripts/build_tvm.py
           --input-path ${CONFIG_KENNING_MODEL_PATH}
           --output-path runtimes/tvm/generated/model_impl.graph_data
           --header-template-path ${CMAKE_CURRENT_SOURCE_DIR}/runtimes/tvm/generated/model_impl.h.template

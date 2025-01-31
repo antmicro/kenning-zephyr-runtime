@@ -92,7 +92,7 @@ if(${CONFIG_KENNING_ML_RUNTIME_TVM})
       OUTPUT
         model_data
       COMMAND
-        python3 ${CMAKE_SOURCE_DIR}/../scripts/gen_tvm_ops.py
+        python3 ${CMAKE_SOURCE_DIR}/../scripts/build_tvm.py
           --input-path ${CONFIG_KENNING_MODEL_PATH}
           --output-path model_impl.graph_data
           --header-template-path ${CMAKE_SOURCE_DIR}/../lib/kenning_inference_lib/runtimes/tvm/generated/model_impl.h.template
