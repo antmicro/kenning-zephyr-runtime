@@ -1,0 +1,21 @@
+&uart0 {
+    status = "okay";
+    pinctrl-0 = < &uart0a_tx_p2_12 &uart0a_rx_p2_11 >;
+    pinctrl-names = "default";
+    current-speed = < 115200 >;
+    data-bits = < 0x8 >;
+};
+
+&uart2 {
+    current-speed = < 115200 >;
+};
+
+/ {
+    chosen {
+        zephyr,console = &uart0;
+        zephyr,shell-uart = &uart0;
+    };
+    aliases {
+        kcomms = &uart2;
+    };
+};
