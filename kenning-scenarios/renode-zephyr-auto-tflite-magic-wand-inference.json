@@ -21,7 +21,7 @@
                 "inference_input_type": "float32",
                 "inference_output_type": "float32"
             }
-	}
+        }
     ],
     "runtime_builder": {
         "type": "kenning.runtimebuilders.zephyr.ZephyrRuntimeBuilder",

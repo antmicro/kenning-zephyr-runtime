@@ -21,11 +21,11 @@
                 "inference_input_type": "float32",
                 "inference_output_type": "float32"
             }
-	}
+        }
     ],
     "runtime": {
         "type": "kenning.runtimes.tflite.TFLiteRuntime",
-		    "parameters": {}
+        "parameters": {}
     },
     "protocol": {
         "type": "kenning.protocols.uart.UARTProtocol",
