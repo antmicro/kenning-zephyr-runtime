@@ -30,7 +30,7 @@
 #include "generated/magic_wand.h"
 #elif defined(CONFIG_KENNING_TVM_MODEL_MAGIC_WAND_INT8)
 #include "generated/magic_wand_int8.h"
-#elif defined(CONFIG_KENNING_TVM_MODEL_GEN)
+#elif defined(CONFIG_KENNING_TVM_MODEL_GEN) || defined(CONFIG_KENNING_TVM_MODEL_PRE_GEN)
 #include "generated/model_impl.h"
 #else
 #error "No model selected"

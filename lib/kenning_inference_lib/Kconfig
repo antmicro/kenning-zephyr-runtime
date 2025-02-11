@@ -122,6 +122,10 @@ config KENNING_TVM_MODEL_MAGIC_WAND_INT8
         bool
         prompt "Quantized Magic Wand model"
 
+config KENNING_TVM_MODEL_PRE_GEN
+        bool
+        prompt "Load model from pre-generated source"
+
 config KENNING_TVM_MODEL_GEN
         bool
         prompt "Load model from generated source"

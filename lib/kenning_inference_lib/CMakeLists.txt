@@ -10,8 +10,26 @@ macro(appendTVMModel runtime_src)
     set_source_files_properties("runtimes/tvm/generated/magic_wand.c" PROPERTIES COMPILE_FLAGS "-Wno-unused-variable")
     add_compile_definitions(TVM_MODEL_MAGIC_WAND)
   elseif("${CONFIG_KENNING_TVM_MODEL_MAGIC_WAND_INT8}")
-    list(APPEND runtime_src "runtimes/tvm/generated/magic_wand_int8.c")
+    list(APPEND ${runtime_src} "runtimes/tvm/generated/magic_wand_int8.c")
     set_source_files_properties("runtimes/tvm/generated/magic_wand_int8.c" PROPERTIES COMPILE_FLAGS "-Wno-unused-variable")
+  elseif("${CONFIG_KENNING_TVM_MODEL_PRE_GEN}")
+    get_filename_component(BASE_MODEL_PATH_DIR "${CONFIG_KENNING_MODEL_PATH}" DIRECTORY)
+    get_filename_component(BASE_MODEL_PATH_NAME "${CONFIG_KENNING_MODEL_PATH}" NAME_WE)
+    set(BASE_MODEL_PATH "${BASE_MODEL_PATH_DIR}/${BASE_MODEL_PATH_NAME}")
+    add_custom_command(
+      OUTPUT
+        runtimes/tvm/generated/model_impl.c
+        runtimes/tvm/generated/model_impl.h
+      DEPENDS
+        "${CONFIG_KENNING_MODEL_PATH}"
+      COMMAND
+        cp "${BASE_MODEL_PATH}.c" runtimes/tvm/generated/model_impl.c &&
+        cp "${BASE_MODEL_PATH}.h" runtimes/tvm/generated/model_impl.h
+    )
+    list(APPEND ${runtime_src} "runtimes/tvm/generated/model_impl.c")
+    set_source_files_properties("runtimes/tvm/generated/model_impl.c" PROPERTIES COMPILE_FLAGS "-Wno-unused-variable")
+
+    include_directories(${CMAKE_CURRENT_BINARY_DIR}/runtimes/tvm/)
   elseif("${CONFIG_KENNING_TVM_MODEL_GEN}")
     if("${CONFIG_KENNING_MODEL_PATH}" STREQUAL "")
       message(FATAL_ERROR "Provide model path via CONFIG_KENNING_MODEL_PATH")
@@ -41,10 +59,9 @@ macro(appendTVMModel runtime_src)
       COMMAND
         sed -e 's/roundf\(\(/\(\(/g' "runtimes/tvm/generated/model_impl.c" > "runtimes/tvm/generated/model_impl_no_round.c"
     )
-    list(APPEND runtime_src "runtimes/tvm/generated/model_impl_no_round.c")
+    list(APPEND ${runtime_src} "runtimes/tvm/generated/model_impl_no_round.c")
     set_source_files_properties("runtimes/tvm/generated/model_impl_no_round.c" PROPERTIES COMPILE_FLAGS "-Wno-unused-variable")
 
-    add_compile_definitions(TVM_MODEL_MODEL_IMPL)
     include_directories(${CMAKE_CURRENT_BINARY_DIR}/runtimes/tvm/)
   else()
     message(FATAL_ERROR "Invalid TVM model selected")
@@ -87,7 +104,7 @@ macro(generateTFLiteOpsResolver runtime_src)
           --output-model-path runtimes/tflite/generated/model.tflite
     )
   endif()
-  list(APPEND runtime_src "runtimes/tflite/generated/ops_resolver.h")
+  list(APPEND ${runtime_src} "runtimes/tflite/generated/ops_resolver.h")
   include_directories(${CMAKE_CURRENT_BINARY_DIR}/runtimes/tflite/)
 endmacro()
 
