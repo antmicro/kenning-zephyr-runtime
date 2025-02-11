@@ -1,0 +1,20 @@
+platform:
+  type: ZephyrPlatform
+  parameters:
+    name: hifive_unmatched/fu740/s7
+    simulated: true
+    zephyr_build_path: ./build
+dataset:
+  type: MagicWandDataset
+  parameters:
+    dataset_root: ./output/MagicWandDataset
+model_wrapper:
+  type: MagicWandModelWrapper
+  parameters:
+    model_path: kenning:///models/classification/magic_wand.h5
+optimizers:
+- type: TFLiteCompiler
+  parameters:
+    compiled_model_path: ./output/magic-wand.tflite
+    inference_input_type: float32
+    inference_output_type: float32
