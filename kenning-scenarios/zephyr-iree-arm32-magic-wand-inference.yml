@@ -1,0 +1,26 @@
+platform:
+  type: ZephyrPlatform
+  parameters:
+    name: stm32f746g_disco
+    simulated: false
+    uart_port: /dev/ttyUSB1
+dataset:
+  type: MagicWandDataset
+  parameters:
+    dataset_root: ./output/MagicWandDataset
+model_wrapper:
+  type: MagicWandModelWrapper
+  parameters:
+    model_path: kenning:///models/classification/magic_wand.h5
+optimizers:
+- type: IREECompiler
+  parameters:
+    compiled_model_path: ./output/magic-wand-iree-rv64.vmfb
+    backend: llvm-cpu
+    model_framework: keras
+    compiler_args:
+    - iree-vm-bytecode-module-strip-source-map=true
+    - iree-vm-emit-polyglot-zip=false
+    - iree-llvm-debug-symbols=false
+    - iree-llvm-target-cpu=cortex-m33
+    - iree-llvm-target-triple=arm
