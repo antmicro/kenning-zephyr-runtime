@@ -58,7 +58,7 @@ And then execute Kenning to compile the model, run benchmark and generate report
 
 ```
 kenning optimize test report
-    --json-cfg ./kenning-scenarios/renode-zephyr-tvm-magic-wand-inference.json
+    --cfg ./kenning-scenarios/renode-zephyr-tvm-magic-wand-inference.yml
     --measurements ./results-tvm.json
     --report-path ./report-tvm.md
     --report-types performance classification renode_stats
@@ -218,11 +218,11 @@ First off, build the `kenning-zephyr-runtime` app for `stm32f746g_disco` and the
 west build -p always -b stm32f746g_disco app -- -DEXTRA_CONF_FILE=tflite.conf
 ```
 
-Then, evaluate the model in Renode using a sample scenario located in `kenning-scenarios/renode-zephyr-tflite-magic-wand-inference.json` and generate a report with performance and quality metrics:
+Then, evaluate the model in Renode using a sample scenario located in `kenning-scenarios/renode-zephyr-tflite-magic-wand-inference.yml` and generate a report with performance and quality metrics:
 
 ```bash
 kenning optimize test report \
-    --json-cfg kenning-scenarios/renode-zephyr-tflite-magic-wand-inference.json \
+    --cfg kenning-scenarios/renode-zephyr-tflite-magic-wand-inference.yml \
     --measurements results.json --verbosity INFO \
     --report-path reports/stm32-renode-tflite-magic-wand/report.md \
     --to-html \
@@ -232,11 +232,11 @@ kenning optimize test report \
 The model performance report in Markdown will be available under `reports/stm32-renode-tflite-magic-wand/report.md`.
 The HTML version of the report will be accessible from `reports/stm32-renode-tflite-magic-wand/report/report.html`.
 
-The above two steps (`west build` and `kenning ...`) can be also performed by Kenning automatically using `ZephyrRuntimeBuilder` block, e.g. as in the scenario located in `kenning-scenarios/renode-zephyr-auto-tflite-magic-wand-inference.json`:
+The above two steps (`west build` and `kenning ...`) can be also performed by Kenning automatically using `ZephyrRuntimeBuilder` block, e.g. as in the scenario located in `kenning-scenarios/renode-zephyr-auto-tflite-magic-wand-inference.yml`:
 
 ```bash
 kenning optimize test report \
-    --json-cfg kenning-scenarios/renode-zephyr-auto-tflite-magic-wand-inference.json \
+    --cfg kenning-scenarios/renode-zephyr-auto-tflite-magic-wand-inference.yml \
     --measurements results.json --verbosity INFO \
     --report-path reports/stm32-renode-auto-tflite-magic-wand/report.md \
     --to-html \
@@ -270,11 +270,11 @@ To build the `kenning-zephyr-runtime` app to work with microTVM runtime, set `-D
 west build -p always -b stm32f746g_disco app -- -DEXTRA_CONF_FILE=tvm.conf
 ```
 
-Evaluate the model using the sample scenario located in `kenning-scenarios/renode-zephyr-tvm-magic-wand-inference.json`:
+Evaluate the model using the sample scenario located in `kenning-scenarios/renode-zephyr-tvm-magic-wand-inference.yml`:
 
 ```bash
 kenning optimize test report \
-    --json-cfg kenning-scenarios/renode-zephyr-tvm-magic-wand-inference.json \
+    --cfg kenning-scenarios/renode-zephyr-tvm-magic-wand-inference.yml \
     --measurements results.json --verbosity INFO \
     --report-path reports/stm32-renode-tvm-magic-wand/report.md \
     --to-html \
@@ -285,7 +285,7 @@ The above two steps (`west build` and `kenning ...`) can be also performed by Ke
 
 ```bash
 kenning optimize test report \
-    --json-cfg kenning-scenarios/renode-zephyr-auto-tvm-magic-wand-inference.json \
+    --cfg kenning-scenarios/renode-zephyr-auto-tvm-magic-wand-inference.yml \
     --measurements results.json --verbosity INFO \
     --report-path reports/stm32-renode-auto-tvm-magic-wand/report.md \
     --to-html \
@@ -329,10 +329,10 @@ then build the TVM extension:
 west build app -t llext-tvm -- -DEXTRA_CONF_FILE="llext.conf;llext_tvm.conf"
 ```
 
-Evaluate the model using scenario located in `kenning-scenarios/renode-zephyr-tvm-llext-magic-wand-inference.json`:
+Evaluate the model using scenario located in `kenning-scenarios/renode-zephyr-tvm-llext-magic-wand-inference.yml`:
 ```bash
 kenning optimize test report \
-    --json-cfg kenning-scenarios/renode-zephyr-tvm-llext-magic-wand-inference.json \
+    --cfg kenning-scenarios/renode-zephyr-tvm-llext-magic-wand-inference.yml \
     --measurements results.json --verbosity INFO \
     --report-path reports/stm32-renode-tvm-llext-magic-wand/report.md \
     --to-html \
@@ -341,7 +341,7 @@ kenning optimize test report \
 Alternatively, build and evaluation can be done in a single step:
 ```bash
 kenning optimize test report \
-    --json-cfg kenning-scenarios/renode-zephyr-auto-tvm-llext-magic-wand-inference.json \
+    --cfg kenning-scenarios/renode-zephyr-auto-tvm-llext-magic-wand-inference.yml \
     --measurements results.json --verbosity INFO \
     --report-path reports/stm32-renode-auto-tvm-llext-magic-wand/report.md \
     --to-html \
@@ -352,7 +352,7 @@ The above two steps (`west build` and `kenning ...`) can be also performed by Ke
 
 ```bash
 kenning optimize test report \
-    --json-cfg kenning-scenarios/renode-zephyr-auto-tvm-llext-magic-wand-inference.json \
+    --cfg kenning-scenarios/renode-zephyr-auto-tvm-llext-magic-wand-inference.yml \
     --measurements results.json --verbosity INFO \
     --report-path reports/stm32-renode-auto-tvm-llext-magic-wand/report.md \
     --to-html \
@@ -380,7 +380,7 @@ Finally, evaluate the model and generate a report with performance and quality m
 
 ```bash skip
 kenning optimize test report \
-    --json-cfg kenning-scenarios/zephyr-tflite-magic-wand-inference.json \
+    --cfg kenning-scenarios/zephyr-tflite-magic-wand-inference.yml \
     --measurements results.json --verbosity INFO \
     --report-types performance classification \
     --report-path reports/nrf-tflite-magic-wand/report.md \
@@ -406,7 +406,7 @@ Evaluate the model and generate a report with performance and quality metrics:
 
 ```bash skip
 kenning optimize test report \
-    --json-cfg kenning-scenarios/zephyr-tvm-magic-wand-inference.json \
+    --cfg kenning-scenarios/zephyr-tvm-magic-wand-inference.yml \
     --measurements results.json --verbosity INFO \
     --report-types performance classification \
     --report-path reports/stm32-tvm-magic-wand/report.md \
