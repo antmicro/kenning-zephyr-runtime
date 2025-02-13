@@ -60,6 +60,12 @@ image: $CI_IMAGE
     variables:
         APP: demo_app
         ELF_PREFIX: kenning-zephyr-runtime-demo
+        BOARDS: >
+            b_u585i_iot02a
+            stm32f746g_disco
+            hifive_unleashed/fu540/e51
+            max32690evkit/max32690/m4
+            max32690fthr/max32690/m4
 
 .build-llext:
     extends: .build
@@ -206,6 +212,8 @@ build-repl:
             b_u585i_iot02a
             stm32f746g_disco
             hifive_unleashed/fu540/e51
+            max32690evkit/max32690/m4
+            max32690fthr/max32690/m4
     script:
         - |
           source .venv/bin/activate
