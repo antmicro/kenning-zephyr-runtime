@@ -27,17 +27,15 @@ GENERATE_MODULE_STATUSES(CALLBACKS);
         }                                                               \
     } while (0);
 
-#define CHECK_STATUS_LOG(status, response, log_format, log_args...)      \
-    do                                                                   \
-    {                                                                    \
-        if (STATUS_OK != status)                                         \
-        {                                                                \
-            LOG_ERR(log_format, ##log_args);                             \
-            status_t resp_status = protocol_prepare_fail_resp(response); \
-            RETURN_ON_ERROR(resp_status, resp_status);                   \
-            return status;                                               \
-        }                                                                \
-        LOG_DBG(log_format, ##log_args);                                 \
+#define CHECK_STATUS_LOG(status, response, log_format, log_args...) \
+    do                                                              \
+    {                                                               \
+        if (STATUS_OK != status)                                    \
+        {                                                           \
+            LOG_ERR(log_format, ##log_args);                        \
+            return protocol_prepare_fail_resp(response);            \
+        }                                                           \
+        LOG_DBG(log_format, ##log_args);                            \
     } while (0);
 
 #define PREPARE_RESPONSE(status)                               \

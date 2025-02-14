@@ -266,7 +266,7 @@ status_t runtime_callback(message_hdr_t *hdr, resp_message_t *resp)
         if (IS_VALID_POINTER(p_llext))
         {
             LOG_ERR("LLEXT already exists (%x). This should never happen", (unsigned int)p_llext);
-            return CALLBACKS_STATUS_ERROR;
+            status = CALLBACKS_STATUS_ERROR;
         }
 
         // load LLEXT
@@ -292,7 +292,7 @@ status_t runtime_callback(message_hdr_t *hdr, resp_message_t *resp)
         status = model_init();
     }
 
-    PREPARE_RESPONSE(status);
+    CHECK_STATUS_LOG(status, resp, "LLEXT runtime load returned: 0x%x (%s)", status, get_status_str(status));
 
     return status;
 }
