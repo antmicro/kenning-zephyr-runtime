@@ -56,6 +56,7 @@ if __name__ == "__main__":
         conv2d_data_layout="NCHW",
     )
 
+    compiler.init()
     compiler.compile(args.input_path)
 
     KLogger.info(f"TVM ops saved to {args.output_path}")
