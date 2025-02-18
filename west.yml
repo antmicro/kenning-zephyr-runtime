@@ -29,7 +29,7 @@ manifest:
 
     - name: tflite-micro
       remote: zephyrproject-rtos
-      revision: zephyr
+      revision: zephyr-v4.1.0
 
     - name: tvm
       remote: apache
