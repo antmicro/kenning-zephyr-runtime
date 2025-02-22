@@ -6,6 +6,7 @@ image: $CI_IMAGE
 .common_only: &common_only
     only:
         - main
+        - stable
         - dev
         - merge_requests
 
