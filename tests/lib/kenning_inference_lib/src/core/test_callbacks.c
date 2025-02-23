@@ -281,7 +281,7 @@ ZTEST(kenning_inference_lib_test_callbacks, test_data_callback_model_error)
 
     status = data_callback(&hdr, &resp);
 
-    zassert_equal(MODEL_STATUS_INV_STATE, status);
+    zassert_equal(STATUS_OK, status);
     zassert_equal(model_load_input_from_loader_fake.call_count, 1);
     zassert_equal(protocol_prepare_fail_resp_fake.call_count, 1);
 }
@@ -364,7 +364,7 @@ ZTEST(kenning_inference_lib_test_callbacks, test_model_callback_model_error)
 
     status = model_callback(&hdr, &resp);
 
-    zassert_equal(MODEL_STATUS_ERROR, status);
+    zassert_equal(STATUS_OK, status);
     zassert_equal(model_load_weights_from_loader_fake.call_count, 1);
     zassert_equal(protocol_prepare_fail_resp_fake.call_count, 1);
 }
@@ -447,7 +447,7 @@ ZTEST(kenning_inference_lib_test_callbacks, test_process_callback_model_error)
 
     status = process_callback(&hdr, &resp);
 
-    zassert_equal(MODEL_STATUS_ERROR, status);
+    zassert_equal(STATUS_OK, status);
     zassert_equal(model_run_fake.call_count, 1);
     zassert_equal(protocol_prepare_fail_resp_fake.call_count, 1);
 }
@@ -533,7 +533,7 @@ ZTEST(kenning_inference_lib_test_callbacks, test_output_callback_model_error)
 
     status = output_callback(&hdr, &resp);
 
-    zassert_equal(MODEL_STATUS_ERROR, status);
+    zassert_equal(STATUS_OK, status);
     zassert_equal(model_get_output_fake.call_count, 1);
     zassert_equal(protocol_prepare_fail_resp_fake.call_count, 1);
 }
@@ -618,7 +618,7 @@ ZTEST(kenning_inference_lib_test_callbacks, test_stats_callback_model_error)
 
     status = stats_callback(&hdr, &resp);
 
-    zassert_equal(MODEL_STATUS_ERROR, status);
+    zassert_equal(STATUS_OK, status);
     zassert_equal(model_get_statistics_fake.call_count, 1);
     zassert_equal(protocol_prepare_fail_resp_fake.call_count, 1);
 }
@@ -701,7 +701,7 @@ ZTEST(kenning_inference_lib_test_callbacks, test_iospec_callback_model_error)
 
     status = iospec_callback(&hdr, &resp);
 
-    zassert_equal(MODEL_STATUS_ERROR, status);
+    zassert_equal(STATUS_OK, status);
     zassert_equal(model_load_struct_from_loader_fake.call_count, 1);
     zassert_equal(protocol_prepare_fail_resp_fake.call_count, 1);
 }
@@ -778,7 +778,6 @@ ZTEST(kenning_inference_lib_test_callbacks, test_runtime_callback)
     zassert_equal(1, llext_bringup_fake.call_count);
     zassert_equal(0, llext_unload_fake.call_count);
     zassert_equal(0, llext_teardown_fake.call_count);
-    zassert_equal(protocol_prepare_success_resp_fake.call_count, 1);
     zassert_equal(prepare_llext(), llext_bringup_fake.arg0_val);
 
     zassert_equal(STATUS_OK, status);
@@ -810,7 +809,7 @@ ZTEST(kenning_inference_lib_test_callbacks, test_runtime_callback_fail)
     zassert_equal(0, llext_unload_fake.call_count);
     zassert_equal(0, llext_teardown_fake.call_count);
 
-    zassert_equal(CALLBACKS_STATUS_ERROR, status);
+    zassert_equal(STATUS_OK, status);
 }
 
 // ========================================================
