@@ -267,6 +267,7 @@ status_t runtime_callback(message_hdr_t *hdr, resp_message_t *resp)
         {
             LOG_ERR("LLEXT already exists (%x). This should never happen", (unsigned int)p_llext);
             status = CALLBACKS_STATUS_ERROR;
+            break;
         }
 
         // load LLEXT
