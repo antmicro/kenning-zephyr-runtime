@@ -31,7 +31,7 @@ jobs:
             - name: Install tuttest dependencies
               run: |
                   apt-get update -qqy
-                  apt-get install -qqy --no-install-recommends python3 python3-pip git colorized-logs sudo
+                  apt-get install -qqy --no-install-recommends python3 python3-pip git colorized-logs sudo fonts-lato
                   sudo pip3 install --break-system-packages git+https://github.com/antmicro/tuttest.git
             - name: Run README.md snippets
               run: |
