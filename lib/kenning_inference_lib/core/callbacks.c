@@ -227,9 +227,8 @@ status_t iospec_callback(message_hdr_t *hdr, resp_message_t *resp)
     CHECK_STATUS_LOG(status, resp, "model_load_struct returned 0x%x (%s)", status, get_status_str(status));
 
     status = protocol_prepare_success_resp(resp);
-    RETURN_ON_ERROR(status, status);
 
-    return STATUS_OK;
+    return status;
 }
 
 #if defined(CONFIG_LLEXT) || defined(CONFIG_ZTEST)

@@ -4,7 +4,7 @@ platform:
     name: stm32f746g_disco
     simulated: true
     zephyr_build_path: ./build
-    llext_binary_path: ./build/llext/tflite.llext
+    llext_binary_path: ./build/llext/tvm.llext
 dataset:
   type: MagicWandDataset
   parameters:
