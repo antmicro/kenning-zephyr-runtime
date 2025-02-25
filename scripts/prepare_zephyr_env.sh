@@ -76,6 +76,13 @@ cd ${ZEPHYR_SDK_PATH}
 ./setup.sh -h
 ./setup.sh -c
 
+cd -
+
+if [ $ZEPHYR_SDK_ONLY -eq 1 ]; then
+    echo "Zephyr SDK installed successfully"
+    exit 0
+fi
+
 cd ${PROJECT_ROOT}
 
 # setup Zephyr project
