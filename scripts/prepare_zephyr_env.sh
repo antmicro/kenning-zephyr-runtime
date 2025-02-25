@@ -7,7 +7,7 @@
 set -e
 set -x
 
-ZEPHYR_SDK_PATH=$HOME/.local/opt/zephyr-sdk
+ZEPHYR_SDK_PATH=${ZEPHYR_SDK_PATH:-$HOME/.local/opt/zephyr-sdk}
 PROJECT_ROOT=$(realpath $(pwd))
 
 # prepare venv for the project
