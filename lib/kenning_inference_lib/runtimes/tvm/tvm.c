@@ -162,7 +162,6 @@ status_t runtime_init_weights()
 
 status_t runtime_init_input()
 {
-    struct msg_loader *msg_loader_input = g_ldr_tables[1][LOADER_TYPE_DATA];
     status_t status = STATUS_OK;
     DLTensor tensor_in;
 
