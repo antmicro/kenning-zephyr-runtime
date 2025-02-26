@@ -68,6 +68,8 @@ status_t prepare_llext_loader()
                                                  .max_size = 0,
                                                  .addr = NULL};
     g_ldr_tables[0][LOADER_TYPE_RUNTIME] = &msg_loader_llext;
+
+    return STATUS_OK;
 }
 
 #endif // defined(CONFIG_LLEXT)
