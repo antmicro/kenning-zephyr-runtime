@@ -16,36 +16,6 @@
 
 LOG_MODULE_REGISTER(demo_app, CONFIG_DEMO_APP_LOG_LEVEL);
 
-/* encode type string as uint32_t */
-#define ENCODE_TYPE(t0, t1, t2, t3) ((t0) | ((t1) << 8) | ((t2) << 16) | ((t3) << 24))
-
-#ifdef CONFIG_KENNING_DEMO_USE_QUANTIZED_MODEL
-#include <quantization_params.h>
-
-#define ELEM_TYPE ENCODE_TYPE('i', '8', 0, 0)
-#define ELEM_SIZE 1
-#else // CONFIG_KENNING_DEMO_USE_QUANTIZED_MODEL
-#define ELEM_TYPE ENCODE_TYPE('f', '3', '2', 0)
-#define ELEM_SIZE 4
-#endif // CONFIG_KENNING_DEMO_USE_QUANTIZED_MODEL
-
-/**
- * Struct with Magic Wand model params
- */
-const MlModel model_struct = {
-    .num_input = 1,
-    .num_input_dim = {4},
-    .input_shape = {{1, 128, 3, 1}},
-    .input_length = {384},
-    .input_size_bytes = {ELEM_SIZE},
-    .num_output = 1,
-    .output_length = {4},
-    .output_size_bytes = ELEM_SIZE,
-    .hal_element_type = ELEM_TYPE,
-    .entry_func = "module.main",
-    .model_name = "module",
-};
-
 /**
  * Magic Wand dataset classes
  */
