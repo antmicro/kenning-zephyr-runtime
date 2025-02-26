@@ -65,6 +65,11 @@ def main():
                     output_path=args.output_resolver_path,
                 )
         args.output_model_path.write_bytes(args.model_path.read_bytes())
+        args.output_model_path.with_suffix(
+            f"{args.output_model_path.suffix}.json"
+        ).write_bytes(
+            args.model_path.with_suffix(f"{args.model_path.suffix}.json").read_bytes()
+        )
         return 0
     if args.ops_list:
         TFLiteCompiler.create_resolver_file_from_ops_list(
