@@ -4,109 +4,9 @@
 
 zephyr_library_named(kenning_inference_lib)
 
-macro(appendTVMModel runtime_src)
-  if("${CONFIG_KENNING_TVM_MODEL_MAGIC_WAND}")
-    list(APPEND ${runtime_src} "runtimes/tvm/generated/magic_wand.c")
-    set_source_files_properties("runtimes/tvm/generated/magic_wand.c" PROPERTIES COMPILE_FLAGS "-Wno-unused-variable")
-    add_compile_definitions(TVM_MODEL_MAGIC_WAND)
-  elseif("${CONFIG_KENNING_TVM_MODEL_MAGIC_WAND_INT8}")
-    list(APPEND ${runtime_src} "runtimes/tvm/generated/magic_wand_int8.c")
-    set_source_files_properties("runtimes/tvm/generated/magic_wand_int8.c" PROPERTIES COMPILE_FLAGS "-Wno-unused-variable")
-  elseif("${CONFIG_KENNING_TVM_MODEL_PRE_GEN}")
-    get_filename_component(BASE_MODEL_PATH_DIR "${CONFIG_KENNING_MODEL_PATH}" DIRECTORY)
-    get_filename_component(BASE_MODEL_PATH_NAME "${CONFIG_KENNING_MODEL_PATH}" NAME_WE)
-    set(BASE_MODEL_PATH "${BASE_MODEL_PATH_DIR}/${BASE_MODEL_PATH_NAME}")
-    add_custom_command(
-      OUTPUT
-        runtimes/tvm/generated/model_impl.c
-        runtimes/tvm/generated/model_impl.h
-      DEPENDS
-        "${CONFIG_KENNING_MODEL_PATH}"
-      COMMAND
-        cp "${BASE_MODEL_PATH}.c" runtimes/tvm/generated/model_impl.c &&
-        cp "${BASE_MODEL_PATH}.h" runtimes/tvm/generated/model_impl.h
-    )
-    list(APPEND ${runtime_src} "runtimes/tvm/generated/model_impl.c")
-    set_source_files_properties("runtimes/tvm/generated/model_impl.c" PROPERTIES COMPILE_FLAGS "-Wno-unused-variable")
+set(KENNING_LIB_DIR "${CMAKE_CURRENT_LIST_DIR}/../../")
 
-    include_directories(${CMAKE_CURRENT_BINARY_DIR}/runtimes/tvm/)
-  elseif("${CONFIG_KENNING_TVM_MODEL_GEN}")
-    if("${CONFIG_KENNING_MODEL_PATH}" STREQUAL "")
-      message(FATAL_ERROR "Provide model path via CONFIG_KENNING_MODEL_PATH")
-    endif("${CONFIG_KENNING_MODEL_PATH}" STREQUAL "")
-
-    add_custom_command(
-      OUTPUT
-        runtimes/tvm/generated/model_impl.c
-        runtimes/tvm/generated/model_impl.h
-      COMMAND
-        python3 ${CMAKE_SOURCE_DIR}/../scripts/build_tvm.py
-          --input-path ${CONFIG_KENNING_MODEL_PATH}
-          --output-path runtimes/tvm/generated/model_impl.graph_data
-          --header-template-path ${CMAKE_CURRENT_SOURCE_DIR}/runtimes/tvm/generated/model_impl.h.template
-          --board ${BOARD}
-          --conf '${CONFIG_KENNING_TVM_TARGET_ATTRS}'
-          ${CONFIG_KENNING_MODEL_COMPILER_ARGS}
-    )
-    # temporary fix for failing vrinta instruction in Renode simulation
-    # it removes roundf that is applied after softmax (the output is cast
-    # into uint after that, so this should not break anything)
-    add_custom_command(
-      OUTPUT
-        "runtimes/tvm/generated/model_impl_no_round.c"
-      DEPENDS
-        "runtimes/tvm/generated/model_impl.c"
-      COMMAND
-        sed -e 's/roundf\(\(/\(\(/g' "runtimes/tvm/generated/model_impl.c" > "runtimes/tvm/generated/model_impl_no_round.c"
-    )
-    list(APPEND ${runtime_src} "runtimes/tvm/generated/model_impl_no_round.c")
-    set_source_files_properties("runtimes/tvm/generated/model_impl_no_round.c" PROPERTIES COMPILE_FLAGS "-Wno-unused-variable")
-
-    include_directories(${CMAKE_CURRENT_BINARY_DIR}/runtimes/tvm/)
-  else()
-    message(FATAL_ERROR "Invalid TVM model selected")
-  endif()
-endmacro()
-
-macro(generateTFLiteOpsResolver runtime_src)
-  if(NOT "${CONFIG_KENNING_MODEL_PATH}" STREQUAL "")
-    add_custom_command(
-      OUTPUT
-        runtimes/tflite/generated/model.tflite
-        runtimes/tflite/generated/ops_resolver.h
-      COMMAND
-        python3 ${CMAKE_SOURCE_DIR}/../scripts/build_tflite.py
-          --model-path ${CONFIG_KENNING_MODEL_PATH}
-          --ops-list "${CONFIG_KENNING_TFLITE_OPS}"
-          --output-resolver-path runtimes/tflite/generated/ops_resolver.h
-          --output-model-path runtimes/tflite/generated/model.tflite
-    )
-  elseif(NOT "${CONFIG_KENNING_TFLITE_OPS}" STREQUAL "")
-    add_custom_command(
-      OUTPUT
-        runtimes/tflite/generated/model.tflite
-        runtimes/tflite/generated/ops_resolver.h
-      COMMAND
-        python3 ${CMAKE_SOURCE_DIR}/../scripts/build_tflite.py
-          --ops-list "${CONFIG_KENNING_TFLITE_OPS}"
-          --output-resolver-path runtimes/tflite/generated/ops_resolver.h
-          --output-model-path runtimes/tflite/generated/model.tflite
-    )
-  else()
-    add_custom_command(
-      OUTPUT
-        runtimes/tflite/generated/model.tflite
-        runtimes/tflite/generated/ops_resolver.h
-      COMMAND
-        python3 ${CMAKE_SOURCE_DIR}/../scripts/build_tflite.py
-          --ops-list "Conv2D,FullyConnected,MaxPool2D,Reshape,Softmax"
-          --output-resolver-path runtimes/tflite/generated/ops_resolver.h
-          --output-model-path runtimes/tflite/generated/model.tflite
-    )
-  endif()
-  list(APPEND ${runtime_src} "runtimes/tflite/generated/ops_resolver.h")
-  include_directories(${CMAKE_CURRENT_BINARY_DIR}/runtimes/tflite/)
-endmacro()
+include(cmake/model.cmake)
 
 # if model path starts with "./" make it absolute
 if (CONFIG_KENNING_MODEL_PATH MATCHES "^\./.*")
@@ -142,11 +42,11 @@ if(${CONFIG_KENNING_ML_RUNTIME_STUB})
 elseif(${CONFIG_KENNING_ML_RUNTIME_TVM})
   list(APPEND runtime_src "runtimes/tvm/tvm.c")
   list(APPEND runtime_src "runtimes/tvm/platform.c")
-  appendTVMModel(runtime_src)
+  kenning_gen_tvm_model_sources(runtime_src)
 elseif(${CONFIG_KENNING_ML_RUNTIME_TFLITE})
   list(APPEND runtime_src "runtimes/tflite/tflite.cpp")
   list(APPEND runtime_src "runtimes/tflite/tflite.c")
-  generateTFLiteOpsResolver(runtime_src)
+  kenning_gen_tflite_model_sources(runtime_src)
 elseif(${CONFIG_KENNING_ML_RUNTIME_IREE})
   set(IREE_DIR ${ZEPHYR_CURRENT_MODULE_DIR}/../iree)
   set(ZEPHYR_CONFIG_HEADER "${IREE_DIR}/zephyr/zephyr_config.h")
@@ -184,9 +84,12 @@ elseif(${CONFIG_KENNING_ML_RUNTIME_IREE})
   elseif()
     message(FATAL_ERROR "Invalid IREE loader")
   endif()
+  kenning_gen_iree_model_sources(runtime_src)
 elseif(${CONFIG_KENNING_ML_RUNTIME_LLEXT})
   list(APPEND runtime_src "runtimes/llext/llext.c")
 endif()
+
+kenning_gen_model_data()
 
 zephyr_library_sources(${core_src} ${protocol_src} ${runtime_src})
 
@@ -206,7 +109,7 @@ if(CONFIG_LLEXT)
     list(APPEND tvm_runtime_src "runtimes/tvm/tvm.c")
     list(APPEND tvm_runtime_src "runtimes/tvm/platform.c")
 
-    appendTVMModel(tvm_runtime_src)
+    kenning_gen_tvm_model_sources(tvm_runtime_src)
 
     add_compile_definitions(EXTENSION_TVM)
 
@@ -297,9 +200,7 @@ if(CONFIG_LLEXT)
     list(APPEND tflite_runtime_src "runtimes/tflite/tflite.cpp")
     list(APPEND tflite_runtime_src "runtimes/tflite/tflite.c")
 
-    generateTFLiteOpsResolver(tflite_runtime_src)
-
-    add_compile_definitions(EXTENSION_TVM)
+    kenning_gen_tflite_model_sources(tflite_runtime_src)
 
     add_llext_target(
       "llext-tflite"
@@ -308,7 +209,7 @@ if(CONFIG_LLEXT)
     )
 
     llext_compile_options("llext-tflite" -ffunction-sections)
-    llext_link_options("llext-tflite" -Wl,--gc-sections -Wl,-e tflite_opt_entrypoint -Wl,${CMAKE_CURRENT_SOURCE_DIR}/runtimes/llext/keep_ext.ld)
+    llext_link_options("llext-tflite" -Wl,--gc-sections -Wl,-e tflite_opt_entrypoint -Wl,${CMAKE_CURRENT_LIST_DIR}/runtimes/llext/keep_ext.ld)
 
     llext_compile_options("llext-tflite" -O3 -Os)
     llext_link_options("llext-tflite" -O3 -Os)
