@@ -60,6 +60,7 @@ def get_kenning_communication_uart(boards: str) -> str:
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(__doc__)
     parser.add_argument("--debug", action="store_true", help="Enable GDB server")
+    parser.add_argument("--no-kcomms", action="store_true", help="Disable Kenning communication")
     args = parser.parse_args()
 
     board = get_cmake_var("BOARD:STRING").split("/")[0]
@@ -89,7 +90,7 @@ if __name__ == "__main__":
 
     console = serial.Serial("/tmp/uart-log", baudrate=115200)
 
-    if "app" == project_name:
+    if "app" == project_name and not args.no_kcomms:
         # create pty terminal for Kenning communication UART
         kcomms_uart = get_kenning_communication_uart(board)
 
