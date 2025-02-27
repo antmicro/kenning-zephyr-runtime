@@ -2,7 +2,10 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-# generates TVM model ops source and adds it to provided list
+# Generates TVM model ops source and adds it to provided list.
+#
+# @param runtime_src List with runtime sources to which model sources will be
+#                    added.
 macro(kenning_gen_tvm_model_sources runtime_src)
   if("${CONFIG_KENNING_TVM_MODEL_MAGIC_WAND}" OR "${CONFIG_KENNING_TVM_MODEL_MAGIC_WAND_INT8}")
     if("${CONFIG_KENNING_TVM_MODEL_MAGIC_WAND}")
@@ -137,7 +140,10 @@ macro(kenning_gen_tvm_model_sources runtime_src)
   include_directories(${CMAKE_CURRENT_BINARY_DIR}/runtimes/tvm/)
 endmacro(kenning_gen_tvm_model_sources)
 
-# generates TFLite ops resolver source and adds it to provided list
+# Generates TFLite ops resolver source and adds it to provided list.
+#
+# @param runtime_src List with runtime sources to which model sources will be
+#                    added.
 macro(kenning_gen_tflite_model_sources runtime_src)
   if(NOT "${CONFIG_KENNING_MODEL_PATH}" STREQUAL "")
     add_custom_command(
@@ -181,6 +187,10 @@ macro(kenning_gen_tflite_model_sources runtime_src)
   include_directories(${CMAKE_CURRENT_BINARY_DIR}/runtimes/tflite/)
 endmacro(kenning_gen_tflite_model_sources)
 
+# Adds IREE sources to provided list.
+#
+# @param runtime_src List with runtime sources to which model sources will be
+#                    added.
 macro(kenning_gen_iree_model_sources runtime_src)
   set(model_vmfb_path "runtimes/iree/generated/model.vmfb")
   set(import_path "runtimes/iree/generated/model.mlir")
@@ -264,7 +274,8 @@ macro(kenning_gen_iree_model_sources runtime_src)
   unset(import_path)
 endmacro(kenning_gen_iree_model_sources)
 
-# generate model struct and appends it to header
+# Generate model data header that contains quantization params, model struct
+# and model data.
 macro(kenning_gen_model_data)
   set(model_data_path)
   set(model_json_path)
@@ -330,4 +341,7 @@ macro(kenning_gen_model_data)
     DEPENDS
       model_data.h
   )
+
+  unset(model_data_path)
+  unset(model_json_path)
 endmacro(kenning_gen_model_data)
