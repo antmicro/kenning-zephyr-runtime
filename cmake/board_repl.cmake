@@ -2,7 +2,8 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-# Adds board-repl target
+# Adds board-repl target that generates REPL file needed to simulate selected
+# board in Renode. The REPL will be saved to build/<board_name>.repl.
 function(kenning_add_board_repl_target)
   add_custom_command(
     OUTPUT
