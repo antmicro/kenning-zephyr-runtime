@@ -2,6 +2,10 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
+"""
+Python script for convering IO spec in JSON format to model struct.
+"""
+
 import argparse
 import json
 import numpy as np
@@ -37,11 +41,24 @@ const MlModel model_struct = {{
 
 
 def py_arr_to_c_arr(arr: list):
+    """
+    Converts python array to C array.
+
+    Parameters
+    ----------
+    arr : List
+        Array to be converted.
+
+    Returns
+    -------
+    str :
+        Array in C format.
+    """
     return str(arr).replace("[", "{").replace("]", "}")
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(__doc__)
 
     parser.add_argument(
         "--input-path",
