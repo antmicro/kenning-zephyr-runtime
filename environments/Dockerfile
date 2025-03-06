@@ -7,6 +7,7 @@ ENV DEBIAN_FRONTEND noninteractive
 
 RUN apt-get update && $INST \
     ccache \
+    cmake \
     curl \
     device-tree-compiler \
     dfu-util \
@@ -24,6 +25,7 @@ RUN apt-get update && $INST \
     libhidapi-hidraw0 \
     libhidapi-libusb0 \
     libmagic1 \
+    libncurses5 \
     libsdl2-dev \
     libusb-0.1-4 \
     libxcb1 \
@@ -44,9 +46,9 @@ RUN apt-get update && $INST \
     libxkbcommon0 \
     libxkbcommon-x11-0 \
     make \
-    mono-complete \
     ninja-build \
     patch \
+    picocom \
     python3-dev \
     python3-pip \
     python3-setuptools \
@@ -58,14 +60,22 @@ RUN apt-get update && $INST \
     xz-utils \
     && apt-get autoremove && apt-get clean && rm -rf /var/lib/apt/lists/*
 
+RUN wget https://packages.microsoft.com/config/debian/12/packages-microsoft-prod.deb -O packages-microsoft-prod.deb && dpkg -i packages-microsoft-prod.deb && rm packages-microsoft-prod.deb
+
+RUN apt-get update && $INST dotnet-sdk-9.0 && apt-get autoremove && apt-get clean && rm -rf /var/lib/apt/lists/*
+
+RUN wget -O /tmp/renode-portable-dotnet.tar.gz https://builds.renode.io/renode-latest.linux-portable-dotnet.tar.gz && \
+    mkdir -p /opt/renode/ && \
+    tar -C /opt/renode --strip-components=1 -xzvf /tmp/renode-portable-dotnet.tar.gz && rm /tmp/renode-portable-dotnet.tar.gz
+
+ENV PYRENODE_RUNTIME=coreclr
+ENV PYRENODE_BIN=/opt/renode/renode
+
 RUN $PIPINST \
     pip \
-    setuptools
+    setuptools \
+    west \
+    pyelftools
 
 RUN $PIPINST \
-    "kenning[iree,tvm,torch,anomaly_detection,tensorflow,tflite,reports,renode,uart] @ git+https://github.com/antmicro/kenning.git"
-
-RUN mkdir -p /opt/renode && \
-    wget -O /opt/renode/renode-latest.pkg.tar.gz https://builds.renode.io/renode-latest.pkg.tar.xz
-
-ENV PYRENODE_PKG /opt/renode/renode-latest.pkg.tar.gz
+    "kenning[anomaly_detection,iree,tvm,tensorflow,tflite,torch,reports,renode,uart,auto_pytorch] @ git+https://github.com/antmicro/kenning.git"
