@@ -1,0 +1,69 @@
+# This scenario demonstrates an AutoML flow on example of Anomaly Detection in time series
+# for MAX32960 Evaluation Kit.
+#
+# Configures the AutoML flow
+automl:
+  # Implementation of the AutoML flow using AutoPyTorch
+  type: AutoPyTorchML
+  parameters:
+    # Time limit for AutoML task (in minutes)
+    time_limit: 3
+    # List of model architectures used for AutoML,
+    # represented by ModelWrapper (has to implement AutoMLModel class)
+    use_models:
+      - PyTorchAnomalyDetectionVAE
+    # Directory storing AutoML results
+    output_directory: ./workspace/automl-results
+    # Maximum number of models returned by the flow
+    n_best_models: 5
+
+    # AutoPyTorch-specific options
+    # Chosen metric to optimize
+    optimize_metric: f1
+    # Type of budget for training models, either epochs or time limit
+    budget_type: epochs
+    # Lower and upper limit of the budger
+    min_budget: 1
+    max_budget: 5
+    # Size of the application that will use generated models
+    application_size: 75.5
+
+# Chooses the platform to run
+platform:
+  type: ZephyrPlatform
+  parameters:
+    # Chooses MAX32690 Evaluation Kit
+    name: max32690evkit/max32690/m4
+    # Use Renode to simulate the platform
+    simulated: True
+
+# Defines dataset for anomaly detection
+dataset:
+  type: AnomalyDetectionDataset
+  parameters:
+    dataset_root: ./workspace/CATS
+    csv_file: kenning:///datasets/anomaly_detection/cats_nano.csv
+    split_fraction_test: 0.1
+    split_seed: 12345
+    inference_batch_size: 1
+
+# Optimizers used on selected models for final evaluation
+# In here TFLite Micro will be used for on-target inference
+optimizers:
+- type: TFLiteCompiler
+  parameters:
+    target: default
+    compiled_model_path: ./workspace/automl-results/vae.tflite
+    inference_input_type: float32
+    inference_output_type: float32
+
+# Runtime builder that rebuilds the Kenning Zephyr Runtime
+runtime_builder:
+  type: ZephyrRuntimeBuilder
+  parameters:
+    workspace: ./kenning-zephyr-runtime
+    venv_dir: ../.venv
+    output_path: ./workspace/kzr_build
+    run_west_update: false
+    extra_targets: [board-repl]
+
