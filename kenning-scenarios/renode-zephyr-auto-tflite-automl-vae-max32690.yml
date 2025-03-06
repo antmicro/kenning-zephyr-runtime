@@ -26,7 +26,7 @@ automl:
     min_budget: 1
     max_budget: 5
     # Size of the application that will use generated models
-    application_size: 75.5
+    application_size: 85
 
 # Chooses the platform to run
 platform:
