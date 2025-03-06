@@ -75,7 +75,7 @@ macro(kenning_gen_tvm_model_sources runtime_src)
     unset(model_src_path)
   elseif("${CONFIG_KENNING_TVM_MODEL_PRE_GEN}")
     get_filename_component(model_path_dir "${CONFIG_KENNING_MODEL_PATH}" DIRECTORY)
-    get_filename_component(model_path_name "${CONFIG_KENNING_MODEL_PATH}" NAME_WE)
+    get_filename_component(model_path_name "${CONFIG_KENNING_MODEL_PATH}" NAME_WLE)
     set(model_path "${model_path_dir}/${model_path_name}")
 
     add_custom_command(
