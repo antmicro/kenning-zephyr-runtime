@@ -39,6 +39,12 @@ int buf_reset(struct msg_loader *ldr, size_t n);
         .addr = (_addr)                                                                                        \
     }
 
+#define MSG_LOADER_BUF_RESET(_addr, _max_size, _reset)                                                        \
+    {                                                                                                         \
+        .save = buf_save, .save_one = buf_save_one, .reset = (_reset), .written = 0, .max_size = (_max_size), \
+        .addr = (_addr)                                                                                       \
+    }
+
 #define LOADER_TYPES(TYPE)    \
     TYPE(LOADER_TYPE_NONE)    \
     TYPE(LOADER_TYPE_DATA)    \

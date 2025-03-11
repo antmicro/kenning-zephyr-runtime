@@ -29,16 +29,31 @@ static tflite::MicroInterpreter *gp_tflite_interpreter = nullptr;
 
 static uint8_t __attribute__((aligned(8))) g_tfliteBuffer[CONFIG_KENNING_TFLITE_BUFFER_SIZE * 1024];
 
+status_t tflite_reset_buf(struct msg_loader *ldr, size_t n)
+{
+    ldr->written = 0;
+
+    if (gp_tflite_interpreter != NULL)
+    {
+        gp_tflite_interpreter->~MicroInterpreter();
+        gp_tflite_interpreter = NULL;
+    }
+
+    return STATUS_OK;
+}
+
 status_t prepare_tflite_ldr_table()
 {
     static struct msg_loader msg_loader_model =
-        MSG_LOADER_BUF(g_tfliteBuffer, CONFIG_KENNING_TFLITE_BUFFER_SIZE * 1024);
+        MSG_LOADER_BUF_RESET(g_tfliteBuffer, CONFIG_KENNING_TFLITE_BUFFER_SIZE * 1024, tflite_reset_buf);
+
     static struct msg_loader msg_loader_input = MSG_LOADER_BUF(NULL, 0);
     memset(&g_ldr_tables[1], 0, NUM_LOADER_TYPES * sizeof(struct msg_loader *));
     g_ldr_tables[1][LOADER_TYPE_MODEL] = &msg_loader_model;
     g_ldr_tables[1][LOADER_TYPE_DATA] = &msg_loader_input;
     return STATUS_OK;
 }
+
 status_t runtime_deinit() { return STATUS_OK; }
 
 status_t runtime_init()
@@ -66,13 +81,19 @@ status_t runtime_init_weights()
         return RUNTIME_WRAPPER_STATUS_ERROR;
     }
 
+    static bool firstStart = true;
     static tflite::MicroInterpreter interpreter(model, g_tflite_resolver, tensorArena, tensorArenaSize);
 
-    gp_tflite_interpreter = &interpreter;
-
     // this hack is used for reloading the interpreter on model change
-    interpreter.~MicroInterpreter();
+    if (firstStart)
+    {
+        interpreter.~MicroInterpreter();
+        firstStart = false;
+    }
+
     new (&interpreter) tflite::MicroInterpreter(model, g_tflite_resolver, tensorArena, tensorArenaSize);
+
+    gp_tflite_interpreter = &interpreter;
 
     TfLiteStatus allocate_status = interpreter.AllocateTensors();
     if (allocate_status != kTfLiteOk)
