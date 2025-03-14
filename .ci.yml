@@ -220,6 +220,28 @@ test-demo:
             - log.json
         when: always
 
+test-tflite-reset:
+    <<: *ace
+    <<: *common_only
+    stage: tests
+    before_script:
+        - mkdir -p $HOME/.local/opt
+        - tar xzf env.tar.gz
+        - cp -r env/.venv .
+        - cp -r env/zephyr-sdk $HOME/.local/opt/
+        - cp -r env/zephyr-workspace/* ..
+        - cp -r env/zephyr-workspace/.west ..
+    script:
+        - source .venv/bin/activate
+        - ./scripts/test_tflite_reset.sh
+    dependencies:
+        - prepare-env
+    artifacts:
+        paths:
+            - measurements
+            - build
+        when: always
+
 unit-tests:
     <<: *ace
     <<: *common_only

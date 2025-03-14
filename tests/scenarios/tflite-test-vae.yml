@@ -1,0 +1,37 @@
+# west build -p always -b max32690evkit/max32690/m4 app -- \
+#   -DEXTRA_CONF_FILE=tflite.conf \
+#   -DCONFIG_KENNING_TFLITE_OPS=\"Add,FullyConnected,Mul,Reshape,Tanh,Sub,Div,StridedSlice,Exp,Cast,Less,Log,Sum,Sqrt,ReduceMax,Cos\"
+platform:
+  type: ZephyrPlatform
+  parameters:
+    name: max32690evkit/max32690/m4
+    simulated: false
+    zephyr_build_path: ./build/
+    uart_port: /tmp/uart
+
+# this breaks 'optimize'
+model_wrapper:
+  type: PyTorchAnomalyDetectionVAE
+  parameters:
+    model_path: /dev/zero
+    encoder_neuron_list: [16, 8]
+    batch_norm: true
+
+# A dataset used for evaluating the model
+dataset:
+  type: AnomalyDetectionDataset
+  parameters:
+    dataset_root: ./dataset
+    csv_file: kenning:///datasets/anomaly_detection/cats_nano.csv
+    split_fraction_test: 0.01
+    inference_batch_size: 1
+    split_seed: 12345
+    download_dataset: true
+
+optimizers:
+  - type: TFLiteCompiler
+    parameters:
+      target: default
+      compiled_model_path: ./vae.tflite
+      inference_input_type: float32
+      inference_output_type: float32
