@@ -359,6 +359,40 @@ kenning optimize test report \
     --verbosity INFO
 ```
 
+### Increasing simulated board memory for evaluation of larger models
+
+In some cases we would like to evaluate a model that won't fit in the board memory together with the evaluation app, i.e. when target application is smaller than the evaluation app.
+For such cases, there is a target called `increase-memory`.
+You can use it if the build fails for selected board due to memory limitations.
+
+For example, if you run following build, it should fail
+```bash skip
+west build -p always -b 96b_nitrogen demo_app -- -DEXTRA_CONF_FILE=tvm.conf
+```
+After that, run
+```bash skip
+build -t increase-memory -- -DCONFIG_KENNING_INCREASE_MEMORY_SIZE=2048
+```
+where `CONFIG_KENNING_INCREASE_MEMORY_SIZE` specifies desired memory size in kilobytes.
+This will generate board overlay with increased memory and save it in `<app>/boards/<board_name>_increased_memory.overlay`.
+Example overlay looks like this:
+```
+&sram0 {
+    reg = <0x20000000 0x200000>;
+};
+```
+
+Then run build again with `CONFIG_KENNING_INCREASE_MEMORY=y` as follows:
+```bash skip
+west build -p always -b 96b_nitrogen demo_app -- -DEXTRA_CONF_FILE=tvm.conf -DCONFIG_KENNING_INCREASE_MEMORY=y
+```
+This time, the build should succeed and you should be able to run the simulation.
+```bash skip
+python ./scripts/run_renode.py
+```
+
+**NOTE** Memory increase works only in Renode simulation. It should not be used with actual hardware.
+
 ## Evaluating a model in Kenning using actual hardware
 
 Kenning can evaluate the runtime running on a physical device.
