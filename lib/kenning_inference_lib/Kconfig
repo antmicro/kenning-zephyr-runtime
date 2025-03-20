@@ -55,6 +55,14 @@ config KENNING_MESSAGE_RECV_BUFFER_SIZE
         int "Size in bytes of the buffer used for holding message chunks"
         default 128
 
+config KENNING_INCREASE_MEMORY
+        bool "Whether board memory should be increased (works only in Renode simulation)"
+        default 0
+
+config KENNING_INCREASE_MEMORY_SIZE
+        int "Size of increased board memory"
+        default 4096
+
 choice KENNING_ML_RUNTIME
         prompt "ML runtime to be used"
         depends on KENNING_INFERENCE_LIB
