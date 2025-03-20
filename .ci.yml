@@ -52,7 +52,7 @@ image: $CI_IMAGE
         - prepare-env
     artifacts:
         paths:
-            - artifacts/*.elf
+            - artifacts/*
         when: always
 
 .build-demo:
@@ -178,8 +178,34 @@ build-demo-tvm-gen-model:
         BOARDS: >
             stm32f746g_disco
 
+build-demo-increased-memory:
+    extends: .build-demo
+    variables:
+        BOARDS: >
+            96b_nitrogen
+            b_u585i_iot02a
+            hifive_unleashed/fu540/e51
+    script:
+        - |
+          source .venv/bin/activate
+          for BOARD in ${BOARDS}
+          do
+              BOARD_NAME="${BOARD//\//_}_increased_memory"
+              python -m west build -p always -b ${BOARD} ${APP} -- -DEXTRA_CONF_FILE=tvm.conf || true
+              python -m west build -t increase-memory -- -DCONFIG_KENNING_INCREASE_MEMORY_SIZE=2048
+              python -m west build -p always -b ${BOARD} ${APP} -- -DEXTRA_CONF_FILE=tvm.conf -DCONFIG_KENNING_INCREASE_MEMORY=y
+              cp build/zephyr/zephyr.elf artifacts/${ELF_PREFIX}-tvm-${BOARD_NAME}.elf
+              python -m west build -t board-repl
+              cp build/*.repl artifacts/${BOARD_NAME}.repl
+          done
+
 build-repl:
     extends: .build
+    variables:
+        BOARDS: >
+            b_u585i_iot02a
+            stm32f746g_disco
+            hifive_unleashed/fu540/e51
     script:
         - |
           source .venv/bin/activate
@@ -190,10 +216,6 @@ build-repl:
               python -m west build -t board-repl
               cp build/*.repl artifacts/${BOARD_NAME}.repl
           done
-    artifacts:
-        paths:
-            - artifacts/*.repl
-        when: always
 
 build-llext-tvm:
     extends: .build-llext
@@ -214,6 +236,7 @@ test-demo:
         - build-demo-iree-vmvx
         - build-demo-iree-embedded-elf
         - build-demo-tvm-gen-model
+        - build-demo-increased-memory
         - build-repl
     artifacts:
         paths:
