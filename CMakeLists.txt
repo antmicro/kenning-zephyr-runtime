@@ -8,6 +8,7 @@ set(KENNING_MODULE_BINARY_DIR "${CMAKE_CURRENT_BINARY_DIR}" CACHE INTERNAL "KENN
 
 include(cmake/board_repl.cmake)
 include(cmake/gen_model_header.cmake)
+include(cmake/increase_board_memory.cmake)
 
 if (CONFIG_ZTEST)
   add_compile_definitions(__UNIT_TEST__=1)
