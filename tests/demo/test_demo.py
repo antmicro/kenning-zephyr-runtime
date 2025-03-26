@@ -10,6 +10,7 @@ import pytest
 from pyrenode3.wrappers import Emulation, TerminalTester
 
 RUNTIME_BINARIES = [binary for binary in Path("./artifacts/").glob("*.elf")]
+RUNTIME_BINARIES.sort()
 FLOAT_RE = r"(?:-?[0-9]+.[0-9]+)|(?:nan)"
 MODEL_OUTPUT_RE = re.compile(
     rf"I: model output: \[wing: ({FLOAT_RE}), ring: ({FLOAT_RE}), "
