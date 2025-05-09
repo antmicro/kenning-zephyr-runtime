@@ -20,16 +20,17 @@ GENERATE_MODULE_STATUSES(LOADERS);
 struct msg_loader
 {
     int (*save)(struct msg_loader *, const uint8_t *, size_t);
-    int (*save_one)(struct msg_loader *, uint8_t, size_t);
+    int (*save_one)(struct msg_loader *, void *);
     int (*reset)(struct msg_loader *, size_t);
     size_t written;
     size_t max_size;
     void *addr;
+    void *state;
 };
 
 int buf_save(struct msg_loader *ldr, const uint8_t *src, size_t n);
 
-int buf_save_one(struct msg_loader *ldr, uint8_t c, size_t n);
+int buf_save_one(struct msg_loader *ldr, void *c);
 
 int buf_reset(struct msg_loader *ldr, size_t n);
 

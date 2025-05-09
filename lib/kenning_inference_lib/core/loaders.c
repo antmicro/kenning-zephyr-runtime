@@ -21,14 +21,14 @@ status_t buf_save(struct msg_loader *ldr, const uint8_t *src, size_t n)
     return STATUS_OK;
 }
 
-status_t buf_save_one(struct msg_loader *ldr, uint8_t c, size_t n)
+status_t buf_save_one(struct msg_loader *ldr, void *c)
 {
     if (ldr->written + 1 > ldr->max_size)
     {
         return LOADERS_STATUS_NOT_ENOUGH_MEMORY;
     }
 
-    ((uint8_t *)(ldr->addr))[ldr->written] = c;
+    ((uint8_t *)(ldr->addr))[ldr->written] = *(uint8_t *)c;
     ldr->written++;
 
     return STATUS_OK;
