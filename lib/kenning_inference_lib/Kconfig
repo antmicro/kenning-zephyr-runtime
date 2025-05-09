@@ -106,6 +106,10 @@ config KENNING_IREE_INPUT_BUFFER_SIZE
         default 4
         depends on KENNING_ML_RUNTIME_IREE
 
+config KENNING_ML_RUNTIME_AI8X
+        bool
+        prompt "AI8X runtime"
+
 config KENNING_ML_RUNTIME_LLEXT
         bool
         prompt "Loads Kenning Runtime from Linkable Loadable Extensions."
@@ -202,6 +206,11 @@ config KENNING_IREE_LOADER_EMBEDDED_ELF
         prompt "embedded elf loader"
 
 endchoice
+
+config KENNING_AI8X_CNN_TIMEOUT_MS
+        int "CNN accelerator timeout"
+        depends on KENNING_ML_RUNTIME_AI8X
+        default 1000
 
 module = CALLBACKS
 module-str = callbacks
