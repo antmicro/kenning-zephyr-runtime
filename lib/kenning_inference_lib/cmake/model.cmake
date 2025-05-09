@@ -274,6 +274,39 @@ macro(kenning_gen_iree_model_sources runtime_src)
   unset(import_path)
 endmacro(kenning_gen_iree_model_sources)
 
+# Adds AI8X sources to provided list.
+#
+# @param runtime_src List with runtime sources to which model sources will be
+#                    added.
+macro(kenning_gen_ai8x_model_sources runtime_src)
+  get_filename_component(model_path_dir "${CONFIG_KENNING_MODEL_PATH}" DIRECTORY)
+  get_filename_component(model_path_name "${CONFIG_KENNING_MODEL_PATH}" NAME_WLE)
+  set(model_path "${model_path_dir}/${model_path_name}")
+
+  add_custom_command(
+    OUTPUT
+      runtimes/ai8x/generated/model.bin
+      runtimes/ai8x/generated/model.bin.json
+      runtimes/ai8x/generated/cnn_model.c
+    DEPENDS
+      "${CONFIG_KENNING_MODEL_PATH}"
+    COMMAND
+      cp "${model_path}.bin" runtimes/ai8x/generated/model.bin
+    COMMAND
+      cp "${model_path}.bin.json" runtimes/ai8x/generated/model.bin.json
+    COMMAND
+      cp "${model_path}/cnn_model.c" runtimes/ai8x/generated/cnn_model.c
+  )
+
+  list(APPEND ${runtime_src} "runtimes/ai8x/generated/cnn_model.c")
+
+  unset(model_path)
+  unset(model_path_dir)
+  unset(model_path_name)
+
+  include_directories(${CMAKE_CURRENT_BINARY_DIR}/runtimes/ai8x/)
+endmacro(kenning_gen_ai8x_model_sources)
+
 # Generate model data header that contains quantization params, model struct
 # and model data.
 macro(kenning_gen_model_data)
@@ -290,6 +323,9 @@ macro(kenning_gen_model_data)
   elseif(${CONFIG_KENNING_ML_RUNTIME_IREE})
     set(model_data_path runtimes/iree/generated/model.vmfb)
     set(model_json_path runtimes/iree/generated/model.vmfb.json)
+  elseif(${CONFIG_KENNING_ML_RUNTIME_AI8X})
+    set(model_data_path runtimes/ai8x/generated/model.bin)
+    set(model_json_path runtimes/ai8x/generated/model.bin.json)
   endif()
 
   add_custom_command(
