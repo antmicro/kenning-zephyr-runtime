@@ -1,0 +1,43 @@
+platform:
+  type: ZephyrPlatform
+  parameters:
+    name: max78002evkit/max78002/m4
+    simulated: false
+    auto_flash: true
+    # might need to specify path to OpenOCD from Maxim SDK
+    # openocd_path:
+dataset:
+  type: AnomalyDetectionDataset
+  parameters:
+    dataset_root: ./workspace/CATS
+    csv_file: https://zenodo.org/records/8338435/files/data.csv
+    split_seed: 12345
+    split_fraction_test: 0.10
+    inference_batch_size: 1
+    # should be increased for training
+    reduce_dataset: 0.005
+model_wrapper:
+  type: Ai8xAnomalyDetectionCNN
+  parameters:
+    model_path: ./workspace/anomaly_detection_ai8x_cnn.pth
+    # Training parameters
+    batch_size: 128
+    learning_rate: 2.0e-5
+    num_epochs: 5
+    logdir: ./workspace/training-logdir
+    # QAT-specific params
+    qat_start_epoch: 3
+    qat_weight_bits: 2
+    quantize_activation: true
+optimizers:
+  - type: Ai8xCompiler
+    parameters:
+      compiled_model_path: ./workspace/cnn_model/model.bin
+runtime_builder:
+  type: ZephyrRuntimeBuilder
+  parameters:
+    workspace: .
+    venv_dir: .venv
+    output_path: ./workspace/kzr_build
+    run_west_update: false
+    extra_targets: [board-repl]
