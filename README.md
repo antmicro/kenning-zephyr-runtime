@@ -371,7 +371,7 @@ west build -p always -b 96b_nitrogen demo_app -- -DEXTRA_CONF_FILE=tvm.conf
 ```
 After that, run
 ```bash skip
-build -t increase-memory -- -DCONFIG_KENNING_INCREASE_MEMORY_SIZE=2048
+west build -t increase-memory -- -DCONFIG_KENNING_INCREASE_MEMORY_SIZE=2048
 ```
 where `CONFIG_KENNING_INCREASE_MEMORY_SIZE` specifies desired memory size in kilobytes.
 This will generate board overlay with increased memory and save it in `<app>/boards/<board_name>_increased_memory.overlay`.
