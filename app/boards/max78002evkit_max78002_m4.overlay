@@ -1,0 +1,25 @@
+&clk_ipll {
+	status = "okay";
+};
+
+
+&uart0 {
+    current-speed = < 115200 >;
+};
+
+&uart1 {
+    current-speed = < 115200 >;
+    pinctrl-0 = < &uart1_tx_p0_13 &uart1_rx_p0_12 >;
+    pinctrl-names = "default";
+    status = "okay";
+};
+
+/ {
+    chosen {
+        zephyr,console = &uart1;
+        zephyr,shell-uart = &uart1;
+    };
+    aliases {
+        kcomms = &uart0;
+    };
+};
