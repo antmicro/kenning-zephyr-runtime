@@ -11,12 +11,13 @@ function(kenning_add_board_repl_target)
     COMMAND
       gcc
         -H -E -P -x assembler-with-cpp
-        -I ${ZEPHYR_BASE}/include/
+        -I ${WEST_TOPDIR}/modules/hal/stm32/dts/
         -I ${ZEPHYR_BASE}/dts/
         -I ${ZEPHYR_BASE}/dts/arm/
-        -I ${ZEPHYR_BASE}/dts/riscv/
         -I ${ZEPHYR_BASE}/dts/common/
-        -I ${WEST_TOPDIR}/modules/hal/stm32/dts/
+        -I ${ZEPHYR_BASE}/dts/riscv/
+        -I ${ZEPHYR_BASE}/dts/vendor/
+        -I ${ZEPHYR_BASE}/include/
         ${dts_files}
         1>${BOARD}_flat.dts
         2>includes.txt
