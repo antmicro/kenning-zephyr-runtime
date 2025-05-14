@@ -130,6 +130,14 @@ build-tflite:
     variables:
         RUNTIME: tflite
 
+build-ai8x:
+    extends: .build
+    variables:
+        RUNTIME: ai8x_c
+        BOARDS: >
+            max78002evkit/max78002/m4
+        EXTRA_ARGS: -DCONFIG_KENNING_MODEL_PATH="https://dl.antmicro.com/kenning/models/anomaly_detection/ai8x_cnn_cats.bin"
+
 build-iree-vmvx:
     extends: .build
     variables:
