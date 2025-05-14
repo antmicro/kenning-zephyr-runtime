@@ -23,18 +23,6 @@ enum cnn_load_state
     CNN_LOAD_END,
 };
 
-status_t buf_save_one_cnn(struct msg_loader *ldr, void *c);
-
-status_t buf_save_cnn(struct msg_loader *ldr, const uint8_t *src, size_t n);
-
-status_t buf_reset_cnn(struct msg_loader *ldr, size_t n);
-
-status_t buf_save_cnn_input(struct msg_loader *ldr, const uint8_t *src, size_t n);
-
-status_t buf_save_one_cnn_input(struct msg_loader *ldr, void *c);
-
-status_t buf_reset_cnn_input(struct msg_loader *ldr, size_t n);
-
 /**
  * Prepares loader table for ai8x rutime
  *

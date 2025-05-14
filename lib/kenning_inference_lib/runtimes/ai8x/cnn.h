@@ -15,6 +15,9 @@
 #define CNN_GCFR_REG_ADDR 0x40005800UL
 #define CNN_GCR_REG_ADDR 0x40000000UL
 
+// Taken from
+// https://github.com/analogdevicesinc/msdk/tree/89609813e1bac31cd7d93e1bb60b0aecb5a90bc6/Examples/MAX78002/CNN
+
 #define CNN_REG_QUADRANT_0_ADDR 0x51000000
 #define CNN_REG_QUADRANT_1_ADDR 0x52000000
 #define CNN_REG_QUADRANT_2_ADDR 0x53000000
@@ -27,6 +30,12 @@
 #define CNN_REG_QUADRANT_3_ENABLE 0x00100809
 #define CNN_REG_QUADRANT_MASTER_ENABLE 0x00100009
 
+/**
+ * GCFR registers.
+ *
+ * Based on
+ * https://github.com/analogdevicesinc/msdk/blob/89609813e1bac31cd7d93e1bb60b0aecb5a90bc6/Libraries/CMSIS/Device/Maxim/MAX78002/Include/gcfr_regs.h#L80
+ */
 struct __attribute__((packed)) gcfr_regs
 {
     volatile uint32_t reg0; /* 0x00: GCFR REG0 Register */
@@ -35,6 +44,12 @@ struct __attribute__((packed)) gcfr_regs
     volatile uint32_t reg3; /* 0x0C: GCFR REG3 Register */
 };
 
+/**
+ * GCR registers.
+ *
+ * Based on
+ * https://github.com/analogdevicesinc/msdk/blob/89609813e1bac31cd7d93e1bb60b0aecb5a90bc6/Libraries/CMSIS/Device/Maxim/MAX78002/Include/gcr_regs.h#L80
+ */
 struct __attribute__((packed)) gcr_regs
 {
     volatile uint32_t sysctrl;   /* 0x00 GCR SYSCTRL Register */
@@ -64,6 +79,12 @@ struct __attribute__((packed)) gcr_regs
     volatile uint32_t gpr0; /* 0x80: GCR GPR0 Register */
 };
 
+/**
+ * GCR PCLKDIV register.
+ *
+ * Based on MAX78002 User Guide and
+ * https://github.com/analogdevicesinc/msdk/blob/89609813e1bac31cd7d93e1bb60b0aecb5a90bc6/Examples/MAX78002/CNN/kinetics/cnn.c#L1613
+ */
 union gcr_pclkdiv
 {
     uint32_t bits;
