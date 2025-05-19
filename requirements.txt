@@ -1,6 +1,6 @@
 cmake
 importlib_metadata
-kenning[iree,tvm,tensorflow,tflite,reports,renode,uart] @ git+https://github.com/antmicro/kenning.git
+kenning[anomaly_detection,iree,tvm,tensorflow,tflite,reports,renode,uart] @ git+https://github.com/antmicro/kenning.git
 pyelftools
 pyserial
 pytest
