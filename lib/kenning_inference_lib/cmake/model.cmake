@@ -111,7 +111,7 @@ macro(kenning_gen_tvm_model_sources runtime_src)
         runtimes/tvm/generated/model_impl.graph_data
         runtimes/tvm/generated/model_impl.graph_data.json
       COMMAND
-        python3 ${KENNING_LIB_DIR}/scripts/build_tvm.py
+        ${CONFIG_KENNING_PYTHON_PATH} ${KENNING_LIB_DIR}/scripts/build_tvm.py
           --input-path ${CONFIG_KENNING_MODEL_PATH}
           --output-path runtimes/tvm/generated/model_impl.graph_data
           --header-template-path ${CMAKE_CURRENT_LIST_DIR}/runtimes/tvm/generated/model_impl.h.template
@@ -152,7 +152,7 @@ macro(kenning_gen_tflite_model_sources runtime_src)
         runtimes/tflite/generated/model.tflite.json
         runtimes/tflite/generated/ops_resolver.h
       COMMAND
-        python3 ${KENNING_LIB_DIR}/scripts/build_tflite.py
+        ${CONFIG_KENNING_PYTHON_PATH} ${KENNING_LIB_DIR}/scripts/build_tflite.py
           --model-path ${CONFIG_KENNING_MODEL_PATH}
           --ops-list "${CONFIG_KENNING_TFLITE_OPS}"
           --output-resolver-path runtimes/tflite/generated/ops_resolver.h
@@ -165,7 +165,7 @@ macro(kenning_gen_tflite_model_sources runtime_src)
         runtimes/tflite/generated/model.tflite.json
         runtimes/tflite/generated/ops_resolver.h
       COMMAND
-        python3 ${KENNING_LIB_DIR}/scripts/build_tflite.py
+        ${CONFIG_KENNING_PYTHON_PATH} ${KENNING_LIB_DIR}/scripts/build_tflite.py
           --ops-list "${CONFIG_KENNING_TFLITE_OPS}"
           --output-resolver-path runtimes/tflite/generated/ops_resolver.h
           --output-model-path runtimes/tflite/generated/model.tflite
@@ -177,7 +177,7 @@ macro(kenning_gen_tflite_model_sources runtime_src)
         runtimes/tflite/generated/model.tflite.json
         runtimes/tflite/generated/ops_resolver.h
       COMMAND
-        python3 ${KENNING_LIB_DIR}/scripts/build_tflite.py
+        ${CONFIG_KENNING_PYTHON_PATH} ${KENNING_LIB_DIR}/scripts/build_tflite.py
           --ops-list "Conv2D,FullyConnected,MaxPool2D,Reshape,Softmax"
           --output-resolver-path runtimes/tflite/generated/ops_resolver.h
           --output-model-path runtimes/tflite/generated/model.tflite
@@ -289,7 +289,7 @@ macro(kenning_gen_ai8x_model_sources runtime_src)
       runtimes/ai8x/generated/model.bin.json
       runtimes/ai8x/generated/cnn_model.c
     COMMAND
-      python3 ${KENNING_LIB_DIR}/scripts/ai8x_fetch.py "${CONFIG_KENNING_MODEL_PATH}" runtimes/ai8x/generated/
+      ${CONFIG_KENNING_PYTHON_PATH} ${KENNING_LIB_DIR}/scripts/ai8x_fetch.py "${CONFIG_KENNING_MODEL_PATH}" runtimes/ai8x/generated/
   )
 
   list(APPEND ${runtime_src} "runtimes/ai8x/generated/cnn_model.c")
@@ -346,7 +346,7 @@ macro(kenning_gen_model_data)
     DEPENDS
       ${model_json_path}
     COMMAND
-      python3 ${KENNING_LIB_DIR}/scripts/io_spec_to_struct.py
+      ${CONFIG_KENNING_PYTHON_PATH} ${KENNING_LIB_DIR}/scripts/io_spec_to_struct.py
         --input-path ${model_json_path}
         --output-path model_data_struct.h
   )

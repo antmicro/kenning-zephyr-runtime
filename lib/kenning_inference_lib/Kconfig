@@ -7,6 +7,14 @@ config KENNING_INFERENCE_LIB
         help
           This option enables the kenning_inference_lib library
 
+config KENNING_PYTHON_PATH
+        string "path to the model that would be used"
+        default "python3"
+        depends on KENNING_INFERENCE_LIB
+        help
+          The path to a Python3 binary, by default a python3
+          from current environment is used.
+
 config KENNING_MODEL_PATH
         string "path to the model that would be used"
         depends on KENNING_INFERENCE_LIB
