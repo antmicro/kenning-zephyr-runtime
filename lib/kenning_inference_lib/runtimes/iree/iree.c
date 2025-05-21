@@ -412,12 +412,12 @@ status_t runtime_get_statistics(const size_t statistics_buffer_size, uint8_t *st
 
     runtime_stats_ptr = (runtime_statistic_t *)statistics_buffer;
 
-    LOAD_RUNTIME_STAT(runtime_stats_ptr, 0, iree_alloc_stats, device_bytes_allocated);
-    LOAD_RUNTIME_STAT(runtime_stats_ptr, 1, iree_alloc_stats, device_bytes_freed);
-    LOAD_RUNTIME_STAT(runtime_stats_ptr, 2, iree_alloc_stats, device_bytes_peak);
-    LOAD_RUNTIME_STAT(runtime_stats_ptr, 3, iree_alloc_stats, host_bytes_allocated);
-    LOAD_RUNTIME_STAT(runtime_stats_ptr, 4, iree_alloc_stats, host_bytes_freed);
-    LOAD_RUNTIME_STAT(runtime_stats_ptr, 5, iree_alloc_stats, host_bytes_peak);
+    LOAD_RUNTIME_STAT(runtime_stats_ptr, 0, iree_alloc_stats, device_bytes_allocated, RUNTIME_STATISTICS_ALLOCATION);
+    LOAD_RUNTIME_STAT(runtime_stats_ptr, 1, iree_alloc_stats, device_bytes_freed, RUNTIME_STATISTICS_ALLOCATION);
+    LOAD_RUNTIME_STAT(runtime_stats_ptr, 2, iree_alloc_stats, device_bytes_peak, RUNTIME_STATISTICS_ALLOCATION);
+    LOAD_RUNTIME_STAT(runtime_stats_ptr, 3, iree_alloc_stats, host_bytes_allocated, RUNTIME_STATISTICS_ALLOCATION);
+    LOAD_RUNTIME_STAT(runtime_stats_ptr, 4, iree_alloc_stats, host_bytes_freed, RUNTIME_STATISTICS_ALLOCATION);
+    LOAD_RUNTIME_STAT(runtime_stats_ptr, 5, iree_alloc_stats, host_bytes_peak, RUNTIME_STATISTICS_ALLOCATION);
 
     *statistics_size = stats_size;
 

@@ -73,10 +73,24 @@ typedef struct __attribute__((packed))
 } MlModel;
 
 // Loads runtime stat into stats array
-#define LOAD_RUNTIME_STAT(stats_array, stat_idx, src_struct, src_stat_name)               \
+#define LOAD_RUNTIME_STAT(stats_array, stat_idx, src_struct, src_stat_name, stats_type)   \
     memset(stats_array[stat_idx].stat_name, 0, RUNTIME_STAT_NAME_MAX_LEN);                \
     snprintf(stats_array[stat_idx].stat_name, RUNTIME_STAT_NAME_MAX_LEN, #src_stat_name); \
-    stats_array[stat_idx].stat_value = src_struct.src_stat_name;
+    stats_array[stat_idx].stat_value = src_struct.src_stat_name;                          \
+    stats_array[stat_idx].stat_type = (uint64_t)(stats_type)
+
+typedef enum
+{
+    RUNTIME_STATISTICS_DEFAULT = 0,
+    RUNTIME_STATISTICS_ALLOCATION = 1,
+    RUNTIME_STATISTICS_INFERENCE_TIME = 2,
+} runtime_statistic_type_t;
+
+typedef struct
+{
+    uint64_t target_inference_step;
+    uint64_t target_inference_step_timestamp;
+} runtime_statistics_execution_time_t;
 
 /**
  * Struct for holding various runtime statistics
@@ -84,6 +98,7 @@ typedef struct __attribute__((packed))
 typedef struct
 {
     char stat_name[RUNTIME_STAT_NAME_MAX_LEN];
+    uint64_t stat_type;
     uint64_t stat_value;
 } runtime_statistic_t;
 

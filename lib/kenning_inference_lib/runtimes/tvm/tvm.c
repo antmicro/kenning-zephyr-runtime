@@ -19,6 +19,7 @@
 #include <tvm/runtime/crt/internal/graph_executor/graph_executor.h>
 #include <tvm/runtime/crt/module.h>
 #include <tvm/runtime/crt/packed_func.h>
+#include <zephyr/kernel.h>
 #include <zephyr/logging/log.h>
 #if defined(CONFIG_LLEXT)
 #include <zephyr/llext/symbol.h>
@@ -39,6 +40,8 @@
 LOG_MODULE_REGISTER(tvm_runtime, CONFIG_RUNTIME_WRAPPER_LOG_LEVEL);
 
 GENERATE_MODULE_STATUSES_STR(RUNTIME_WRAPPER);
+
+static runtime_statistics_execution_time_t gp_tvm_time_stats;
 
 static uint8_t __attribute__((aligned(8))) gp_tvmGraphBuffer[CONFIG_KENNING_TVM_GRAPH_BUFFER_SIZE * 1024];
 static uint8_t __attribute__((aligned(8))) gp_tvmInputBuffer[CONFIG_KENNING_TVM_INPUT_BUFFER_SIZE * 1024];
@@ -192,7 +195,16 @@ status_t runtime_run_model()
 {
     status_t status = STATUS_OK;
 
+    int64_t timer_start = k_cycle_get_64();
+
     TVMGraphExecutor_Run(gp_tvm_graph_executor);
+
+    int64_t timer_delta = k_cycle_get_64() - timer_start;
+
+    uint64_t timer_delta_ns = (double)timer_delta / (double)sys_clock_hw_cycles_per_sec() * 1e9;
+    gp_tvm_time_stats.target_inference_step = timer_delta_ns;
+    gp_tvm_time_stats.target_inference_step_timestamp =
+        (double)timer_start / (double)sys_clock_hw_cycles_per_sec() * 1e9;
 
     return status;
 }
@@ -231,7 +243,8 @@ status_t runtime_get_statistics(const size_t statistics_buffer_size, uint8_t *st
 {
     tvm_alloc_stats_t tvm_alloc_stats;
     runtime_statistic_t *runtime_stats_ptr;
-    size_t stats_size = sizeof(runtime_statistic_t) * sizeof(tvm_alloc_stats_t) / sizeof(uint64_t);
+    size_t stats_size = sizeof(runtime_statistic_t) *
+                        (sizeof(tvm_alloc_stats_t) + sizeof(runtime_statistics_execution_time_t)) / sizeof(uint64_t);
 
     RETURN_ERROR_IF_POINTER_INVALID(statistics_buffer, RUNTIME_WRAPPER_STATUS_INV_PTR);
     RETURN_ERROR_IF_POINTER_INVALID(statistics_size, RUNTIME_WRAPPER_STATUS_INV_PTR);
@@ -245,9 +258,14 @@ status_t runtime_get_statistics(const size_t statistics_buffer_size, uint8_t *st
 
     runtime_stats_ptr = (runtime_statistic_t *)statistics_buffer;
 
-    LOAD_RUNTIME_STAT(runtime_stats_ptr, 0, tvm_alloc_stats, total_allocated);
-    LOAD_RUNTIME_STAT(runtime_stats_ptr, 1, tvm_alloc_stats, total_freed);
-    LOAD_RUNTIME_STAT(runtime_stats_ptr, 2, tvm_alloc_stats, peak_allocated);
+    LOAD_RUNTIME_STAT(runtime_stats_ptr, 0, tvm_alloc_stats, total_allocated, RUNTIME_STATISTICS_ALLOCATION);
+    LOAD_RUNTIME_STAT(runtime_stats_ptr, 1, tvm_alloc_stats, total_freed, RUNTIME_STATISTICS_ALLOCATION);
+    LOAD_RUNTIME_STAT(runtime_stats_ptr, 2, tvm_alloc_stats, peak_allocated, RUNTIME_STATISTICS_ALLOCATION);
+
+    LOAD_RUNTIME_STAT(runtime_stats_ptr, 3, gp_tvm_time_stats, target_inference_step,
+                      RUNTIME_STATISTICS_INFERENCE_TIME);
+    LOAD_RUNTIME_STAT(runtime_stats_ptr, 4, gp_tvm_time_stats, target_inference_step_timestamp,
+                      RUNTIME_STATISTICS_INFERENCE_TIME);
 
     *statistics_size = stats_size;
 
