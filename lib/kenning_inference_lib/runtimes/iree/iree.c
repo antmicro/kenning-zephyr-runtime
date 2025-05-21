@@ -16,8 +16,11 @@
 #include <iree/modules/hal/module.h>
 #include <iree/vm/bytecode_module.h>
 #include <iree/vm/ref.h>
+#include <zephyr/kernel.h>
 
 LOG_MODULE_REGISTER(iree_runtime, CONFIG_RUNTIME_WRAPPER_LOG_LEVEL);
+
+static runtime_statistics_execution_time_t gp_iree_time_stats;
 
 GENERATE_MODULE_STATUSES_STR(RUNTIME_WRAPPER);
 
@@ -325,6 +328,13 @@ status_t runtime_init_input()
     return STATUS_OK;
 }
 
+status_t runtime_run_model_bench()
+{
+    status_t status = STATUS_OK;
+    MEASURE_TIME(gp_iree_time_stats, status = runtime_run_model())
+    return STATUS_OK;
+}
+
 status_t runtime_run_model()
 {
     status_t status = STATUS_OK;
@@ -397,7 +407,8 @@ status_t runtime_get_statistics(const size_t statistics_buffer_size, uint8_t *st
     iree_hal_allocator_statistics_t iree_alloc_stats;
     runtime_statistic_t *runtime_stats_ptr;
     size_t stats_size =
-        sizeof(runtime_statistic_t) * sizeof(iree_hal_allocator_statistics_t) / sizeof(iree_device_size_t);
+        sizeof(runtime_statistic_t) * (sizeof(iree_hal_allocator_statistics_t) / sizeof(iree_device_size_t) +
+                                       sizeof(runtime_statistics_execution_time_t) / sizeof(uint64_t));
 
     RETURN_ERROR_IF_POINTER_INVALID(statistics_buffer, RUNTIME_WRAPPER_STATUS_INV_PTR);
     RETURN_ERROR_IF_POINTER_INVALID(statistics_size, RUNTIME_WRAPPER_STATUS_INV_PTR);
@@ -419,6 +430,10 @@ status_t runtime_get_statistics(const size_t statistics_buffer_size, uint8_t *st
     LOAD_RUNTIME_STAT(runtime_stats_ptr, 4, iree_alloc_stats, host_bytes_freed, RUNTIME_STATISTICS_ALLOCATION);
     LOAD_RUNTIME_STAT(runtime_stats_ptr, 5, iree_alloc_stats, host_bytes_peak, RUNTIME_STATISTICS_ALLOCATION);
 
+    LOAD_RUNTIME_STAT(runtime_stats_ptr, 6, gp_iree_time_stats, target_inference_step,
+                      RUNTIME_STATISTICS_INFERENCE_TIME);
+    LOAD_RUNTIME_STAT(runtime_stats_ptr, 7, gp_iree_time_stats, target_inference_step_timestamp,
+                      RUNTIME_STATISTICS_INFERENCE_TIME);
     *statistics_size = stats_size;
 
     return STATUS_OK;

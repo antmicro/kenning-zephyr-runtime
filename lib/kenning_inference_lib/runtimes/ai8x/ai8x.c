@@ -47,12 +47,17 @@ status_t runtime_init_weights()
 
 status_t runtime_init_input() { return STATUS_OK; }
 
+status_t runtime_run_model_bench()
+{
+    status_t status = STATUS_OK;
+    MEASURE_TIME(gp_ai8x_time_stats, status = runtime_run_model())
+    return STATUS_OK;
+}
+
 status_t runtime_run_model()
 {
     status_t status = STATUS_OK;
     int wait_status = CNN_OK;
-
-    int64_t timer_start = k_cycle_get_64();
 
     cnn_set_clock(4, 3);
     cnn_start();
@@ -62,13 +67,6 @@ status_t runtime_run_model()
         status = RUNTIME_WRAPPER_STATUS_ERROR;
     }
     cnn_set_clock(1, 3);
-
-    int64_t timer_delta = k_cycle_get_64() - timer_start;
-
-    uint64_t timer_delta_ns = (double)timer_delta / (double)sys_clock_hw_cycles_per_sec() * 1e9;
-    gp_ai8x_time_stats.target_inference_step = timer_delta_ns;
-    gp_ai8x_time_stats.target_inference_step_timestamp =
-        (double)timer_start / (double)sys_clock_hw_cycles_per_sec() * 1e9;
 
     return status;
 }

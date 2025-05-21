@@ -268,6 +268,26 @@ status_t model_run()
     return status;
 }
 
+status_t model_run_bench()
+{
+    status_t status = STATUS_OK;
+
+    if (g_model_state < MODEL_STATE_INPUT_LOADED)
+    {
+        return MODEL_STATUS_INV_STATE;
+    }
+
+    // perform inference
+    status = runtime_run_model_bench();
+    RETURN_ON_ERROR(status, status);
+
+    LOG_DBG("Model inference with a benchmark done");
+
+    g_model_state = MODEL_STATE_INFERENCE_DONE;
+
+    return status;
+}
+
 status_t model_get_output_size(size_t *model_output_size)
 {
     status_t status = STATUS_OK;

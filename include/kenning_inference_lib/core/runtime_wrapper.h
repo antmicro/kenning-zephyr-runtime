@@ -79,6 +79,16 @@ typedef struct __attribute__((packed))
     stats_array[stat_idx].stat_value = src_struct.src_stat_name;                          \
     stats_array[stat_idx].stat_type = (uint64_t)(stats_type)
 
+#define MEASURE_TIME(stats, func)                                                     \
+    do                                                                                \
+    {                                                                                 \
+        int64_t __timer_start = k_cycle_get_64();                                     \
+        func;                                                                         \
+        int64_t __timer_delta = k_cycle_get_64() - __timer_start;                     \
+        (stats).target_inference_step = k_cyc_to_ns_floor64(__timer_delta);           \
+        (stats).target_inference_step_timestamp = k_cyc_to_ns_floor64(__timer_start); \
+    } while (0);
+
 typedef enum
 {
     RUNTIME_STATISTICS_DEFAULT = 0,
@@ -129,6 +139,13 @@ status_t runtime_init_weights();
 status_t runtime_init_input();
 
 /**
+ * Runs model inference with a benchmark using wrapped runtime
+ *
+ * @returns status of the runtime
+ */
+status_t runtime_run_model_bench();
+
+/**
  * Runs model inference using wrapped runtime
  *
  * @returns status of the runtime
@@ -171,6 +188,7 @@ status_t runtime_deinit();
     LL_EXTENSION_SYMBOL(runtime_init_weights);     \
     LL_EXTENSION_SYMBOL(runtime_init_input);       \
     LL_EXTENSION_SYMBOL(runtime_run_model);        \
+    LL_EXTENSION_SYMBOL(runtime_run_model_bench);  \
     LL_EXTENSION_SYMBOL(runtime_get_model_output); \
     LL_EXTENSION_SYMBOL(runtime_get_statistics);   \
     LL_EXTENSION_SYMBOL(runtime_deinit);

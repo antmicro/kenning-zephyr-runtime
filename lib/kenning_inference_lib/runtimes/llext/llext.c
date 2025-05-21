@@ -52,6 +52,13 @@ status_t runtime_init_input()
     return p_func();
 }
 
+status_t runtime_run_model_bench()
+{
+    FIND_P_FUNC(runtime_run_model_bench)
+
+    return p_func();
+}
+
 status_t runtime_run_model()
 {
     FIND_P_FUNC(runtime_run_model)

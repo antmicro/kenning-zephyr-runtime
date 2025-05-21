@@ -95,6 +95,13 @@ status_t model_load_weights_from_loader();
 status_t model_load_input_from_loader(const size_t expected_size);
 
 /**
+ * Runs model inference with a benchmark
+ *
+ * @returns status of the model
+ */
+status_t model_run_bench();
+
+/**
  * Runs model inference
  *
  * @returns status of the model

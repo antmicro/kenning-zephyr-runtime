@@ -150,7 +150,7 @@ status_t process_callback(message_hdr_t *hdr, resp_message_t *resp)
 
     VALIDATE_HEADER(MESSAGE_TYPE_PROCESS, hdr);
 
-    status = model_run();
+    status = model_run_bench();
 
     CHECK_STATUS_LOG(status, resp, "model_run returned 0x%x (%s)", status, get_status_str(status));
 

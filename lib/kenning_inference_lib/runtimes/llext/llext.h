@@ -33,6 +33,7 @@ typedef status_t (*runtime_init_ptr_t)(void);
 typedef status_t (*runtime_init_weights_ptr_t)(void);
 typedef status_t (*runtime_init_input_ptr_t)(void);
 typedef status_t (*runtime_run_model_ptr_t)(void);
+typedef status_t (*runtime_run_model_bench_ptr_t)(void);
 typedef status_t (*runtime_get_model_output_ptr_t)(uint8_t *model_output);
 typedef status_t (*runtime_get_statistics_ptr_t)(const size_t statistics_buffer_size, uint8_t *statistics_buffer,
                                                  size_t *statistics_size);

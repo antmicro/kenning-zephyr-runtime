@@ -14,6 +14,8 @@ status_t runtime_init_weights() { return STATUS_OK; }
 
 status_t runtime_init_input() { return STATUS_OK; }
 
+status_t runtime_run_model_bench() { return STATUS_OK; }
+
 status_t runtime_run_model() { return STATUS_OK; }
 
 status_t runtime_get_model_output(uint8_t *model_output) { return STATUS_OK; }
