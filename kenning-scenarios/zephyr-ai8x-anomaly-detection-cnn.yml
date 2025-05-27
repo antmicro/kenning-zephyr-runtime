@@ -14,7 +14,7 @@ dataset:
     split_seed: 12345
     split_fraction_test: 0.10
     inference_batch_size: 1
-    # should be increased for training
+    # for training comment the line below
     reduce_dataset: 0.005
 model_wrapper:
   type: Ai8xAnomalyDetectionCNN
