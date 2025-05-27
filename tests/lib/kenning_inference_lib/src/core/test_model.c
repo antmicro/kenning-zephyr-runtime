@@ -37,6 +37,7 @@ DEFINE_FFF_GLOBALS;
     MOCK(status_t, runtime_init_weights)                \
     MOCK(status_t, runtime_init_input)                  \
     MOCK(status_t, runtime_run_model)                   \
+    MOCK(status_t, runtime_run_model_bench)             \
     MOCK(status_t, runtime_get_model_output, uint8_t *) \
     MOCK(status_t, runtime_get_statistics, const size_t, uint8_t *, size_t *)
 
@@ -716,6 +717,69 @@ ZTEST(kenning_inference_lib_test_model, test_model_run_invalid_state)
     g_model_state = (_model_state);                \
                                                    \
     status = model_run();                          \
+                                                   \
+    zassert_equal(MODEL_STATUS_INV_STATE, status); \
+    zassert_equal((_model_state), g_model_state);
+
+    TEST_RUN(MODEL_STATE_UNINITIALIZED);
+    TEST_RUN(MODEL_STATE_STRUCT_LOADED);
+    TEST_RUN(MODEL_STATE_WEIGHTS_LOADED);
+
+#undef TEST_RUN
+}
+
+// ========================================================
+// model_run_bench
+// ========================================================
+
+/**
+ * Tests model execution for valid model states
+ */
+ZTEST(kenning_inference_lib_test_model, test_model_run_bench)
+{
+    status_t status = STATUS_OK;
+
+#define TEST_RUN(_model_state)        \
+    g_model_state = (_model_state);   \
+                                      \
+    status = model_run_bench();       \
+                                      \
+    zassert_equal(STATUS_OK, status); \
+    zassert_equal(MODEL_STATE_INFERENCE_DONE, g_model_state);
+
+    TEST_RUN(MODEL_STATE_INPUT_LOADED);
+    TEST_RUN(MODEL_STATE_INFERENCE_DONE);
+
+#undef TEST_RUN
+}
+
+/**
+ * Tests model execution when inference fails
+ */
+ZTEST(kenning_inference_lib_test_model, test_model_run_bench_runtime_fail)
+{
+    status_t status = STATUS_OK;
+
+    g_model_state = MODEL_STATE_INPUT_LOADED;
+    runtime_run_model_bench_fake.return_val = RUNTIME_WRAPPER_STATUS_ERROR;
+
+    status = model_run_bench();
+
+    zassert_equal(RUNTIME_WRAPPER_STATUS_ERROR, status);
+    zassert_equal(MODEL_STATE_INPUT_LOADED, g_model_state);
+}
+
+/**
+ * Tests model execution when model is in invalid state
+ */
+ZTEST(kenning_inference_lib_test_model, test_model_run_bench_invalid_state)
+{
+    status_t status = STATUS_OK;
+
+#define TEST_RUN(_model_state)                     \
+    g_model_state = (_model_state);                \
+                                                   \
+    status = model_run_bench();                    \
                                                    \
     zassert_equal(MODEL_STATUS_INV_STATE, status); \
     zassert_equal((_model_state), g_model_state);

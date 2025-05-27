@@ -40,6 +40,7 @@ DEFINE_FFF_GLOBALS;
     MOCK(status_t, model_load_weights_from_loader)                                                         \
     MOCK(status_t, model_load_input_from_loader, const size_t)                                             \
     MOCK(status_t, model_run)                                                                              \
+    MOCK(status_t, model_run_bench)                                                                        \
     MOCK(status_t, model_get_output, const size_t, uint8_t *, size_t *)                                    \
     MOCK(status_t, model_get_statistics, const size_t, uint8_t *, size_t *)                                \
     MOCK(status_t, runtime_deinit)                                                                         \
@@ -425,13 +426,13 @@ ZTEST(kenning_inference_lib_test_callbacks, test_process_callback)
     message_hdr_t hdr = prepare_message_header(MESSAGE_TYPE_PROCESS, 0);
     resp_message_t resp;
 
-    model_run_fake.return_val = STATUS_OK;
+    model_run_bench_fake.return_val = STATUS_OK;
 
     status = process_callback(&hdr, &resp);
 
     zassert_equal(STATUS_OK, status);
     zassert_equal(protocol_prepare_success_resp_fake.call_count, 1);
-    zassert_equal(model_run_fake.call_count, 1);
+    zassert_equal(model_run_bench_fake.call_count, 1);
 }
 
 /**
@@ -443,12 +444,12 @@ ZTEST(kenning_inference_lib_test_callbacks, test_process_callback_model_error)
     message_hdr_t hdr = prepare_message_header(MESSAGE_TYPE_PROCESS, 0);
     resp_message_t resp;
 
-    model_run_fake.return_val = MODEL_STATUS_ERROR;
+    model_run_bench_fake.return_val = MODEL_STATUS_ERROR;
 
     status = process_callback(&hdr, &resp);
 
     zassert_equal(STATUS_OK, status);
-    zassert_equal(model_run_fake.call_count, 1);
+    zassert_equal(model_run_bench_fake.call_count, 1);
     zassert_equal(protocol_prepare_fail_resp_fake.call_count, 1);
 }
 
@@ -463,7 +464,7 @@ ZTEST(kenning_inference_lib_test_callbacks, test_process_callback_invalid_pointe
     status = process_callback(NULL, &resp);
 
     zassert_equal(CALLBACKS_STATUS_INV_PTR, status);
-    zassert_equal(model_run_fake.call_count, 0);
+    zassert_equal(model_run_bench_fake.call_count, 0);
     zassert_equal(model_load_input_from_loader_fake.call_count, 0);
 }
 
@@ -480,7 +481,7 @@ ZTEST(kenning_inference_lib_test_callbacks, test_process_callback_invalid_messag
     hdr = prepare_message_header(_message_type, 0);       \
     status = process_callback(&hdr, &resp);               \
     zassert_equal(CALLBACKS_STATUS_INV_MSG_TYPE, status); \
-    zassert_equal(model_run_fake.call_count, 0);
+    zassert_equal(model_run_bench_fake.call_count, 0);
 
     TEST_PROCESS_CALLBACK(MESSAGE_TYPE_OK);
     TEST_PROCESS_CALLBACK(MESSAGE_TYPE_ERROR);
