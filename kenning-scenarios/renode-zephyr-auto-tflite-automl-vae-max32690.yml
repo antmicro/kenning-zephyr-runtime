@@ -7,7 +7,7 @@ automl:
   type: AutoPyTorchML
   parameters:
     # Time limit for AutoML task (in minutes)
-    time_limit: 3
+    time_limit: 5
     # List of model architectures used for AutoML,
     # represented by ModelWrapper (has to implement AutoMLModel class)
     use_models:
