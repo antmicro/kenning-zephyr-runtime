@@ -32,6 +32,77 @@ MODEL_STATE model_get_state() { return g_model_state; }
 
 void model_reset_state() { g_model_state = MODEL_STATE_UNINITIALIZED; }
 
+/**
+ * Validates metadata (shapes and data types) of tensors stored in a struct
+ * (intended for use with the model_spec_t struct from runtime_wrapper.h)
+ * This funcition serves to minimize code repetition (code validating input and output tensors was
+ * essentially identical, so instead this function can be called twice - once of input and once for output)
+ * Note: The function takes a pointer to the struct and offsets to arrays,
+ * instead of just pointers to arrays, in order to avoid alignment issues.
+ *
+ * @param tensor_struct Pointer to the struct containing the validated values
+ * @param num_tensors Number of tensors being validated
+ * @param num_tensor_dim_offset Offset (relative to the beginning of the struct) to array storing number of dimesnsions
+ * for each tensor
+ * @param tensor_shape_offset Offset (relative to the beginning of the struct) to a 2D array storing shape for each
+ * tensor
+ * @param tensor_data_type_offset Offset (relative to the beginning of the struct) to array storing data type for each
+ * tensor
+ * @param max_num_tensors Maximum number of tensors to validate (maximum value of num_tensors parameter) - should be
+ * either MAX_MODEL_INPUT_NUM or MAX_MODEL_OUTPUT_NUM
+ * @param max_num_tensor_dim Maximum number of dimensions for any tensor - should be either MAX_MODEL_OUTPUT_DIM or
+ * MAX_MODEL_INPUT_DIM
+ * @param tensors_name String, that will be used to refer to the tensors in the logs (either "input" or "output")
+ *
+ * @returns 1 if values are valid, 0 if values are not valid
+ */
+static int validate_tensors(model_spec_t *tensor_struct, uint32_t num_tensors, size_t num_tensor_dim_offset,
+                            size_t tensor_shape_offset, size_t tensor_data_type_offset, uint32_t max_num_tensors,
+                            uint32_t max_tensor_dim, const char tensors_name[])
+{
+    int tensor_invalid = 0;
+    uint32_t *num_tensor_dim = (uint32_t *)((size_t)tensor_struct + num_tensor_dim_offset);
+    uint32_t *tensor_shape = (uint32_t *)((size_t)tensor_struct + tensor_shape_offset);
+    data_type_t *tensor_data_type = (data_type_t *)((size_t)tensor_struct + tensor_data_type_offset);
+    if (num_tensors < 1 || num_tensors > max_num_tensors)
+    {
+        LOG_ERR("Wrong number of %s tensors: %d", tensors_name, num_tensors);
+        tensor_invalid = 1;
+    }
+    for (int i = 0; i < MIN(num_tensors, max_num_tensors); ++i)
+    {
+        if (0 == num_tensor_dim[i] || num_tensor_dim[i] > max_tensor_dim)
+        {
+            LOG_ERR("Unsupported %s dimension number: %d (tensor: %d)", tensors_name, num_tensor_dim[i], i);
+            tensor_invalid = 1;
+        }
+
+        if (tensor_data_type[i].bits % KENNING_BITS_PER_BYTE != 0)
+        {
+            LOG_ERR("Unsupported %s data type size: %d. (tensor: %d)", tensors_name, tensor_data_type[i].bits, i);
+            tensor_invalid = 1;
+        }
+        if (tensor_data_type[i].code >= DATA_TYPE_CODE_END)
+        {
+            // Data type codes are compatible with DLPack's DLDataTypeCode enum - see commens in runtime_wrapper.h
+            LOG_ERR(
+                "Unsupported %s data type code: %d (tensor: %d). Check DATA_TYPE_CODES macro for available options.",
+                tensors_name, tensor_data_type[i].code, i);
+            tensor_invalid = 1;
+        }
+        for (int j = 0; j < MIN(num_tensor_dim[i], max_tensor_dim); j++)
+        {
+            if (0 == tensor_shape[max_tensor_dim * i + j])
+            {
+                LOG_ERR("Unsupported %s shape (can't be 0): %d (tensor: %d, dimension: %d)", tensors_name,
+                        tensor_shape[max_tensor_dim * i + j], i, j);
+                tensor_invalid = 1;
+            }
+        }
+    }
+    return tensor_invalid;
+}
+
 status_t prepare_iospec_loader()
 {
     static struct msg_loader msg_loader_iospec = MSG_LOADER_BUF((uint8_t *)(&g_model_spec), sizeof(model_spec_t));
@@ -72,101 +143,24 @@ status_t model_load_struct_from_loader()
         return MODEL_STATUS_INV_ARG;
     }
 
-    // validate struct
-    if (g_model_struct.num_input < 1 || g_model_struct.num_input > MAX_MODEL_INPUT_NUM ||
-        g_model_struct.num_output < 1 || g_model_struct.num_output > MAX_MODEL_OUTPUT_NUM)
-    {
-        LOG_ERR("Wrong number of inputs or outputs");
-        return MODEL_STATUS_INV_ARG;
+#define VALIDATE_TENSORS_CALL(name)                                                                           \
+    if (validate_tensors(&g_model_spec, g_model_spec.num_##name, offsetof(model_spec_t, num_##name##_dim),    \
+                         offsetof(model_spec_t, name##_shape), offsetof(model_spec_t, name##_data_type),      \
+                         ARRAY_SIZE(g_model_spec.num_##name##_dim), ARRAY_SIZE(g_model_spec.name##_shape[0]), \
+                         "" #name))                                                                           \
+    {                                                                                                         \
+        status = MODEL_STATUS_INV_ARG;                                                                        \
+        return status;                                                                                        \
     }
 
-#define CHECK_DATA_TYPE(_, code_) \
-    case code_:                   \
-    {                             \
-        type_ok_ = 1;             \
-        break;                    \
-    }
+    // Validate model input tensor metadata:
+    VALIDATE_TENSORS_CALL(input);
 
-#define CHECK_DATA_TYPES(type_ok, code)  \
-    int type_ok_ = 0;                    \
-    switch (code)                        \
-    {                                    \
-        DATA_TYPE_CODES(CHECK_DATA_TYPE) \
-    }                                    \
-    type_ok = type_ok_;
+    // Validate model output tensor metadata:
+    VALIDATE_TENSORS_CALL(output);
+#undef VALIDATE_TENSORS_CALL
 
-    for (int i = 0; i < g_model_struct.num_input; ++i)
-    {
-        if (0 == g_model_struct.num_input_dim[i] || g_model_struct.num_input_dim[i] > MAX_MODEL_INPUT_DIM)
-        {
-            LOG_ERR("Wrong input dim");
-            return MODEL_STATUS_INV_ARG;
-        }
-        if (0 == model_spec_input_length(&g_model_struct, i))
-        {
-            LOG_ERR("Wrong input length");
-            return MODEL_STATUS_INV_ARG;
-        }
-        for (int j = 0; j < g_model_struct.num_input_dim[i]; ++j)
-        {
-            if (0 == g_model_struct.input_shape[i][j])
-            {
-                LOG_ERR("Wrong input shape");
-                return MODEL_STATUS_INV_ARG;
-            }
-        }
-        if (g_model_struct.input_data_type[i].size % KENNING_BITS_PER_BYTE != 0)
-        {
-            LOG_ERR("Only input data types sizes, that are multiples of 8 are supported, %d-bit size is not.",
-                    g_model_struct.input_data_type[i].size);
-        }
-        int data_type_ok;
-        CHECK_DATA_TYPES(data_type_ok, g_model_struct.input_data_type[i].code)
-        if (data_type_ok == 0)
-        {
-            // Data type codes are compatible with DLPack's DLDataTypeCode enum - see commens in runtime_wrapper.h
-            LOG_ERR("Only input data types codes from 0 to 17 are supported, %d is not.",
-                    g_model_struct.input_data_type[i].code);
-        }
-    }
-
-    for (int i = 0; i < g_model_struct.num_output; ++i)
-    {
-        if (0 == g_model_struct.num_output_dim[i] || g_model_struct.num_output_dim[i] > MAX_MODEL_OUTPUT_DIM)
-        {
-            LOG_ERR("Wrong output dim");
-            return MODEL_STATUS_INV_ARG;
-        }
-        if (0 == model_spec_output_length(&g_model_struct, i))
-        {
-            LOG_ERR("Wrong output length");
-            return MODEL_STATUS_INV_ARG;
-        }
-        for (int j = 0; j < g_model_struct.num_output_dim[i]; ++j)
-        {
-            if (0 == g_model_struct.output_shape[i][j])
-            {
-                LOG_ERR("Wrong output shape");
-                return MODEL_STATUS_INV_ARG;
-            }
-        }
-        if (g_model_struct.output_data_type[i].size % KENNING_BITS_PER_BYTE != 0)
-        {
-            LOG_ERR("Only output data types sizes, that are multiples of 8 are supported, %d-bit size is not.",
-                    g_model_struct.output_data_type[i].size);
-        }
-        int data_type_ok;
-        CHECK_DATA_TYPES(data_type_ok, g_model_struct.output_data_type[i].code)
-        if (data_type_ok == 0)
-        {
-            // Data type codes are compatible with DLPack's DLDataTypeCode enum - see commens in runtime_wrapper.h
-            LOG_ERR("Only output data types codes from 0 to 17 are supported, %d is not.",
-                    g_model_struct.output_data_type[i].code);
-        }
-    }
-
-#undef CHECK_DATA_TYPE
-    LOG_DBG("Loaded model struct. Model name: %s", g_model_struct.model_name);
+    LOG_DBG("Loaded model struct. Model name: %s", g_model_spec.model_name);
 
     g_model_state = MODEL_STATE_STRUCT_LOADED;
 
