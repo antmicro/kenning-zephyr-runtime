@@ -9,10 +9,13 @@ Python script for convering IO spec in JSON format to model struct.
 import argparse
 import json
 import numpy as np
+import re
+from typing import Dict, List, Any, Tuple
 from math import prod
 from pathlib import Path
 
 from kenning.utils.resource_manager import ResourceURI
+from kenning.interfaces.io_spec_serializer import IOSpecSerializer
 
 STRUCT_TEMPLATE = """
 /* encode type string as uint32_t */
@@ -23,16 +26,15 @@ STRUCT_TEMPLATE = """
 #define QUANTIZATION_OUTPUT_SCALE {quantization_output_scale}
 #define QUANTIZATION_OUTPUT_ZERO_POINT {quantization_output_zero_point}
 
-const MlModel model_struct = {{
+const model_spec_t model_spec = {{
     .num_input = {num_input},
     .num_input_dim = {num_input_dim},
     .input_shape = {input_shape},
-    .input_length = {input_length},
-    .input_size_bytes = {input_size_bytes},
+    .input_data_type = {input_data_type},
     .num_output = {num_output},
-    .output_length = {output_length},
-    .output_size_bytes = {output_size_bytes},
-    .hal_element_type = {hal_element_type},
+    .num_output_dim = {num_output_dim},
+    .output_shape = {output_shape},
+    .output_data_type = {output_data_type},
     .entry_func = "{entry_func}",
     .model_name = "{model_name}",
 }};
@@ -55,6 +57,9 @@ def py_arr_to_c_arr(arr: list):
         Array in C format.
     """
     return str(arr).replace("[", "{").replace("]", "}")
+
+def py_tuple_to_c_struct(tpl: Tuple):
+    return str(tpl).replace("(", "{").replace(")", "}")
 
 
 if __name__ == "__main__":
@@ -89,15 +94,8 @@ if __name__ == "__main__":
     io_spec_input = io_spec.get("processed_input", io_spec["input"])
     io_spec_output = io_spec["output"]
 
-    input_elem_size_bytes = [np.dtype(inp["dtype"]).itemsize for inp in io_spec_input]
-    output_elem_size_bytes = np.dtype(io_spec_output[0]["dtype"]).itemsize
 
-    hal_element_type_map = {
-        "float32": "ENCODE_TYPE('f', '3', '2', 0)",
-        "int8": "ENCODE_TYPE('i', '8', 0, 0)",
-    }
-
-    model_struct = STRUCT_TEMPLATE.format(
+    model_spec = STRUCT_TEMPLATE.format(
         quantization_input_scale=io_spec_input[0].get("scale", 0),
         quantization_input_zero_point=io_spec_input[0].get("zero_point", 0),
         quantization_output_scale=io_spec_output[0].get("scale", 0),
@@ -105,14 +103,13 @@ if __name__ == "__main__":
         num_input=len(io_spec_input),
         num_input_dim=py_arr_to_c_arr([len(inp["shape"]) for inp in io_spec_input]),
         input_shape=py_arr_to_c_arr([inp["shape"] for inp in io_spec_input]),
-        input_length=py_arr_to_c_arr([prod(inp["shape"]) for inp in io_spec_input]),
-        input_size_bytes=py_arr_to_c_arr(input_elem_size_bytes),
+        input_data_type=py_tuple_to_c_struct(py_arr_to_c_arr(IOSpecSerializer.io_spec_parse_types(io_spec_input))),
         num_output=len(io_spec_output),
-        output_length=py_arr_to_c_arr([prod(outp["shape"]) for outp in io_spec_output]),
-        output_size_bytes=output_elem_size_bytes,
-        hal_element_type=hal_element_type_map[io_spec_input[0]["dtype"]],
+        num_output_dim=py_arr_to_c_arr([len(out["shape"]) for out in io_spec_output]),
+        output_shape=py_arr_to_c_arr([out["shape"] for out in io_spec_output]),
+        output_data_type=py_tuple_to_c_struct(py_arr_to_c_arr(IOSpecSerializer.io_spec_parse_types(io_spec_output))),
         entry_func="module.main",
         model_name="module",
     )
 
-    args.output_path.write_text(model_struct)
+    args.output_path.write_text(model_spec)

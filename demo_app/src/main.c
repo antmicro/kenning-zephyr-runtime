@@ -59,7 +59,7 @@ int main(void)
         }
 
         // load model structure
-        status = model_load_struct((uint8_t *)&model_struct, sizeof(MlModel));
+        status = model_load_struct((uint8_t *)&model_spec, sizeof(model_spec_t));
         BREAK_ON_ERROR_LOG(status, "Model struct load error 0x%x (%s)", status, get_status_str(status));
 
         // load model weights
@@ -118,7 +118,7 @@ void format_output(uint8_t *buffer, const size_t buffer_size, float *model_outpu
     uint8_t *buffer_end = buffer + buffer_size;
 
     buffer += snprintf(buffer, buffer_end - buffer, "[");
-    for (int i = 0; i < model_struct.output_length[0]; ++i)
+    for (int i = 0; i < model_spec_output_length(&model_spec, 0); ++i)
     {
         if (i > 0)
         {
