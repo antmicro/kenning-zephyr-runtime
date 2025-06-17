@@ -22,9 +22,9 @@ extern "C"
 
 LOG_MODULE_REGISTER(tflite_runtime, CONFIG_RUNTIME_WRAPPER_LOG_LEVEL);
 
-static runtime_statistics_execution_time_t gp_tflite_time_stats;
+extern model_spec_t g_model_spec;
 
-extern MlModel g_model_struct;
+static runtime_statistics_execution_time_t gp_tflite_time_stats;
 
 extern tflite::MicroMutableOpResolver<TFLITE_RESOLVER_SIZE> g_tflite_resolver;
 static tflite::MicroInterpreter *gp_tflite_interpreter = nullptr;

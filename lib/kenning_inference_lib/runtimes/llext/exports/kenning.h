@@ -14,9 +14,9 @@
 #include <kenning_inference_lib/core/loaders.h>
 #include <kenning_inference_lib/core/runtime_wrapper.h>
 
-extern MlModel g_model_struct;
+extern model_spec_t g_model_spec;
 
-EXPORT_SYMBOL(g_model_struct);
+EXPORT_SYMBOL(g_model_spec);
 
 EXPORT_SYMBOL(g_ldr_tables);
 

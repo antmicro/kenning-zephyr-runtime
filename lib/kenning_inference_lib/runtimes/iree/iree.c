@@ -27,18 +27,91 @@ GENERATE_MODULE_STATUSES_STR(RUNTIME_WRAPPER);
 static uint8_t __attribute__((aligned(8))) gp_ireeModelBuffer[CONFIG_KENNING_IREE_MODEL_BUFFER_SIZE * 1024];
 static uint8_t __attribute__((aligned(8))) gp_ireeInputBuffer[CONFIG_KENNING_IREE_INPUT_BUFFER_SIZE * 1024];
 
-static const iree_hal_element_type_t G_HAL_ELEM_DTYPE_TO_IREE_HAL_ELEM_TYPE[] = {
-    IREE_HAL_ELEMENT_TYPE_INT_8,    /* HAL_ELEMENT_TYPE_INT_8 */
-    IREE_HAL_ELEMENT_TYPE_UINT_8,   /* HAL_ELEMENT_TYPE_UINT_8 */
-    IREE_HAL_ELEMENT_TYPE_INT_16,   /* HAL_ELEMENT_TYPE_INT_16 */
-    IREE_HAL_ELEMENT_TYPE_UINT_16,  /* HAL_ELEMENT_TYPE_UINT_16 */
-    IREE_HAL_ELEMENT_TYPE_INT_32,   /* HAL_ELEMENT_TYPE_INT_32 */
-    IREE_HAL_ELEMENT_TYPE_UINT_32,  /* HAL_ELEMENT_TYPE_UINT_32 */
-    IREE_HAL_ELEMENT_TYPE_INT_64,   /* HAL_ELEMENT_TYPE_INT_64 */
-    IREE_HAL_ELEMENT_TYPE_UINT_64,  /* HAL_ELEMENT_TYPE_UINT_64 */
-    IREE_HAL_ELEMENT_TYPE_FLOAT_16, /* HAL_ELEMENT_TYPE_FLOAT_16 */
-    IREE_HAL_ELEMENT_TYPE_FLOAT_32, /* HAL_ELEMENT_TYPE_FLOAT_32 */
-};
+/**
+ * Function converts Kenning Zephyr Runtime data type format, to IREE data type format.
+ *
+ * @param dtype Data type in Kenning Zephyr Runtime format
+ *
+ * @returns Data type in in IREE formay
+ */
+static iree_hal_element_type_t kenning_elem_dtype_to_iree_hal_elem_type(data_type_t *dtype)
+{
+    RETURN_ERROR_IF_POINTER_INVALID(dtype, RUNTIME_WRAPPER_STATUS_INV_PTR);
+    switch ((data_type_code_t)dtype->code)
+    {
+    case DATA_TYPE_INT:
+    {
+        switch (dtype->bits)
+        {
+        case 8:
+            return IREE_HAL_ELEMENT_TYPE_INT_8;
+            break;
+        case 16:
+            return IREE_HAL_ELEMENT_TYPE_INT_16;
+            break;
+        case 32:
+            return IREE_HAL_ELEMENT_TYPE_INT_32;
+            break;
+        case 64:
+            return IREE_HAL_ELEMENT_TYPE_INT_64;
+            break;
+        default:
+        {
+            LOG_ERR("Unsupported signed integer size: %d", dtype->bits);
+            return NULL;
+        }
+        }
+    };
+    break;
+    case DATA_TYPE_UINT:
+    {
+        switch (dtype->bits)
+        {
+        case 8:
+            return IREE_HAL_ELEMENT_TYPE_UINT_8;
+            break;
+        case 16:
+            return IREE_HAL_ELEMENT_TYPE_UINT_16;
+            break;
+        case 32:
+            return IREE_HAL_ELEMENT_TYPE_UINT_32;
+            break;
+        case 64:
+            return IREE_HAL_ELEMENT_TYPE_UINT_64;
+            break;
+        default:
+        {
+            LOG_ERR("Unsupported unsigned integer size: %d", dtype->bits);
+            return NULL;
+        }
+        }
+    };
+    break;
+    case DATA_TYPE_FLOAT:
+    {
+        switch (dtype->bits)
+        {
+        case 16:
+            return IREE_HAL_ELEMENT_TYPE_FLOAT_16;
+            break;
+        case 32:
+            return IREE_HAL_ELEMENT_TYPE_FLOAT_32;
+            break;
+        default:
+        {
+            LOG_ERR("Unsupported IEEE float size: %d", dtype->bits);
+            return NULL;
+        }
+        }
+    }
+    break;
+    default:
+    {
+        LOG_ERR("Unsupported type code: %d", dtype->code);
+        return NULL;
+    }
+    }
+}
 
 /**
  * Initialization status
@@ -70,7 +143,7 @@ static iree_vm_list_t *gp_model_outputs = NULL;
 /**
  * Struct describing model IO
  */
-extern MlModel g_model_struct;
+extern model_spec_t g_model_spec;
 
 /**
  * Releases context that hold modules' state
@@ -83,6 +156,28 @@ static void release_context()
         iree_vm_context_release(gp_context);
         gp_context = NULL;
     }
+}
+
+/**
+ * Calculates size of a variable in bytes based on data type
+ *
+ * @param data_type Data type in Kenning Zephyr Runtime format
+ *
+ * @returns Size of the variable in bytes, rounded up to 1 byte
+ */
+static size_t compute_size_bytes(data_type_t data_type) { return (data_type.bits - 1) / KENNING_BITS_PER_BYTE + 1; }
+
+/**
+ * Calculates size of a data structure in bytes based on number of elements and data type
+ *
+ * @param number_of_elements Number of elements in the structure
+ * @param data_type Data type in Kenning Zephyr Runtime format
+ *
+ * @returns Size of the structue in bytes, rounded up to 1 byte
+ */
+static size_t compute_structure_size_bytes(size_t number_of_elements, data_type_t data_type)
+{
+    return number_of_elements * compute_size_bytes(data_type);
 }
 
 /**
@@ -158,9 +253,10 @@ static iree_status_t prepare_input_hal_buffer_views(const uint8_t *model_input,
     iree_const_byte_span_t *byte_span[MAX_MODEL_INPUT_NUM] = {NULL};
     size_t offset = 0;
 
-    for (int i = 0; i < g_model_struct.num_input; ++i)
+    for (int i = 0; i < g_model_spec.num_input; ++i)
     {
-        size_t size = g_model_struct.input_size_bytes[i] * g_model_struct.input_length[i];
+        size_t size =
+            compute_structure_size_bytes(model_spec_input_length(&g_model_spec, i), g_model_spec.input_data_type[i]);
         byte_span[i] = malloc(sizeof(iree_const_byte_span_t));
         *byte_span[i] = iree_make_const_byte_span(model_input + offset, size);
         offset += size;
@@ -170,16 +266,16 @@ static iree_status_t prepare_input_hal_buffer_views(const uint8_t *model_input,
                                                   IREE_HAL_MEMORY_TYPE_HOST_LOCAL | IREE_HAL_MEMORY_TYPE_DEVICE_VISIBLE,
                                               .access = IREE_HAL_MEMORY_ACCESS_READ,
                                               .usage = IREE_HAL_BUFFER_USAGE_DEFAULT};
-    for (int i = 0; i < g_model_struct.num_input; ++i)
+    for (int i = 0; i < g_model_spec.num_input; ++i)
     {
         iree_status = iree_hal_buffer_view_allocate_buffer(
-            iree_hal_device_allocator(gp_device), g_model_struct.num_input_dim[i], g_model_struct.input_shape[i],
-            G_HAL_ELEM_DTYPE_TO_IREE_HAL_ELEM_TYPE[g_model_struct.hal_element_type],
+            iree_hal_device_allocator(gp_device), g_model_spec.num_input_dim[i], g_model_spec.input_shape[i],
+            kenning_elem_dtype_to_iree_hal_elem_type(&g_model_spec.input_data_type),
             IREE_HAL_ENCODING_TYPE_DENSE_ROW_MAJOR, buffer_params, *byte_span[i], &(arg_buffer_views[i]));
         BREAK_ON_IREE_ERROR(iree_status);
     }
 
-    for (int i = 0; i < g_model_struct.num_input; ++i)
+    for (int i = 0; i < g_model_spec.num_input; ++i)
     {
         if (NULL != byte_span[i])
         {
@@ -196,8 +292,7 @@ status_t prepare_input_buffer(const uint8_t *model_input)
     iree_status_t iree_status = iree_ok_status();
 
     iree_status = iree_vm_list_create(
-        /*element_type=*/NULL, /*initial_capacity=*/g_model_struct.num_input, iree_allocator_system(),
-        &gp_model_inputs);
+        /*element_type=*/NULL, /*initial_capacity=*/g_model_spec.num_input, iree_allocator_system(), &gp_model_inputs);
     CHECK_IREE_STATUS(iree_status);
 
     iree_hal_buffer_view_t *arg_buffer_views[MAX_MODEL_INPUT_NUM] = {NULL};
@@ -205,7 +300,7 @@ status_t prepare_input_buffer(const uint8_t *model_input)
     CHECK_IREE_STATUS(iree_status);
 
     iree_vm_ref_t arg_buffer_view_ref;
-    for (int i = 0; i < g_model_struct.num_input; ++i)
+    for (int i = 0; i < g_model_spec.num_input; ++i)
     {
         arg_buffer_view_ref = iree_hal_buffer_view_move_ref(arg_buffer_views[i]);
         iree_status = iree_vm_list_push_ref_move(gp_model_inputs, &arg_buffer_view_ref);
@@ -348,8 +443,8 @@ status_t runtime_run_model()
     status = prepare_output_buffer();
     RETURN_ON_ERROR(status, status);
 
-    iree_status = iree_vm_context_resolve_function(
-        gp_context, iree_make_cstring_view((char *)g_model_struct.entry_func), &main_function);
+    iree_status = iree_vm_context_resolve_function(gp_context, iree_make_cstring_view((char *)g_model_spec.entry_func),
+                                                   &main_function);
     CHECK_IREE_STATUS(iree_status);
 
     // invoke model
@@ -367,7 +462,7 @@ status_t runtime_get_model_output(uint8_t *model_output)
     RETURN_ERROR_IF_POINTER_INVALID(model_output, RUNTIME_WRAPPER_STATUS_INV_PTR);
 
     size_t model_output_offset = 0;
-    for (int output_idx = 0; output_idx < g_model_struct.num_output; ++output_idx)
+    for (int output_idx = 0; output_idx < g_model_spec.num_output; ++output_idx)
     {
         iree_hal_buffer_mapping_t mapped_memory = {0};
         iree_hal_buffer_view_t *ret_buffer_view = NULL;
@@ -383,17 +478,19 @@ status_t runtime_get_model_output(uint8_t *model_output)
                                       IREE_HAL_MEMORY_ACCESS_READ, 0, IREE_WHOLE_BUFFER, &mapped_memory);
         CHECK_IREE_STATUS(iree_status);
 
-        if ((output_idx > g_model_struct.num_output ||
-             mapped_memory.contents.data_length / g_model_struct.output_size_bytes !=
-                 g_model_struct.output_length[output_idx]) &&
+        if ((output_idx > g_model_spec.num_output ||
+             mapped_memory.contents.data_length / compute_size_bytes(g_model_spec.output_data_type[output_idx]) !=
+                 model_spec_output_length(&g_model_spec, output_idx)) &&
             NULL == ret_buffer_view)
         {
             return RUNTIME_WRAPPER_STATUS_INV_PTR;
         }
         memcpy(&model_output[model_output_offset], mapped_memory.contents.data,
-               g_model_struct.output_size_bytes * g_model_struct.output_length[output_idx]);
+               compute_structure_size_bytes(model_spec_output_length(&g_model_spec, output_idx),
+                                            g_model_spec.output_data_type[output_idx]));
 
-        model_output_offset += g_model_struct.output_size_bytes * g_model_struct.output_length[output_idx];
+        model_output_offset += compute_structure_size_bytes(model_spec_output_length(&g_model_spec, output_idx),
+                                                            g_model_spec.output_data_type[output_idx]);
 
         iree_hal_buffer_unmap_range(&mapped_memory);
     }

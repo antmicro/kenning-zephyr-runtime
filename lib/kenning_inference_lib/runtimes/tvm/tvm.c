@@ -46,26 +46,12 @@ static runtime_statistics_execution_time_t gp_tvm_time_stats;
 static uint8_t __attribute__((aligned(8))) gp_tvmGraphBuffer[CONFIG_KENNING_TVM_GRAPH_BUFFER_SIZE * 1024];
 static uint8_t __attribute__((aligned(8))) gp_tvmInputBuffer[CONFIG_KENNING_TVM_INPUT_BUFFER_SIZE * 1024];
 
-extern MlModel g_model_struct;
+extern model_spec_t g_model_spec;
 
 static bool g_tvm_runtime_initialized = false;
 static const DLDevice g_device = {kDLCPU, 1};
 static TVMGraphExecutor *gp_tvm_graph_executor = NULL;
 static TVMModuleHandle g_tvm_module_handle;
-
-static const DLDataType G_HAL_ELEM_DTYPE_TO_DLPACK_DTYPE[] = {
-    {kDLInt, 8, 0},    /* HAL_ELEMENT_TYPE_INT_8 */
-    {kDLUInt, 8, 0},   /* HAL_ELEMENT_TYPE_UINT_8 */
-    {kDLInt, 16, 0},   /* HAL_ELEMENT_TYPE_INT_16 */
-    {kDLUInt, 16, 0},  /* HAL_ELEMENT_TYPE_UINT_16 */
-    {kDLInt, 32, 0},   /* HAL_ELEMENT_TYPE_INT_32 */
-    {kDLUInt, 32, 0},  /* HAL_ELEMENT_TYPE_UINT_32 */
-    {kDLInt, 64, 0},   /* HAL_ELEMENT_TYPE_INT_64 */
-    {kDLUInt, 64, 0},  /* HAL_ELEMENT_TYPE_UINT_64 */
-    {kDLFloat, 16, 0}, /* HAL_ELEMENT_TYPE_FLOAT_16 */
-    {kDLFloat, 32, 0}, /* HAL_ELEMENT_TYPE_FLOAT_32 */
-    {kDLFloat, 64, 0}, /* HAL_ELEMENT_TYPE_FLOAT_64 */
-};
 
 void TVMLogf(const char *msg, ...)
 {
@@ -169,12 +155,16 @@ status_t runtime_init_input()
     DLTensor tensor_in;
 
     tensor_in.device = g_device;
-    tensor_in.ndim = g_model_struct.num_input_dim[0];
-    tensor_in.dtype = G_HAL_ELEM_DTYPE_TO_DLPACK_DTYPE[g_model_struct.hal_element_type];
+    tensor_in.ndim = g_model_spec.num_input_dim[0];
+    // Converting Kenning Zephyr Runtime data type format, to DLPack's DLDataType format used by TVM
+    tensor_in.dtype.code = g_model_spec.input_data_type[0].code; // Data type codes in the Kenning format are the same
+                                                                 // as in the DLPack's DLDataType
+    tensor_in.dtype.bits = g_model_spec.input_data_type[0].bits;
+    tensor_in.dtype.lanes = 0; // Default value
     int64_t shape[MAX_MODEL_INPUT_DIM];
-    for (int i = 0; i < g_model_struct.num_input_dim[0]; ++i)
+    for (int i = 0; i < g_model_spec.num_input_dim[0]; ++i)
     {
-        shape[i] = g_model_struct.input_shape[0][i];
+        shape[i] = g_model_spec.input_shape[0][i];
     }
     tensor_in.shape = shape;
     tensor_in.strides = NULL;
@@ -216,9 +206,17 @@ status_t runtime_get_model_output(uint8_t *model_output)
     RETURN_ERROR_IF_POINTER_INVALID(model_output, RUNTIME_WRAPPER_STATUS_INV_PTR);
 
     tensor_out.device = g_device;
-    tensor_out.ndim = 2;
-    tensor_out.dtype = G_HAL_ELEM_DTYPE_TO_DLPACK_DTYPE[g_model_struct.hal_element_type];
-    int64_t shape[] = {1, g_model_struct.output_length[0]};
+    tensor_out.ndim = g_model_spec.num_output_dim[0];
+    // Converting Kenning Zephyr Runtime data type format, to DLPack's DLDataType format used by TVM
+    tensor_out.dtype.bits = g_model_spec.output_data_type[0].bits;
+    tensor_out.dtype.code = g_model_spec.output_data_type[0].code; // Data type codes in the Kenning format are the
+                                                                   // same as in the DLPack's DLDataType
+    tensor_out.dtype.lanes = 0;                                    // Default value
+    int64_t shape[MAX_MODEL_OUTPUT_DIM];
+    for (int i = 0; i < g_model_spec.num_output_dim[0]; ++i)
+    {
+        shape[i] = g_model_spec.output_shape[0][i];
+    }
     tensor_out.shape = shape;
     tensor_out.strides = NULL;
     tensor_out.byte_offset = 0;
