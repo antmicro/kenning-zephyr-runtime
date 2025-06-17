@@ -4,3 +4,4 @@ build
 renode/log
 twister-out
 twister-out.*
+tests/demo/__pycache__/*
