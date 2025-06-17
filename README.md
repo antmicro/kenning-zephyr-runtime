@@ -168,7 +168,7 @@ The binary built after executing `west build` can be found in `build/zephyr/zeph
 
 Use `pip` to install [Kenning](https://github.com/antmicro/kenning) with Renode support enabled:
 
-```bash
+```bash skip
 pip install --upgrade pip
 pip install "kenning[tvm,tensorflow,reports,renode] @ git+https://github.com/antmicro/kenning.git"
 ```
