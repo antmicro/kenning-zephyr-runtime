@@ -52,12 +52,12 @@ status_t model_init();
 /**
  * Loads model struct from given buffer
  *
- * @param model_struct_data buffer that contains model struct
+ * @param model_spec_data buffer that contains model struct
  * @param data_size size of the buffer
  *
  * @returns status of the model
  */
-status_t model_load_struct(const uint8_t *model_struct_data, const size_t data_size);
+status_t model_load_struct(const uint8_t *model_spec_data, const size_t data_size);
 
 /**
  * Loads model weights from given buffer
@@ -139,6 +139,6 @@ status_t model_get_output(const size_t buffer_size, uint8_t *model_output, size_
  */
 status_t model_get_statistics(const size_t statistics_buffer_size, uint8_t *statistics_buffer, size_t *statistics_size);
 
-extern MlModel g_model_struct;
+extern model_spec_t g_model_spec;
 
 #endif // KENNING_INFERENCE_LIB_CORE_MODEL_H_

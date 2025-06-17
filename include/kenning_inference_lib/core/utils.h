@@ -182,6 +182,8 @@ enum
 
 #define STATUS_OK 0 /* success */
 
+#define KENNING_BITS_PER_BYTE 8
+
 /**
  * Generic error status
  */
