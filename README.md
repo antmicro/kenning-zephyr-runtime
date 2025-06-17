@@ -503,8 +503,7 @@ I: inference done
 ### Building demo using different model
 
 It is also possible to build `demo_app` using some custom model.
-To do it, you need to edit `model_struct` in `demo_app/src/main.c` to match the model IO specification.
-Then, provide model input in `demo_app/src/input_data.h` and model path using `CONFIG_KENNING_MODEL_PATH` config variable (similarly as in [Building runtime with microTVM backend using custom model](#Building-runtime-with-microTVM-backend-using-custom-model)):
+To do it, you need to provide model input in `demo_app/src/input_data.h` and model path using `CONFIG_KENNING_MODEL_PATH` config variable (similarly as in [Building runtime with microTVM backend using custom model](#Building-runtime-with-microTVM-backend-using-custom-model)):
 ```bash
 west build -p always -b stm32f746g_disco demo_app -- \
     -DEXTRA_CONF_FILE=tvm_gen.conf \
