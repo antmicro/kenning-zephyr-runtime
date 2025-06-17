@@ -9,20 +9,25 @@
 
 #include <kenning_inference_lib/core/loaders.h>
 #include <kenning_inference_lib/core/model.h>
+#include <kenning_inference_lib/core/runtime_wrapper.h>
 
 #include "utils.h"
 
-#define MODEL_STRUCT_INPUT_LEN (256)
-#define MODEL_STRUCT_INPUT_SIZE (4)
-#define MODEL_STRUCT_OUTPUT_LEN (10)
-#define MODEL_STRUCT_OUTPUT_SIZE (4)
+#define MODEL_SPEC_INPUT_LEN (28 * 28)
+#define MODEL_SPEC_INPUT_SIZE (4)
+#define MODEL_SPEC_OUTPUT_LEN (10)
+#define MODEL_SPEC_OUTPUT_SIZE (4)
+#define MODEL_SPEC_INPUT_NUM (1)
+#define MODEL_SPEC_OUTPUT_NUM (1)
+#define STRUCT_VALID_SHAPE_VALUE (1)
 #define MODEL_SIZE (8)
-#define MODEL_INPUT_SIZE (MODEL_STRUCT_INPUT_LEN * MODEL_STRUCT_INPUT_SIZE)
+#define MODEL_INPUT_SIZE (MODEL_SPEC_INPUT_LEN * MODEL_SPEC_INPUT_SIZE)
 
-#define VALID_HAL_ELEMENT_TYPE ("f32")
-
-extern MlModel g_model_struct;
+extern model_spec_t g_model_spec;
 extern MODEL_STATE g_model_state;
+
+const data_type_t MODEL_SPEC_INPUT_DATA_TYPE = {DATA_TYPE_INT, MODEL_SPEC_INPUT_SIZE * 8};
+const data_type_t MODEL_SPEC_OUTPUT_DATA_TYPE = {DATA_TYPE_INT, MODEL_SPEC_OUTPUT_SIZE * 8};
 
 static uint8_t __attribute__((aligned(8))) gp_modelBuffer[MODEL_SIZE * 1024];
 static uint8_t __attribute__((aligned(8))) gp_inputBuffer[MODEL_INPUT_SIZE * 1024];
@@ -32,16 +37,45 @@ static uint8_t __attribute__((aligned(8))) gp_inputBuffer[MODEL_INPUT_SIZE * 102
 // ========================================================
 DEFINE_FFF_GLOBALS;
 
-#define MOCKS(MOCK)                                     \
-    MOCK(status_t, runtime_init)                        \
-    MOCK(status_t, runtime_init_weights)                \
-    MOCK(status_t, runtime_init_input)                  \
-    MOCK(status_t, runtime_run_model)                   \
-    MOCK(status_t, runtime_run_model_bench)             \
-    MOCK(status_t, runtime_get_model_output, uint8_t *) \
-    MOCK(status_t, runtime_get_statistics, const size_t, uint8_t *, size_t *)
+#define MOCKS(MOCK)                                                           \
+    MOCK(status_t, runtime_init)                                              \
+    MOCK(status_t, runtime_init_weights)                                      \
+    MOCK(status_t, runtime_init_input)                                        \
+    MOCK(status_t, runtime_run_model)                                         \
+    MOCK(status_t, runtime_run_model_bench)                                   \
+    MOCK(status_t, runtime_get_model_output, uint8_t *)                       \
+    MOCK(status_t, runtime_get_statistics, const size_t, uint8_t *, size_t *) \
+    MOCK(uint32_t, model_spec_input_length, const model_spec_t *, uint32_t)   \
+    MOCK(uint32_t, model_spec_output_length, const model_spec_t *, uint32_t)
 
 MOCKS(DECLARE_MOCK);
+
+/**
+ * This custom mock is required for testing the following model functions:
+ *
+ * model_load_struct_from_loader, model_get_input_size, model_load_struct, model_load_input_from_loader,
+ * model_load_input
+ *
+ * In all tests, where these functions are used (or functions, that use these functions, are used) use the following
+ * line:
+ *
+ *  model_spec_input_length_fake.custom_fake = model_spec_input_length_mock;
+ *
+ */
+uint32_t model_spec_input_length_mock(const model_spec_t *model_iospec, uint32_t index);
+
+/**
+ * This custom mock is required for testing the following model functions:
+ *
+ * model_load_struct_from_loader, model_get_output_size, model_load_struct, model_get_output
+ *
+ * In all tests, where these functions are used (or functions, that use these functions, are used) use the following
+ * line:
+ *
+ * model_spec_output_length_fake.custom_fake = model_spec_output_length_mock;
+ *
+ */
+uint32_t model_spec_output_length_mock(const model_spec_t *model_iospec, uint32_t index);
 
 // ========================================================
 // helper functions declarations
@@ -54,7 +88,7 @@ MOCKS(DECLARE_MOCK);
  *
  * @returns prepared model struct
  */
-static MlModel get_model_struct_data(char dtype[]);
+static model_spec_t get_model_spec_data();
 
 // ========================================================
 // setup
@@ -64,7 +98,7 @@ static void model_tests_setup_f()
 {
     MOCKS(RESET_MOCK);
 
-    g_model_struct = get_model_struct_data(VALID_HAL_ELEMENT_TYPE);
+    g_model_spec = get_model_spec_data();
     g_model_state = MODEL_STATE_UNINITIALIZED;
 
     static struct msg_loader msg_loader_model = MSG_LOADER_BUF(gp_modelBuffer, MODEL_SIZE * 1024);
@@ -162,15 +196,18 @@ ZTEST(kenning_inference_lib_test_model, test_model_init_fail)
 ZTEST(kenning_inference_lib_test_model, test_model_load_struct_valid_state)
 {
     status_t status = STATUS_OK;
-    MlModel model_struct;
+    model_spec_t model_spec;
 
-#define TEST_LOAD_STRUCT(_model_state)                                     \
-    g_model_state = (_model_state);                                        \
-    model_struct = get_model_struct_data(VALID_HAL_ELEMENT_TYPE);          \
-                                                                           \
-    status = model_load_struct((uint8_t *)&model_struct, sizeof(MlModel)); \
-                                                                           \
-    zassert_equal(STATUS_OK, status);                                      \
+    model_spec_input_length_fake.custom_fake = model_spec_input_length_mock;
+    model_spec_output_length_fake.custom_fake = model_spec_output_length_mock;
+
+#define TEST_LOAD_STRUCT(_model_state)                                        \
+    g_model_state = (_model_state);                                           \
+    model_spec = get_model_spec_data();                                       \
+                                                                              \
+    status = model_load_struct((uint8_t *)&model_spec, sizeof(model_spec_t)); \
+                                                                              \
+    zassert_equal(STATUS_OK, status);                                         \
     zassert_equal(g_model_state, MODEL_STATE_STRUCT_LOADED);
 
     TEST_LOAD_STRUCT(MODEL_STATE_INITIALIZED);
@@ -183,77 +220,30 @@ ZTEST(kenning_inference_lib_test_model, test_model_load_struct_valid_state)
 }
 
 /**
- * Tests model struct parsing for valid HAL element types
- */
-ZTEST(kenning_inference_lib_test_model, test_model_load_struct)
-{
-    status_t status = STATUS_OK;
-    MlModel model_struct;
-
-#define TEST_LOAD_STRUCT(_dtype_str, _dtype)                               \
-    g_model_state = MODEL_STATE_INITIALIZED;                               \
-    model_struct = get_model_struct_data(_dtype_str);                      \
-                                                                           \
-    status = model_load_struct((uint8_t *)&model_struct, sizeof(MlModel)); \
-                                                                           \
-    zassert_equal(STATUS_OK, status);                                      \
-    zassert_equal((_dtype), g_model_struct.hal_element_type);              \
-    zassert_equal(MODEL_STATE_STRUCT_LOADED, g_model_state);
-
-    TEST_LOAD_STRUCT("f16", HAL_ELEMENT_TYPE_FLOAT_16);
-    TEST_LOAD_STRUCT("f32", HAL_ELEMENT_TYPE_FLOAT_32);
-    TEST_LOAD_STRUCT("u8", HAL_ELEMENT_TYPE_UINT_8);
-    TEST_LOAD_STRUCT("i32", HAL_ELEMENT_TYPE_INT_32);
-#undef TEST_LOAD_STRUCT
-}
-
-/**
- * Tests model struct parsing for invalid HAL element types
- */
-ZTEST(kenning_inference_lib_test_model, test_model_load_struct_invalid_dtype)
-{
-    status_t status = STATUS_OK;
-    MlModel model_struct;
-
-#define TEST_LOAD_STRUCT(_dtype_str)                                       \
-    g_model_state = MODEL_STATE_INITIALIZED;                               \
-    model_struct = get_model_struct_data(_dtype_str);                      \
-                                                                           \
-    status = model_load_struct((uint8_t *)&model_struct, sizeof(MlModel)); \
-                                                                           \
-    zassert_equal(MODEL_STATUS_INV_ARG, status);                           \
-    zassert_equal(MODEL_STATE_INITIALIZED, g_model_state);
-
-    TEST_LOAD_STRUCT("");
-    TEST_LOAD_STRUCT("x");
-    TEST_LOAD_STRUCT("f15");
-    TEST_LOAD_STRUCT("f32x");
-#undef TEST_LOAD_STRUCT
-}
-
-/**
  * Tests model struct parsing for valid input_num values
  */
 ZTEST(kenning_inference_lib_test_model, test_model_load_struct_num_input)
 {
     status_t status = STATUS_OK;
-    MlModel model_struct;
+    model_spec_t model_spec;
 
-#define TEST_LOAD_STRUCT(_num_input)                                       \
-    g_model_state = MODEL_STATE_INITIALIZED;                               \
-    model_struct = get_model_struct_data(VALID_HAL_ELEMENT_TYPE);          \
-    model_struct.num_input = (_num_input);                                 \
-    for (int i = 0; i < (_num_input); ++i)                                 \
-    {                                                                      \
-        model_struct.num_input_dim[i] = 1;                                 \
-        model_struct.input_length[i] = 1;                                  \
-        model_struct.input_shape[i][0] = 1;                                \
-    }                                                                      \
-                                                                           \
-    status = model_load_struct((uint8_t *)&model_struct, sizeof(MlModel)); \
-                                                                           \
-    zassert_equal(STATUS_OK, status);                                      \
-    zassert_equal((_num_input), g_model_struct.num_input);                 \
+    model_spec_input_length_fake.custom_fake = model_spec_input_length_mock;
+    model_spec_output_length_fake.custom_fake = model_spec_output_length_mock;
+
+#define TEST_LOAD_STRUCT(_num_input)                                          \
+    g_model_state = MODEL_STATE_INITIALIZED;                                  \
+    model_spec = get_model_spec_data();                                       \
+    model_spec.num_input = (_num_input);                                      \
+    for (int i = 0; i < (_num_input); ++i)                                    \
+    {                                                                         \
+        model_spec.num_input_dim[i] = 1;                                      \
+        model_spec.input_shape[i][0] = STRUCT_VALID_SHAPE_VALUE;              \
+    }                                                                         \
+                                                                              \
+    status = model_load_struct((uint8_t *)&model_spec, sizeof(model_spec_t)); \
+                                                                              \
+    zassert_equal(STATUS_OK, status);                                         \
+    zassert_equal((_num_input), g_model_spec.num_input);                      \
     zassert_equal(MODEL_STATE_STRUCT_LOADED, g_model_state);
 
     TEST_LOAD_STRUCT(1);
@@ -268,16 +258,19 @@ ZTEST(kenning_inference_lib_test_model, test_model_load_struct_num_input)
 ZTEST(kenning_inference_lib_test_model, test_model_load_struct_invalid_num_input)
 {
     status_t status = STATUS_OK;
-    MlModel model_struct;
+    model_spec_t model_spec;
 
-#define TEST_LOAD_STRUCT(_num_input)                                       \
-    g_model_state = MODEL_STATE_INITIALIZED;                               \
-    model_struct = get_model_struct_data(VALID_HAL_ELEMENT_TYPE);          \
-    model_struct.num_input = (_num_input);                                 \
-                                                                           \
-    status = model_load_struct((uint8_t *)&model_struct, sizeof(MlModel)); \
-                                                                           \
-    zassert_equal(MODEL_STATUS_INV_ARG, status);                           \
+    model_spec_input_length_fake.custom_fake = model_spec_input_length_mock;
+    model_spec_output_length_fake.custom_fake = model_spec_output_length_mock;
+
+#define TEST_LOAD_STRUCT(_num_input)                                          \
+    g_model_state = MODEL_STATE_INITIALIZED;                                  \
+    model_spec = get_model_spec_data();                                       \
+    model_spec.num_input = (_num_input);                                      \
+                                                                              \
+    status = model_load_struct((uint8_t *)&model_spec, sizeof(model_spec_t)); \
+                                                                              \
+    zassert_equal(MODEL_STATUS_INV_ARG, status);                              \
     zassert_equal(MODEL_STATE_INITIALIZED, g_model_state);
 
     TEST_LOAD_STRUCT(0);
@@ -293,25 +286,31 @@ ZTEST(kenning_inference_lib_test_model, test_model_load_struct_invalid_num_input
 ZTEST(kenning_inference_lib_test_model, test_model_load_struct_num_output)
 {
     status_t status = STATUS_OK;
-    MlModel model_struct;
+    model_spec_t model_spec;
 
-#define TEST_LOAD_STRUCT(_num_output)                                      \
-    g_model_state = MODEL_STATE_INITIALIZED;                               \
-    model_struct = get_model_struct_data(VALID_HAL_ELEMENT_TYPE);          \
-    model_struct.num_output = (_num_output);                               \
-    for (int i = 0; i < (_num_output); ++i)                                \
-    {                                                                      \
-        model_struct.output_length[i] = 1;                                 \
-    }                                                                      \
-                                                                           \
-    status = model_load_struct((uint8_t *)&model_struct, sizeof(MlModel)); \
-                                                                           \
-    zassert_equal(STATUS_OK, status);                                      \
-    zassert_equal((_num_output), g_model_struct.num_output);               \
+    model_spec_input_length_fake.custom_fake = model_spec_input_length_mock;
+    model_spec_output_length_fake.custom_fake = model_spec_output_length_mock;
+
+#define TEST_LOAD_STRUCT(_num_output)                                         \
+    g_model_state = MODEL_STATE_INITIALIZED;                                  \
+    model_spec = get_model_spec_data();                                       \
+    model_spec.num_output = (_num_output);                                    \
+    for (int i = 0; i < (_num_output); ++i)                                   \
+    {                                                                         \
+        model_spec.num_output_dim[i] = 2;                                     \
+        model_spec.output_shape[i][0] = STRUCT_VALID_SHAPE_VALUE;             \
+        model_spec.output_shape[i][1] = STRUCT_VALID_SHAPE_VALUE;             \
+        model_spec.output_data_type[i] = MODEL_SPEC_OUTPUT_DATA_TYPE;         \
+    }                                                                         \
+                                                                              \
+    status = model_load_struct((uint8_t *)&model_spec, sizeof(model_spec_t)); \
+                                                                              \
+    zassert_equal(STATUS_OK, status);                                         \
+    zassert_equal((_num_output), g_model_spec.num_output);                    \
     zassert_equal(MODEL_STATE_STRUCT_LOADED, g_model_state);
 
     TEST_LOAD_STRUCT(1);
-    TEST_LOAD_STRUCT(MAX_MODEL_OUTPUTS);
+    TEST_LOAD_STRUCT(MAX_MODEL_OUTPUT_NUM);
 
 #undef TEST_LOAD_STRUCT
 }
@@ -322,21 +321,24 @@ ZTEST(kenning_inference_lib_test_model, test_model_load_struct_num_output)
 ZTEST(kenning_inference_lib_test_model, test_model_load_struct_invalid_num_output)
 {
     status_t status = STATUS_OK;
-    MlModel model_struct;
+    model_spec_t model_spec;
 
-#define TEST_LOAD_STRUCT(_num_output)                                      \
-    g_model_state = MODEL_STATE_INITIALIZED;                               \
-    model_struct = get_model_struct_data(VALID_HAL_ELEMENT_TYPE);          \
-    model_struct.num_output = (_num_output);                               \
-                                                                           \
-    status = model_load_struct((uint8_t *)&model_struct, sizeof(MlModel)); \
-                                                                           \
-    zassert_equal(MODEL_STATUS_INV_ARG, status);                           \
+    model_spec_input_length_fake.custom_fake = model_spec_input_length_mock;
+    model_spec_output_length_fake.custom_fake = model_spec_output_length_mock;
+
+#define TEST_LOAD_STRUCT(_num_output)                                         \
+    g_model_state = MODEL_STATE_INITIALIZED;                                  \
+    model_spec = get_model_spec_data();                                       \
+    model_spec.num_output = (_num_output);                                    \
+                                                                              \
+    status = model_load_struct((uint8_t *)&model_spec, sizeof(model_spec_t)); \
+                                                                              \
+    zassert_equal(MODEL_STATUS_INV_ARG, status);                              \
     zassert_equal(MODEL_STATE_INITIALIZED, g_model_state);
 
     TEST_LOAD_STRUCT(0);
     TEST_LOAD_STRUCT(-1);
-    TEST_LOAD_STRUCT(MAX_MODEL_OUTPUTS + 1);
+    TEST_LOAD_STRUCT(MAX_MODEL_OUTPUT_NUM + 1);
 
 #undef TEST_LOAD_STRUCT
 }
@@ -347,17 +349,20 @@ ZTEST(kenning_inference_lib_test_model, test_model_load_struct_invalid_num_outpu
 ZTEST(kenning_inference_lib_test_model, test_model_load_struct_num_input_dim)
 {
     status_t status = STATUS_OK;
-    MlModel model_struct;
+    model_spec_t model_spec;
 
-#define TEST_LOAD_STRUCT(_num_input_dim)                                   \
-    g_model_state = MODEL_STATE_INITIALIZED;                               \
-    model_struct = get_model_struct_data(VALID_HAL_ELEMENT_TYPE);          \
-    model_struct.num_input_dim[0] = (_num_input_dim);                      \
-                                                                           \
-    status = model_load_struct((uint8_t *)&model_struct, sizeof(MlModel)); \
-                                                                           \
-    zassert_equal(STATUS_OK, status);                                      \
-    zassert_equal((_num_input_dim), g_model_struct.num_input_dim[0]);      \
+    model_spec_input_length_fake.custom_fake = model_spec_input_length_mock;
+    model_spec_output_length_fake.custom_fake = model_spec_output_length_mock;
+
+#define TEST_LOAD_STRUCT(_num_input_dim)                                      \
+    g_model_state = MODEL_STATE_INITIALIZED;                                  \
+    model_spec = get_model_spec_data();                                       \
+    model_spec.num_input_dim[0] = (_num_input_dim);                           \
+                                                                              \
+    status = model_load_struct((uint8_t *)&model_spec, sizeof(model_spec_t)); \
+                                                                              \
+    zassert_equal(STATUS_OK, status);                                         \
+    zassert_equal((_num_input_dim), g_model_spec.num_input_dim[0]);           \
     zassert_equal(MODEL_STATE_STRUCT_LOADED, g_model_state);
 
     TEST_LOAD_STRUCT(1);
@@ -372,16 +377,19 @@ ZTEST(kenning_inference_lib_test_model, test_model_load_struct_num_input_dim)
 ZTEST(kenning_inference_lib_test_model, test_model_load_struct_invalid_num_input_dim)
 {
     status_t status = STATUS_OK;
-    MlModel model_struct;
+    model_spec_t model_spec;
 
-#define TEST_LOAD_STRUCT(_num_input_dim)                                   \
-    g_model_state = MODEL_STATE_INITIALIZED;                               \
-    model_struct = get_model_struct_data(VALID_HAL_ELEMENT_TYPE);          \
-    model_struct.num_input_dim[0] = (_num_input_dim);                      \
-                                                                           \
-    status = model_load_struct((uint8_t *)&model_struct, sizeof(MlModel)); \
-                                                                           \
-    zassert_equal(MODEL_STATUS_INV_ARG, status);                           \
+    model_spec_input_length_fake.custom_fake = model_spec_input_length_mock;
+    model_spec_output_length_fake.custom_fake = model_spec_output_length_mock;
+
+#define TEST_LOAD_STRUCT(_num_input_dim)                                      \
+    g_model_state = MODEL_STATE_INITIALIZED;                                  \
+    model_spec = get_model_spec_data();                                       \
+    model_spec.num_input_dim[0] = (_num_input_dim);                           \
+                                                                              \
+    status = model_load_struct((uint8_t *)&model_spec, sizeof(model_spec_t)); \
+                                                                              \
+    zassert_equal(MODEL_STATUS_INV_ARG, status);                              \
     zassert_equal(MODEL_STATE_INITIALIZED, g_model_state);
 
     TEST_LOAD_STRUCT(0);
@@ -397,18 +405,21 @@ ZTEST(kenning_inference_lib_test_model, test_model_load_struct_invalid_num_input
 ZTEST(kenning_inference_lib_test_model, test_model_load_struct_invalid_size)
 {
     status_t status = STATUS_OK;
-    MlModel model_struct = get_model_struct_data(VALID_HAL_ELEMENT_TYPE);
+    model_spec_t model_spec = get_model_spec_data();
 
-#define TEST_LOAD_STRUCT(_struct_size, _expected_error)                   \
-    g_model_state = MODEL_STATE_INITIALIZED;                              \
-                                                                          \
-    status = model_load_struct((uint8_t *)&model_struct, (_struct_size)); \
-                                                                          \
-    zassert_equal(_expected_error, status);                               \
+    model_spec_input_length_fake.custom_fake = model_spec_input_length_mock;
+    model_spec_output_length_fake.custom_fake = model_spec_output_length_mock;
+
+#define TEST_LOAD_STRUCT(_struct_size, _expected_error)                 \
+    g_model_state = MODEL_STATE_INITIALIZED;                            \
+                                                                        \
+    status = model_load_struct((uint8_t *)&model_spec, (_struct_size)); \
+                                                                        \
+    zassert_equal(_expected_error, status);                             \
     zassert_equal(MODEL_STATE_INITIALIZED, g_model_state);
 
-    TEST_LOAD_STRUCT(sizeof(MlModel) - 1, MODEL_STATUS_INV_ARG);
-    TEST_LOAD_STRUCT(sizeof(MlModel) + 1, LOADERS_STATUS_NOT_ENOUGH_MEMORY);
+    TEST_LOAD_STRUCT(sizeof(model_spec_t) - 1, MODEL_STATUS_INV_ARG);
+    TEST_LOAD_STRUCT(sizeof(model_spec_t) + 1, LOADERS_STATUS_NOT_ENOUGH_MEMORY);
     TEST_LOAD_STRUCT(0, MODEL_STATUS_INV_ARG);
 
 #undef TEST_LOAD_STRUCT
@@ -423,7 +434,10 @@ ZTEST(kenning_inference_lib_test_model, test_model_load_struct_invalid_ptr)
 
     g_model_state = MODEL_STATE_INITIALIZED;
 
-    status = model_load_struct(NULL, sizeof(MlModel));
+    model_spec_input_length_fake.custom_fake = model_spec_input_length_mock;
+    model_spec_output_length_fake.custom_fake = model_spec_output_length_mock;
+
+    status = model_load_struct(NULL, sizeof(model_spec_t));
 
     zassert_equal(MODEL_STATUS_INV_PTR, status);
     zassert_equal(MODEL_STATE_INITIALIZED, g_model_state);
@@ -522,13 +536,17 @@ ZTEST(kenning_inference_lib_test_model, test_model_get_input_size)
 {
     status_t status = STATUS_OK;
     size_t input_size = 0;
+    data_type_t input_data_type;
+
+    model_spec_input_length_fake.custom_fake = model_spec_input_length_mock;
 
 #define TEST_GET_INPUT_SIZE(_model_state, _input_size_bytes, _input_length, _input_size) \
     g_model_state = (_model_state);                                                      \
+    input_data_type.bits = _input_size_bytes * 8;                                        \
                                                                                          \
-    g_model_struct.num_input = 1;                                                        \
-    g_model_struct.input_size_bytes[0] = (_input_size_bytes);                            \
-    g_model_struct.input_length[0] = (_input_length);                                    \
+    g_model_spec.input_data_type[0] = input_data_type;                                   \
+    g_model_spec.num_input_dim[0] = 1;                                                   \
+    g_model_spec.input_shape[0][0] = (_input_length);                                    \
                                                                                          \
     status = model_get_input_size(&input_size);                                          \
                                                                                          \
@@ -551,6 +569,8 @@ ZTEST(kenning_inference_lib_test_model, test_model_get_input_size_invalid_state)
     status_t status = STATUS_OK;
     size_t input_size = 0;
 
+    model_spec_input_length_fake.custom_fake = model_spec_input_length_mock;
+
     g_model_state = MODEL_STATE_UNINITIALIZED;
 
     status = model_get_input_size(&input_size);
@@ -564,6 +584,8 @@ ZTEST(kenning_inference_lib_test_model, test_model_get_input_size_invalid_state)
 ZTEST(kenning_inference_lib_test_model, test_model_get_input_size_invalid_pointer)
 {
     status_t status = STATUS_OK;
+
+    model_spec_input_length_fake.custom_fake = model_spec_input_length_mock;
 
     status = model_get_input_size(NULL);
 
@@ -580,7 +602,9 @@ ZTEST(kenning_inference_lib_test_model, test_model_get_input_size_invalid_pointe
 ZTEST(kenning_inference_lib_test_model, test_model_load_input)
 {
     status_t status = STATUS_OK;
-    uint8_t model_input[MODEL_STRUCT_INPUT_LEN * MODEL_STRUCT_INPUT_SIZE] = {0};
+    uint8_t model_input[MODEL_SPEC_INPUT_LEN * MODEL_SPEC_INPUT_SIZE] = {0};
+
+    model_spec_input_length_fake.custom_fake = model_spec_input_length_mock;
 
     g_model_state = MODEL_STATE_WEIGHTS_LOADED;
 
@@ -596,7 +620,9 @@ ZTEST(kenning_inference_lib_test_model, test_model_load_input)
 ZTEST(kenning_inference_lib_test_model, test_model_load_input_runtime_fail)
 {
     status_t status = STATUS_OK;
-    uint8_t model_input[MODEL_STRUCT_INPUT_LEN * MODEL_STRUCT_INPUT_SIZE] = {0};
+    uint8_t model_input[MODEL_SPEC_INPUT_LEN * MODEL_SPEC_INPUT_SIZE] = {0};
+
+    model_spec_input_length_fake.custom_fake = model_spec_input_length_mock;
 
     g_model_state = MODEL_STATE_WEIGHTS_LOADED;
     runtime_init_input_fake.return_val = RUNTIME_WRAPPER_STATUS_ERROR;
@@ -616,7 +642,9 @@ ZTEST(kenning_inference_lib_test_model, test_model_load_input_invalid_pointer)
 
     g_model_state = MODEL_STATE_WEIGHTS_LOADED;
 
-    status = model_load_input(NULL, MODEL_STRUCT_INPUT_LEN * MODEL_STRUCT_INPUT_SIZE);
+    model_spec_input_length_fake.custom_fake = model_spec_input_length_mock;
+
+    status = model_load_input(NULL, MODEL_SPEC_INPUT_LEN * MODEL_SPEC_INPUT_SIZE);
 
     zassert_equal(MODEL_STATUS_INV_PTR, status);
     zassert_equal(MODEL_STATE_WEIGHTS_LOADED, g_model_state);
@@ -628,7 +656,9 @@ ZTEST(kenning_inference_lib_test_model, test_model_load_input_invalid_pointer)
 ZTEST(kenning_inference_lib_test_model, test_model_load_input_invalid_state)
 {
     status_t status = STATUS_OK;
-    uint8_t model_input[MODEL_STRUCT_INPUT_LEN * MODEL_STRUCT_INPUT_SIZE] = {0};
+    uint8_t model_input[MODEL_SPEC_INPUT_LEN * MODEL_SPEC_INPUT_SIZE] = {0};
+
+    model_spec_input_length_fake.custom_fake = model_spec_input_length_mock;
 
 #define TEST_LOAD_INPUT(_model_state)                            \
     g_model_state = (_model_state);                              \
@@ -649,7 +679,9 @@ ZTEST(kenning_inference_lib_test_model, test_model_load_input_invalid_state)
 ZTEST(kenning_inference_lib_test_model, test_model_load_input_invalid_size)
 {
     status_t status = STATUS_OK;
-    uint8_t model_input[MODEL_STRUCT_INPUT_LEN * MODEL_STRUCT_INPUT_SIZE] = {0};
+    uint8_t model_input[MODEL_SPEC_INPUT_LEN * MODEL_SPEC_INPUT_SIZE] = {0};
+
+    model_spec_input_length_fake.custom_fake = model_spec_input_length_mock;
 
     g_model_state = MODEL_STATE_WEIGHTS_LOADED;
 
@@ -802,12 +834,17 @@ ZTEST(kenning_inference_lib_test_model, test_model_get_output_size)
 {
     status_t status = STATUS_OK;
     size_t output_size = 0;
+    data_type_t output_data_type;
+
+    model_spec_output_length_fake.custom_fake = model_spec_output_length_mock;
 
 #define TEST_GET_OUTPUT_SIZE(_model_state, _output_size_bytes, _output_length, _output_size) \
     g_model_state = (_model_state);                                                          \
-    g_model_struct.num_output = 1;                                                           \
-    g_model_struct.output_size_bytes = (_output_size_bytes);                                 \
-    g_model_struct.output_length[0] = (_output_length);                                      \
+    output_data_type.bits = (_output_size_bytes * 8);                                        \
+                                                                                             \
+    g_model_spec.num_output_dim[0] = 1;                                                      \
+    g_model_spec.output_shape[0][0] = _output_length;                                        \
+    g_model_spec.output_data_type[0] = output_data_type;                                     \
                                                                                              \
     status = model_get_output_size(&output_size);                                            \
                                                                                              \
@@ -830,6 +867,8 @@ ZTEST(kenning_inference_lib_test_model, test_model_get_output_size_invalid_state
     status_t status = STATUS_OK;
     size_t output_size = 0;
 
+    model_spec_output_length_fake.custom_fake = model_spec_output_length_mock;
+
     g_model_state = MODEL_STATE_UNINITIALIZED;
 
     status = model_get_output_size(&output_size);
@@ -847,8 +886,10 @@ ZTEST(kenning_inference_lib_test_model, test_model_get_output_size_invalid_state
 ZTEST(kenning_inference_lib_test_model, test_model_get_output)
 {
     status_t status = STATUS_OK;
-    uint8_t model_output[MODEL_STRUCT_OUTPUT_LEN * MODEL_STRUCT_OUTPUT_SIZE];
+    uint8_t model_output[MODEL_SPEC_OUTPUT_LEN * MODEL_SPEC_OUTPUT_SIZE];
     size_t model_output_size = 0;
+
+    model_spec_output_length_fake.custom_fake = model_spec_output_length_mock;
 
     g_model_state = MODEL_STATE_INFERENCE_DONE;
 
@@ -856,7 +897,7 @@ ZTEST(kenning_inference_lib_test_model, test_model_get_output)
 
     zassert_equal(STATUS_OK, status);
     zassert_equal(MODEL_STATE_INFERENCE_DONE, g_model_state);
-    zassert_equal(MODEL_STRUCT_OUTPUT_LEN * MODEL_STRUCT_OUTPUT_SIZE, model_output_size);
+    zassert_equal(MODEL_SPEC_OUTPUT_LEN * MODEL_SPEC_OUTPUT_SIZE, model_output_size);
 }
 
 /**
@@ -867,9 +908,11 @@ ZTEST(kenning_inference_lib_test_model, test_model_get_output_invalid_buffer_poi
     status_t status = STATUS_OK;
     size_t model_output_size = 0;
 
+    model_spec_output_length_fake.custom_fake = model_spec_output_length_mock;
+
     g_model_state = MODEL_STATE_INFERENCE_DONE;
 
-    status = model_get_output(MODEL_STRUCT_OUTPUT_LEN * MODEL_STRUCT_OUTPUT_SIZE, NULL, &model_output_size);
+    status = model_get_output(MODEL_SPEC_OUTPUT_LEN * MODEL_SPEC_OUTPUT_SIZE, NULL, &model_output_size);
 
     zassert_equal(MODEL_STATUS_INV_PTR, status);
     zassert_equal(MODEL_STATE_INFERENCE_DONE, g_model_state);
@@ -881,7 +924,9 @@ ZTEST(kenning_inference_lib_test_model, test_model_get_output_invalid_buffer_poi
 ZTEST(kenning_inference_lib_test_model, test_model_get_output_invalid_size_pointer)
 {
     status_t status = STATUS_OK;
-    uint8_t model_output[MODEL_STRUCT_OUTPUT_LEN * MODEL_STRUCT_OUTPUT_SIZE];
+    uint8_t model_output[MODEL_SPEC_OUTPUT_LEN * MODEL_SPEC_OUTPUT_SIZE];
+
+    model_spec_output_length_fake.custom_fake = model_spec_output_length_mock;
 
     g_model_state = MODEL_STATE_INFERENCE_DONE;
 
@@ -897,8 +942,10 @@ ZTEST(kenning_inference_lib_test_model, test_model_get_output_invalid_size_point
 ZTEST(kenning_inference_lib_test_model, test_model_get_output_buffer_too_small)
 {
     status_t status = STATUS_OK;
-    uint8_t model_output[MODEL_STRUCT_OUTPUT_LEN * MODEL_STRUCT_OUTPUT_SIZE - 1];
+    uint8_t model_output[MODEL_SPEC_OUTPUT_LEN * MODEL_SPEC_OUTPUT_SIZE - 1];
     size_t model_output_size = 0;
+
+    model_spec_output_length_fake.custom_fake = model_spec_output_length_mock;
 
     g_model_state = MODEL_STATE_INFERENCE_DONE;
 
@@ -914,8 +961,10 @@ ZTEST(kenning_inference_lib_test_model, test_model_get_output_buffer_too_small)
 ZTEST(kenning_inference_lib_test_model, test_model_get_output_invalid_state)
 {
     status_t status = STATUS_OK;
-    uint8_t model_output[MODEL_STRUCT_OUTPUT_LEN * MODEL_STRUCT_OUTPUT_SIZE];
+    uint8_t model_output[MODEL_SPEC_OUTPUT_LEN * MODEL_SPEC_OUTPUT_SIZE];
     size_t model_output_size = 0;
+
+    model_spec_output_length_fake.custom_fake = model_spec_output_length_mock;
 
 #define TEST_GET_OUTPUT(_model_state)                                                  \
     g_model_state = (_model_state);                                                    \
@@ -939,8 +988,10 @@ ZTEST(kenning_inference_lib_test_model, test_model_get_output_invalid_state)
 ZTEST(kenning_inference_lib_test_model, test_model_get_output_runtime_fail)
 {
     status_t status = STATUS_OK;
-    uint8_t model_output[MODEL_STRUCT_OUTPUT_LEN * MODEL_STRUCT_OUTPUT_SIZE];
+    uint8_t model_output[MODEL_SPEC_OUTPUT_LEN * MODEL_SPEC_OUTPUT_SIZE];
     size_t model_output_size = 0;
+
+    model_spec_output_length_fake.custom_fake = model_spec_output_length_mock;
 
     g_model_state = MODEL_STATE_INFERENCE_DONE;
     runtime_get_model_output_fake.return_val = RUNTIME_WRAPPER_STATUS_ERROR;
@@ -1056,22 +1107,48 @@ ZTEST(kenning_inference_lib_test_model, test_model_get_statistics_runtime_fails)
 // helper functions
 // ========================================================
 
-MlModel get_model_struct_data(char dtype[])
+model_spec_t get_model_spec_data()
 {
-    MlModel model_struct = {
-        1,
+    model_spec_t model_spec = {
+        MODEL_SPEC_INPUT_NUM,
         {4},
         {{1, 28, 28, 1}},
-        {MODEL_STRUCT_INPUT_LEN},
-        {MODEL_STRUCT_INPUT_SIZE},
-        1,
-        {MODEL_STRUCT_OUTPUT_LEN},
-        MODEL_STRUCT_OUTPUT_SIZE,
-        0,
+        {MODEL_SPEC_INPUT_DATA_TYPE},
+        MODEL_SPEC_OUTPUT_NUM,
+        {2},
+        {{1, MODEL_SPEC_OUTPUT_LEN}},
+        {MODEL_SPEC_OUTPUT_DATA_TYPE},
         "module.main",
         "module",
     };
-    strncpy((char *)&model_struct.hal_element_type, dtype, 4);
-
-    return model_struct;
+    return model_spec;
 }
+
+// ========================================================
+// mocks
+// ========================================================
+
+// We use macros to generate definitions for these functions, since they are almost identical.
+#define GENERATE_MODEL_SPEC_LENGTH_CUSTOM_MOCK_DEFINITION(name)                                \
+    uint32_t model_spec_##name##_length_mock(const model_spec_t *model_iospec, uint32_t index) \
+    {                                                                                          \
+        int result = 1;                                                                        \
+        if (model_iospec == NULL)                                                              \
+        {                                                                                      \
+            return 0;                                                                          \
+        }                                                                                      \
+        if (index > model_iospec->num_##name)                                                  \
+        {                                                                                      \
+            return 0;                                                                          \
+        }                                                                                      \
+        for (int i = 0; i < model_iospec->num_##name##_dim[index]; i++)                        \
+        {                                                                                      \
+            result = result * model_iospec->name##_shape[index][i];                            \
+        }                                                                                      \
+        return result;                                                                         \
+    }
+
+// Generating definition for model_spec_input_length_mock
+GENERATE_MODEL_SPEC_LENGTH_CUSTOM_MOCK_DEFINITION(input);
+// Generating definition for model_spec_output_length_mock
+GENERATE_MODEL_SPEC_LENGTH_CUSTOM_MOCK_DEFINITION(output);
