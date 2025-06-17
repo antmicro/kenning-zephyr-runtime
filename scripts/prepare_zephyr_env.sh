@@ -4,8 +4,16 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-set -e
 set -x
+set -e
+
+PIP_EXEC="python3 -m pip"
+VENV_EXEC="python3 -m venv"
+
+if command -v uv >/dev/null 2>&1; then
+    PIP_EXEC="uv pip"
+    VENV_EXEC="uv venv"
+fi
 
 ZEPHYR_SDK_PATH=${ZEPHYR_SDK_PATH:-$HOME/.local/opt/zephyr-sdk}
 PROJECT_ROOT=$(realpath $(pwd))
@@ -14,9 +22,9 @@ PROJECT_ROOT=$(realpath $(pwd))
 if [ ! -d ".venv" ]; then
     if [[ ! -z "$CI" ]] || [[ -f /.dockerenv ]]; then
         # include global packages when run in CI or docker container
-        python3 -m venv .venv --system-site-packages
+        $VENV_EXEC .venv --system-site-packages
     else
-        python3 -m venv .venv
+        $VENV_EXEC .venv
     fi
 fi
 
@@ -28,8 +36,8 @@ if [ -z "$(python3 -m pip freeze -r requirements.txt 2>&1 | grep "not installed"
     echo "Project dependencies installed"
 else
     echo "Installing missing dependencies"
-    python3 -m pip install pip setuptools --upgrade
-    python3 -m pip install -r requirements.txt
+    $PIP_EXEC install pip setuptools --upgrade
+    $PIP_EXEC install -r requirements.txt
 fi
 
 # setup SDK
@@ -98,9 +106,9 @@ fi
 
 # install Zephyr's Python dependencies
 if [ ! -f ".venv/zephyr-deps.stamp" ]; then
-    python3 -m pip install -r ../zephyr/scripts/requirements-base.txt
-    python3 -m pip install -r ../zephyr/scripts/requirements-build-test.txt
-    python3 -m pip install -r ../zephyr/scripts/requirements-run-test.txt
+    $PIP_EXEC install -r ../zephyr/scripts/requirements-base.txt
+    $PIP_EXEC install -r ../zephyr/scripts/requirements-build-test.txt
+    $PIP_EXEC install -r ../zephyr/scripts/requirements-run-test.txt
     touch .venv/zephyr-deps.stamp
 fi
 
