@@ -13,7 +13,7 @@
 #if defined(CONFIG_NEWLIB_LIBC)
 #include <zephyr/sys/printk.h>
 extern const char *_ctype_;
-extern void(__assert_func)(void);
+extern void(__assert_func)(const char *, int, const char *, const char *);
 extern int(vsnprintk)(char *, unsigned int, const char *, va_list);
 
 EXPORT_SYMBOL(vsnprintk);
