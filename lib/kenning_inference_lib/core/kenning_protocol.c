@@ -17,6 +17,7 @@ LOG_MODULE_REGISTER(kenning_protocol, CONFIG_KENNING_PROTOCOL_LOG_LEVEL);
 
 GENERATE_MODULE_STATUSES_STR(KENNING_PROTOCOL);
 const char *const MESSAGE_TYPE_STR[] = {MESSAGE_TYPES(GENERATE_STR)};
+const char *const FLOW_CONTROL_STR[] = {FLOW_CONTROL_VALUES(GENERATE_STR)};
 
 LOADER_TYPE g_msg_ldr_map[NUM_MESSAGE_TYPES] = PREPARE_MSG_LDR_MAP;
 
@@ -31,17 +32,11 @@ status_t protocol_recv_msg(message_hdr_t *hdr)
 
     if (hdr->message_type >= NUM_MESSAGE_TYPES)
     {
-        protocol_read_data(NULL, MESSAGE_SIZE_PAYLOAD(hdr->message_size));
+        protocol_read_data(NULL, hdr->payload_size);
         LOG_ERR("Invalid message type: %u", hdr->message_type);
     }
 
-    if (hdr->message_size == 0)
-    {
-        LOG_ERR("Invalid message size: %u", hdr->message_size);
-        return KENNING_PROTOCOL_STATUS_DATA_INV;
-    }
-
-    if (MESSAGE_SIZE_PAYLOAD(hdr->message_size) == 0)
+    if (hdr->payload_size == 0)
     {
         return status;
     }
@@ -57,12 +52,12 @@ status_t protocol_recv_msg(message_hdr_t *hdr)
 
     if (ldr == NULL)
     {
-        protocol_read_data(NULL, MESSAGE_SIZE_PAYLOAD(hdr->message_size));
+        protocol_read_data(NULL, hdr->payload_size);
         LOG_ERR("Couldn't find loader for %u", hdr->message_type);
         return KENNING_PROTOCOL_STATUS_DATA_INV;
     }
 
-    status = protocol_recv_msg_content(ldr, MESSAGE_SIZE_PAYLOAD(hdr->message_size));
+    status = protocol_recv_msg_content(ldr, hdr->payload_size);
     return status;
 }
 
@@ -87,7 +82,6 @@ status_t protocol_recv_msg_content(struct msg_loader *ldr, size_t n)
 
     status = ldr->reset(ldr, n);
     RETURN_ON_ERROR(status, KENNING_PROTOCOL_STATUS_INTERNAL_ERROR);
-
     while (n)
     {
         int to_read = (buffer_size > n) ? n : buffer_size;
@@ -110,7 +104,7 @@ status_t protocol_send_msg(const resp_message_t *msg)
     status = protocol_write_data((uint8_t *)(&msg->hdr), sizeof(message_hdr_t));
     CHECK_PROTOCOL_STATUS(status);
 
-    status = protocol_write_data(msg->payload, MESSAGE_SIZE_PAYLOAD(msg->hdr.message_size));
+    status = protocol_write_data(msg->payload, msg->hdr.payload_size);
     CHECK_PROTOCOL_STATUS(status);
 
     return status;
@@ -119,7 +113,7 @@ status_t protocol_send_msg(const resp_message_t *msg)
 status_t protocol_prepare_success_resp(resp_message_t *response)
 {
     RETURN_ERROR_IF_POINTER_INVALID(response, KENNING_PROTOCOL_STATUS_INV_PTR);
-    response->hdr.message_size = sizeof(message_type_t);
+    response->hdr.payload_size = 0;
     response->hdr.message_type = MESSAGE_TYPE_OK;
     return STATUS_OK;
 }
@@ -127,7 +121,7 @@ status_t protocol_prepare_success_resp(resp_message_t *response)
 status_t protocol_prepare_fail_resp(resp_message_t *response)
 {
     RETURN_ERROR_IF_POINTER_INVALID(response, KENNING_PROTOCOL_STATUS_INV_PTR);
-    response->hdr.message_size = sizeof(message_type_t);
+    response->hdr.payload_size = 0;
     response->hdr.message_type = MESSAGE_TYPE_ERROR;
     return STATUS_OK;
 }

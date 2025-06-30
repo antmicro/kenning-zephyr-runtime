@@ -103,7 +103,7 @@ status_t data_callback(message_hdr_t *hdr, resp_message_t *resp) // TODO
 
     VALIDATE_HEADER(MESSAGE_TYPE_DATA, hdr);
 
-    status = model_load_input_from_loader(MESSAGE_SIZE_PAYLOAD(hdr->message_size));
+    status = model_load_input_from_loader(hdr->payload_size);
 
     CHECK_STATUS_LOG(status, resp, "model_load_input returned 0x%x (%s)", status, get_status_str(status));
 
@@ -177,8 +177,10 @@ status_t output_callback(message_hdr_t *hdr, resp_message_t *resp)
 
     CHECK_STATUS_LOG(status, resp, "model_get_output returned 0x%x (%s)", status, get_status_str(status));
 
-    resp->hdr.message_size = model_output_size + sizeof(message_type_t);
+    resp->hdr.payload_size = model_output_size;
     resp->hdr.message_type = MESSAGE_TYPE_OK;
+    resp->hdr.flags.general_purpose_flags.has_payload = 1;
+    resp->hdr.flow_control_flags = FLOW_CONTROL_TRANSMISSION;
 
     return STATUS_OK;
 }
@@ -202,8 +204,10 @@ status_t stats_callback(message_hdr_t *hdr, resp_message_t *resp)
 
     CHECK_STATUS_LOG(status, resp, "model_get_statistics returned 0x%x (%s)", status, get_status_str(status));
 
-    resp->hdr.message_size = statistics_length + sizeof(message_type_t);
+    resp->hdr.payload_size = statistics_length;
     resp->hdr.message_type = MESSAGE_TYPE_OK;
+    resp->hdr.flags.general_purpose_flags.has_payload = 1;
+    resp->hdr.flow_control_flags = FLOW_CONTROL_TRANSMISSION;
 
     return STATUS_OK;
 }
@@ -247,7 +251,7 @@ status_t runtime_callback(message_hdr_t *hdr, resp_message_t *resp)
 
     VALIDATE_HEADER(MESSAGE_TYPE_RUNTIME, hdr);
 
-    size_t llext_size = MESSAGE_SIZE_PAYLOAD(hdr->message_size);
+    size_t llext_size = hdr->payload_size;
 
     LOG_INF("Attempting to load %d", llext_size);
     struct llext_buf_loader buf_loader = LLEXT_BUF_LOADER(g_ldr_tables[0][LOADER_TYPE_RUNTIME]->addr, llext_size);

@@ -21,8 +21,7 @@
         return KENNING_PROTOCOL_STATUS_CLIENT_DISCONNECTED;                 \
     }
 
-#define MESSAGE_SIZE_PAYLOAD(msg_size) ((msg_size > 0) ? (msg_size) - sizeof(message_type_t) : 0)
-#define MESSAGE_SIZE_FULL(msg_size) (sizeof(message_hdr_t) + MESSAGE_SIZE_PAYLOAD(msg_size))
+#define MESSAGE_SIZE_FULL(payload_size) (sizeof(message_hdr_t) + (payload_size))
 #define RESP_MESSAGE_BUFFER_SIZE 128
 
 /**
@@ -42,10 +41,22 @@
     TYPE(MESSAGE_TYPE_RUNTIME)        \
     TYPE(NUM_MESSAGE_TYPES)
 
+#define FLOW_CONTROL_VALUES(TYPE)         \
+    TYPE(FLOW_CONTROL_REQUEST)            \
+    TYPE(FLOW_CONTROL_REQUEST_RETRANSMIT) \
+    TYPE(FLOW_CONTROL_ACKNOWLEDGE)        \
+    TYPE(FLOW_CONTROL_TRANSMISSION)       \
+    TYPE(NUM_FLOW_CONTROL_VALUES)
+
 typedef enum
 {
     MESSAGE_TYPES(GENERATE_ENUM)
 } MESSAGE_TYPE;
+
+typedef enum
+{
+    FLOW_CONTROL_VALUES(GENERATE_ENUM)
+} FLOW_CONTROL_VALUE;
 
 #define PREPARE_MSG_LDR_MAP                                      \
     {                                                            \
@@ -81,13 +92,50 @@ extern LOADER_TYPE g_msg_ldr_map[NUM_MESSAGE_TYPES];
 
 GENERATE_MODULE_STATUSES(KENNING_PROTOCOL);
 
-typedef uint32_t message_size_t;
-typedef uint16_t message_type_t;
+typedef uint8_t message_type_t;
+typedef uint8_t flow_control_flags_t;
+typedef uint8_t checksum_t;
+typedef uint32_t payload_size_t;
+
+/**
+ * Some message flags are common for all messages, while some are specific to message type.
+ * We are using the flags_t union to reflect that.
+ */
+typedef union
+{
+    /**
+     * Struct with general flags only
+     */
+    struct __attribute__((packed))
+    {
+        uint16_t success : 1;
+        uint16_t fail : 1;
+        uint16_t is_host_message : 1;
+        uint16_t has_payload : 1;
+        uint16_t first : 1;
+        uint16_t last : 1;
+        uint16_t reserved : 6; // Reserved for future use.
+        uint16_t _ : 4;        // Space for message-specific flags.
+    } general_purpose_flags;
+    /**
+     * Struct with flags specific to message type IOSPEC
+     */
+    struct __attribute__((packed))
+    {
+        uint16_t _ : 12; // Space for general purpose flags
+        uint16_t serialized : 1;
+        uint16_t reserved : 3; // Reserved for future use.
+    } flags_iospec;
+    uint16_t raw_bytes;
+} flags_t;
 
 typedef struct __attribute__((packed))
 {
-    message_size_t message_size;
-    message_type_t message_type;
+    message_type_t message_type : 6;
+    flow_control_flags_t flow_control_flags : 2;
+    checksum_t checksum;
+    flags_t flags;
+    payload_size_t payload_size;
 } message_hdr_t;
 
 /**
