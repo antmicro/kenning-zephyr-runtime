@@ -516,7 +516,7 @@ ZTEST(kenning_inference_lib_test_callbacks, test_output_callback)
 
     zassert_equal(STATUS_OK, status);
     zassert_equal(model_get_output_fake.call_count, 1);
-    zassert_equal(resp.hdr.message_size, MODEL_OUTPUT_SIZE + sizeof(message_type_t));
+    zassert_equal(resp.hdr.payload_size, MODEL_OUTPUT_SIZE);
     zassert_equal(model_get_output_fake.arg1_val, resp.payload);
     zassert_equal(resp.hdr.message_type, MESSAGE_TYPE_OK);
 }
@@ -593,7 +593,7 @@ ZTEST(kenning_inference_lib_test_callbacks, test_stats_callback)
 {
     status_t status = STATUS_OK;
     message_hdr_t hdr = prepare_message_header(MESSAGE_TYPE_STATS, 0);
-    resp_message_t resp = {.hdr = {.message_size = 0}, .payload = (uint8_t *)0x12345};
+    resp_message_t resp = {.hdr = {.payload_size = 0}, .payload = (uint8_t *)0x12345};
 
     model_get_statistics_fake.custom_fake = model_get_statistics_mock;
 
@@ -601,7 +601,7 @@ ZTEST(kenning_inference_lib_test_callbacks, test_stats_callback)
 
     zassert_equal(STATUS_OK, status);
     zassert_equal(model_get_statistics_fake.call_count, 1);
-    zassert_equal(resp.hdr.message_size, STATISTICS_SIZE + sizeof(message_type_t));
+    zassert_equal(resp.hdr.payload_size, STATISTICS_SIZE);
     zassert_equal(model_get_statistics_fake.arg1_val, resp.payload);
     zassert_equal(resp.hdr.message_type, MESSAGE_TYPE_OK);
 }
@@ -820,7 +820,7 @@ ZTEST(kenning_inference_lib_test_callbacks, test_runtime_callback_fail)
 message_hdr_t prepare_message_header(message_type_t msg_type, size_t payload_size)
 {
     message_hdr_t hdr;
-    hdr.message_size = payload_size + sizeof(message_type_t);
+    hdr.payload_size = payload_size;
     hdr.message_type = msg_type;
     return hdr;
 }

@@ -19,6 +19,7 @@ static message_hdr_t gp_message_hdr_to_recv;
 static resp_message_t gp_resp_message_to_send;
 
 const char *const MESSAGE_TYPE_STR[] = {MESSAGE_TYPES(GENERATE_STR)};
+const char *const FLOW_CONTROL_STR[] = {FLOW_CONTROL_VALUES(GENERATE_STR)};
 callback_ptr_t g_msg_callback[NUM_MESSAGE_TYPES] = {
 #define ENTRY(msg_type, callback_func) callback_func,
     CALLBACKS_TABLE(ENTRY)
@@ -182,7 +183,7 @@ ZTEST(kenning_inference_lib_test_inference_server, test_wait_for_message)
     status = wait_for_message(&hdr);
 
     zassert_equal(STATUS_OK, status);
-    zassert_equal(gp_message_hdr_to_recv.message_size, hdr.message_size);
+    zassert_equal(gp_message_hdr_to_recv.payload_size, hdr.payload_size);
     zassert_equal(gp_message_hdr_to_recv.message_type, hdr.message_type);
     zassert_equal(protocol_recv_msg_fake.call_count, 1);
 }
@@ -252,7 +253,7 @@ ZTEST(kenning_inference_lib_test_inference_server, test_handle_message_with_succ
     status = handle_message(&hdr);                                                 \
                                                                                    \
     zassert_equal(STATUS_OK, status);                                              \
-    zassert_equal(MESSAGE_SIZE_FULL(0), gp_resp_message_to_send.hdr.message_size); \
+    zassert_equal(MESSAGE_SIZE_FULL(0), gp_resp_message_to_send.hdr.payload_size); \
     zassert_equal(MESSAGE_TYPE_OK, gp_resp_message_to_send.hdr.message_type);      \
     zassert_equal(protocol_send_msg_fake.call_count, 1);
 
@@ -282,7 +283,7 @@ ZTEST(kenning_inference_lib_test_inference_server, test_handle_message_with_fail
     status = handle_message(&hdr);                                                 \
                                                                                    \
     zassert_equal(STATUS_OK, status);                                              \
-    zassert_equal(MESSAGE_SIZE_FULL(0), gp_resp_message_to_send.hdr.message_size); \
+    zassert_equal(MESSAGE_SIZE_FULL(0), gp_resp_message_to_send.hdr.payload_size); \
     zassert_equal(MESSAGE_TYPE_ERROR, gp_resp_message_to_send.hdr.message_type);   \
     zassert_equal(protocol_send_msg_fake.call_count, 1);
 
@@ -312,7 +313,7 @@ ZTEST(kenning_inference_lib_test_inference_server, test_handle_message_with_succ
     g_msg_callback[_message_type] = callback_with_ok_response_with_payload_mock;     \
     status = handle_message(&hdr);                                                   \
     zassert_equal(STATUS_OK, status);                                                \
-    zassert_equal(MESSAGE_SIZE_FULL(128), gp_resp_message_to_send.hdr.message_size); \
+    zassert_equal(MESSAGE_SIZE_FULL(128), gp_resp_message_to_send.hdr.payload_size); \
     zassert_equal(MESSAGE_TYPE_OK, gp_resp_message_to_send.hdr.message_type);        \
     zassert_equal(protocol_send_msg_fake.call_count, 1);
 
@@ -390,7 +391,7 @@ status_t callback_without_response_mock(message_hdr_t *hdr, resp_message_t *resp
 status_t callback_with_ok_response_mock(message_hdr_t *hdr, resp_message_t *resp)
 {
     resp->hdr.message_type = MESSAGE_TYPE_OK;
-    resp->hdr.message_size = MESSAGE_SIZE_FULL(0);
+    resp->hdr.payload_size = MESSAGE_SIZE_FULL(0);
     memset(resp->payload, 0, CONFIG_KENNING_RESPONSE_PAYLOAD_SIZE);
     return STATUS_OK;
 }
@@ -398,7 +399,7 @@ status_t callback_with_ok_response_mock(message_hdr_t *hdr, resp_message_t *resp
 status_t callback_with_error_response_mock(message_hdr_t *hdr, resp_message_t *resp)
 {
     resp->hdr.message_type = MESSAGE_TYPE_ERROR;
-    resp->hdr.message_size = MESSAGE_SIZE_FULL(0);
+    resp->hdr.payload_size = MESSAGE_SIZE_FULL(0);
     memset(resp->payload, 0, CONFIG_KENNING_RESPONSE_PAYLOAD_SIZE);
     return STATUS_OK;
 }
@@ -407,7 +408,7 @@ status_t callback_with_ok_response_with_payload_mock(message_hdr_t *hdr, resp_me
 {
     const int payload_size = 128;
     resp->hdr.message_type = MESSAGE_TYPE_OK;
-    resp->hdr.message_size = MESSAGE_SIZE_FULL(payload_size);
+    resp->hdr.payload_size = MESSAGE_SIZE_FULL(payload_size);
     memset(resp->payload, 0, CONFIG_KENNING_RESPONSE_PAYLOAD_SIZE);
     memset(resp->payload, 'x', payload_size);
     return STATUS_OK;
@@ -416,7 +417,7 @@ status_t callback_with_ok_response_with_payload_mock(message_hdr_t *hdr, resp_me
 status_t callback_error_mock(message_hdr_t *hdr, resp_message_t *resp)
 {
     resp->hdr.message_type = MESSAGE_TYPE_OK;
-    resp->hdr.message_size = MESSAGE_SIZE_FULL(0);
+    resp->hdr.payload_size = MESSAGE_SIZE_FULL(0);
     memset(resp->payload, 0, CONFIG_KENNING_RESPONSE_PAYLOAD_SIZE);
     return CALLBACKS_STATUS_ERROR;
 }
@@ -428,7 +429,7 @@ status_t callback_error_mock(message_hdr_t *hdr, resp_message_t *resp)
 message_hdr_t prepare_message_header(message_type_t msg_type, size_t payload_size)
 {
     message_hdr_t hdr;
-    hdr.message_size = payload_size + sizeof(message_type_t);
+    hdr.payload_size = payload_size;
     hdr.message_type = msg_type;
     return hdr;
 }

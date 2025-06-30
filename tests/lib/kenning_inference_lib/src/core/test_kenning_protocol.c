@@ -156,7 +156,7 @@ ZTEST(kenning_inference_lib_test_kenning_protocol, test_protocol_recv_msg_hdr)
     status = protocol_recv_msg_hdr(&hdr);
 
     zassert_equal(status, STATUS_OK);
-    zassert_equal(hdr.message_size, MESSAGE_SIZE_FULL(0x123));
+    zassert_equal(hdr.payload_size, MESSAGE_SIZE_FULL(0x123));
     zassert_equal(hdr.message_type, MESSAGE_TYPE_IOSPEC);
     zassert_equal(mock_read_buffer_idx, sizeof(message_hdr_t));
     zassert_equal(mock_write_buffer_idx, 0);
@@ -176,7 +176,7 @@ ZTEST(kenning_inference_lib_test_kenning_protocol, test_protocol_recv_msg_conten
     struct msg_loader *ldr = prepare_loader();
 
     status = protocol_recv_msg_content(ldr, 0x123);
-    int expected_size = mock_read_buffer_idx - sizeof(message_hdr_t) + sizeof(MESSAGE_TYPE_IOSPEC);
+    int expected_size = mock_read_buffer_idx;
 
     zassert_equal(status, STATUS_OK);
     zassert_equal(expected_size, MESSAGE_SIZE_FULL(0x123));
@@ -250,13 +250,13 @@ ZTEST(kenning_inference_lib_test_kenning_protocol, test_protocol_send_message_wi
 
     protocol_write_data_fake.custom_fake = protocol_write_data_mock;
 
-#define TEST_PROTOCOL_SEND_MSG(_message_type)                              \
-    prepare_send_message(_message_type, NULL, 0);                          \
-                                                                           \
-    status = protocol_send_msg(resp_message);                              \
-                                                                           \
-    zassert_equal(STATUS_OK, status);                                      \
-    zassert_equal(resp_message->hdr.message_size, sizeof(message_type_t)); \
+#define TEST_PROTOCOL_SEND_MSG(_message_type)         \
+    prepare_send_message(_message_type, NULL, 0);     \
+                                                      \
+    status = protocol_send_msg(resp_message);         \
+                                                      \
+    zassert_equal(STATUS_OK, status);                 \
+    zassert_equal(resp_message->hdr.payload_size, 0); \
     zassert_equal(resp_message->hdr.message_type, _message_type);
 
     TEST_PROTOCOL_SEND_MSG(MESSAGE_TYPE_OK);
@@ -277,13 +277,13 @@ ZTEST(kenning_inference_lib_test_kenning_protocol, test_protocol_send_message_wi
 
     protocol_write_data_fake.custom_fake = protocol_write_data_mock;
 
-#define TEST_PROTOCOL_SEND_MSG(_message_type)                                                    \
-    prepare_send_message(_message_type, msg_payload, sizeof(msg_payload));                       \
-                                                                                                 \
-    status = protocol_send_msg(resp_message);                                                    \
-                                                                                                 \
-    zassert_equal(STATUS_OK, status);                                                            \
-    zassert_equal(resp_message->hdr.message_size, sizeof(message_type_t) + sizeof(msg_payload)); \
+#define TEST_PROTOCOL_SEND_MSG(_message_type)                              \
+    prepare_send_message(_message_type, msg_payload, sizeof(msg_payload)); \
+                                                                           \
+    status = protocol_send_msg(resp_message);                              \
+                                                                           \
+    zassert_equal(STATUS_OK, status);                                      \
+    zassert_equal(resp_message->hdr.payload_size, sizeof(msg_payload));    \
     zassert_equal(resp_message->hdr.message_type, _message_type);
 
     TEST_PROTOCOL_SEND_MSG(MESSAGE_TYPE_OK);
@@ -343,7 +343,7 @@ ZTEST(kenning_inference_lib_test_kenning_protocol, test_prepare_success_response
 
     zassert_equal(STATUS_OK, status);
     zassert_equal(MESSAGE_TYPE_OK, response.hdr.message_type);
-    zassert_equal(sizeof(message_type_t), response.hdr.message_size);
+    zassert_equal(0, response.hdr.payload_size);
 }
 
 /**
@@ -376,7 +376,7 @@ ZTEST(kenning_inference_lib_test_kenning_protocol, test_prepare_fail_response)
 
     zassert_equal(STATUS_OK, status);
     zassert_equal(MESSAGE_TYPE_ERROR, response.hdr.message_type);
-    zassert_equal(sizeof(message_type_t), response.hdr.message_size);
+    zassert_equal(0, response.hdr.payload_size);
 }
 
 /**
@@ -398,7 +398,7 @@ void prepare_message_in_buffer(message_type_t message_type, size_t payload_size)
 {
     message_hdr_t hdr_to_read = {
         .message_type = message_type,
-        .message_size = MESSAGE_SIZE_FULL(payload_size),
+        .payload_size = MESSAGE_SIZE_FULL(payload_size),
     };
     memcpy(mock_read_buffer, &hdr_to_read, sizeof(message_hdr_t));
     memset(mock_read_buffer + sizeof(message_hdr_t), 'x', payload_size);
@@ -413,7 +413,7 @@ void prepare_send_message(message_type_t msg_type, uint8_t *payload, size_t payl
     }
     message_hdr_t hdr = {
         .message_type = msg_type,
-        .message_size = sizeof(message_type_t) + payload_size,
+        .payload_size = payload_size,
     };
     resp_message = malloc(sizeof(resp_message_t));
     resp_message->payload = malloc(payload_size);
