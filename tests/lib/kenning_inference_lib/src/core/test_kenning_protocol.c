@@ -52,7 +52,7 @@ status_t protocol_write_data_mock(const uint8_t *data, size_t data_length);
  * @param message_type type of the message
  * @param payload_size size of the payload
  */
-void prepare_message_in_buffer(message_type_t message_type, size_t payload_size);
+void prepare_message_in_buffer(message_type_t message_type, flags_t flags, size_t payload_size);
 
 /**
  * Prepares message of given type and payload and stores it in resp_message
@@ -61,7 +61,7 @@ void prepare_message_in_buffer(message_type_t message_type, size_t payload_size)
  * @param payload payload of the message
  * @param payload_size size of the payload
  */
-void prepare_send_message(message_type_t msg_type, uint8_t *payload, size_t payload_size);
+void prepare_send_message(message_type_t msg_type, flags_t flags, uint8_t *payload, size_t payload_size);
 
 // ========================================================
 // setup
@@ -151,13 +151,22 @@ ZTEST(kenning_inference_lib_test_kenning_protocol, test_protocol_recv_msg_hdr)
     message_hdr_t hdr = {0};
 
     protocol_read_data_fake.custom_fake = protocol_read_data_mock;
-    prepare_message_in_buffer(MESSAGE_TYPE_IOSPEC, 0x123);
+    flags_t test_flags;
+    test_flags.raw_bytes = 0b0001000000011001;
+    prepare_message_in_buffer(MESSAGE_TYPE_IOSPEC, test_flags, 0x123);
 
     status = protocol_recv_msg_hdr(&hdr);
 
     zassert_equal(status, STATUS_OK);
-    zassert_equal(hdr.payload_size, MESSAGE_SIZE_FULL(0x123));
+    zassert_equal(hdr.payload_size, 0x123);
     zassert_equal(hdr.message_type, MESSAGE_TYPE_IOSPEC);
+    zassert_equal(hdr.flags.flags_iospec.serialized, 1);
+    zassert_equal(hdr.flags.general_purpose_flags.success, 1);
+    zassert_equal(hdr.flags.general_purpose_flags.fail, 0);
+    zassert_equal(hdr.flags.general_purpose_flags.is_host_message, 0);
+    zassert_equal(hdr.flags.general_purpose_flags.has_payload, 1);
+    zassert_equal(hdr.flags.general_purpose_flags.first, 1);
+    zassert_equal(hdr.flags.general_purpose_flags.last, 0);
     zassert_equal(mock_read_buffer_idx, sizeof(message_hdr_t));
     zassert_equal(mock_write_buffer_idx, 0);
 }
@@ -170,7 +179,9 @@ ZTEST(kenning_inference_lib_test_kenning_protocol, test_protocol_recv_msg_conten
     status_t status = STATUS_OK;
 
     protocol_read_data_fake.custom_fake = protocol_read_data_mock;
-    prepare_message_in_buffer(MESSAGE_TYPE_IOSPEC, 0x123);
+    flags_t test_flags;
+    test_flags.raw_bytes = 0b0000000000000000;
+    prepare_message_in_buffer(MESSAGE_TYPE_IOSPEC, test_flags, 0x123);
     protocol_read_data_mock(NULL, sizeof(message_hdr_t));
 
     struct msg_loader *ldr = prepare_loader();
@@ -249,15 +260,24 @@ ZTEST(kenning_inference_lib_test_kenning_protocol, test_protocol_send_message_wi
     status_t status = STATUS_OK;
 
     protocol_write_data_fake.custom_fake = protocol_write_data_mock;
+    flags_t test_flags;
+    test_flags.raw_bytes = 0b1110000000111111;
 
-#define TEST_PROTOCOL_SEND_MSG(_message_type)         \
-    prepare_send_message(_message_type, NULL, 0);     \
-                                                      \
-    status = protocol_send_msg(resp_message);         \
-                                                      \
-    zassert_equal(STATUS_OK, status);                 \
-    zassert_equal(resp_message->hdr.payload_size, 0); \
-    zassert_equal(resp_message->hdr.message_type, _message_type);
+#define TEST_PROTOCOL_SEND_MSG(_message_type)                                        \
+    prepare_send_message(_message_type, test_flags, NULL, 0);                        \
+                                                                                     \
+    status = protocol_send_msg(resp_message);                                        \
+                                                                                     \
+    zassert_equal(STATUS_OK, status);                                                \
+    zassert_equal(resp_message->hdr.payload_size, 0);                                \
+    zassert_equal(resp_message->hdr.message_type, _message_type);                    \
+    zassert_equal(resp_message->hdr.flags.flags_iospec.serialized, 0);               \
+    zassert_equal(resp_message->hdr.flags.general_purpose_flags.success, 1);         \
+    zassert_equal(resp_message->hdr.flags.general_purpose_flags.fail, 1);            \
+    zassert_equal(resp_message->hdr.flags.general_purpose_flags.is_host_message, 1); \
+    zassert_equal(resp_message->hdr.flags.general_purpose_flags.has_payload, 1);     \
+    zassert_equal(resp_message->hdr.flags.general_purpose_flags.first, 1);           \
+    zassert_equal(resp_message->hdr.flags.general_purpose_flags.last, 1);
 
     TEST_PROTOCOL_SEND_MSG(MESSAGE_TYPE_OK);
     TEST_PROTOCOL_SEND_MSG(MESSAGE_TYPE_ERROR);
@@ -276,15 +296,24 @@ ZTEST(kenning_inference_lib_test_kenning_protocol, test_protocol_send_message_wi
     uint8_t msg_payload[128] = {0};
 
     protocol_write_data_fake.custom_fake = protocol_write_data_mock;
+    flags_t test_flags;
+    test_flags.raw_bytes = 0b0001111111000000;
 
-#define TEST_PROTOCOL_SEND_MSG(_message_type)                              \
-    prepare_send_message(_message_type, msg_payload, sizeof(msg_payload)); \
-                                                                           \
-    status = protocol_send_msg(resp_message);                              \
-                                                                           \
-    zassert_equal(STATUS_OK, status);                                      \
-    zassert_equal(resp_message->hdr.payload_size, sizeof(msg_payload));    \
-    zassert_equal(resp_message->hdr.message_type, _message_type);
+#define TEST_PROTOCOL_SEND_MSG(_message_type)                                          \
+    prepare_send_message(_message_type, test_flags, msg_payload, sizeof(msg_payload)); \
+                                                                                       \
+    status = protocol_send_msg(resp_message);                                          \
+                                                                                       \
+    zassert_equal(STATUS_OK, status);                                                  \
+    zassert_equal(resp_message->hdr.payload_size, sizeof(msg_payload));                \
+    zassert_equal(resp_message->hdr.message_type, _message_type);                      \
+    zassert_equal(resp_message->hdr.flags.flags_iospec.serialized, 1);                 \
+    zassert_equal(resp_message->hdr.flags.general_purpose_flags.success, 0);           \
+    zassert_equal(resp_message->hdr.flags.general_purpose_flags.fail, 0);              \
+    zassert_equal(resp_message->hdr.flags.general_purpose_flags.is_host_message, 0);   \
+    zassert_equal(resp_message->hdr.flags.general_purpose_flags.has_payload, 0);       \
+    zassert_equal(resp_message->hdr.flags.general_purpose_flags.first, 0);             \
+    zassert_equal(resp_message->hdr.flags.general_purpose_flags.last, 0);
 
     TEST_PROTOCOL_SEND_MSG(MESSAGE_TYPE_OK);
     TEST_PROTOCOL_SEND_MSG(MESSAGE_TYPE_ERROR);
@@ -394,17 +423,18 @@ ZTEST(kenning_inference_lib_test_kenning_protocol, test_prepare_fail_response_in
 // ========================================================
 // helper functions
 // ========================================================
-void prepare_message_in_buffer(message_type_t message_type, size_t payload_size)
+void prepare_message_in_buffer(message_type_t message_type, flags_t flags, size_t payload_size)
 {
     message_hdr_t hdr_to_read = {
         .message_type = message_type,
-        .payload_size = MESSAGE_SIZE_FULL(payload_size),
+        .flags = flags,
+        .payload_size = payload_size,
     };
     memcpy(mock_read_buffer, &hdr_to_read, sizeof(message_hdr_t));
     memset(mock_read_buffer + sizeof(message_hdr_t), 'x', payload_size);
 }
 
-void prepare_send_message(message_type_t msg_type, uint8_t *payload, size_t payload_size)
+void prepare_send_message(message_type_t msg_type, flags_t flags, uint8_t *payload, size_t payload_size)
 {
     if (IS_VALID_POINTER(resp_message))
     {
@@ -414,6 +444,7 @@ void prepare_send_message(message_type_t msg_type, uint8_t *payload, size_t payl
     message_hdr_t hdr = {
         .message_type = msg_type,
         .payload_size = payload_size,
+        .flags = flags,
     };
     resp_message = malloc(sizeof(resp_message_t));
     resp_message->payload = malloc(payload_size);
