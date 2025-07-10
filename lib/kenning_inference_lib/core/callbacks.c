@@ -179,9 +179,6 @@ status_t output_callback(message_hdr_t *hdr, resp_message_t *resp)
 
     resp->hdr.payload_size = model_output_size;
     resp->hdr.message_type = MESSAGE_TYPE_OK;
-    resp->hdr.flags.general_purpose_flags.has_payload = 1;
-    resp->hdr.flow_control_flags = FLOW_CONTROL_TRANSMISSION;
-
     return STATUS_OK;
 }
 
@@ -206,8 +203,6 @@ status_t stats_callback(message_hdr_t *hdr, resp_message_t *resp)
 
     resp->hdr.payload_size = statistics_length;
     resp->hdr.message_type = MESSAGE_TYPE_OK;
-    resp->hdr.flags.general_purpose_flags.has_payload = 1;
-    resp->hdr.flow_control_flags = FLOW_CONTROL_TRANSMISSION;
 
     return STATUS_OK;
 }

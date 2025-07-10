@@ -153,7 +153,14 @@ status_t handle_message(message_hdr_t *hdr)
     LOG_DBG("Sending response. Size: %d, type: %d (%s), flow control value: %d (%s), flags: 0x%04x",
             resp.hdr.payload_size, resp.hdr.message_type, message_type_str, resp.hdr.flow_control_flags,
             flow_control_str, resp.hdr.flags.raw_bytes);
-    status = protocol_send_msg(&resp);
+    if (resp.hdr.payload_size == 0) // If the response doesn't have payload, we send an empty message.
+    {
+        status = protocol_send_msg(&resp);
+    }
+    else // Otheriwise we send a transmission (splitting the payload a series of messages)
+    {
+        status = protocol_transmit(&resp);
+    }
     if (STATUS_OK != status)
     {
         LOG_ERR("Error sending message: 0x%x (%s)", status, get_status_str(status));
