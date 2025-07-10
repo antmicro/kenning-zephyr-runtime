@@ -32,7 +32,7 @@ resp_message_t *resp_message;
 DEFINE_FFF_GLOBALS;
 
 #define MOCKS(MOCK)                                        \
-    MOCK(const char *, get_status_str, status_t)           \
+    MOCK(const char *, get_status_str, status_t);          \
     MOCK(status_t, protocol_read_data, uint8_t *, size_t); \
     MOCK(status_t, protocol_write_data, const uint8_t *, size_t);
 
@@ -251,6 +251,99 @@ ZTEST(kenning_inference_lib_test_kenning_protocol, test_protocol_receive_message
 // ========================================================
 // send_message
 // ========================================================
+
+/**
+ * Tests if protocol properly divides large payload into messages.
+ */
+ZTEST(kenning_inference_lib_test_kenning_protocol, test_protocol_transmit)
+{
+    status_t status;
+
+    // Mock 'protocol_write_data' function will write all calls to a buffer ('mock_write_buffer').
+    // Each message sent calls that function twice (for header and for payload).
+    // We need to extract the headers, so this variable is used to store position of the mext message's header.
+    unsigned int mock_write_buffer_hdr_idx;
+
+#define TEST_PROTOCOL_TRANSMIT(_transmission, _message_count, _payload_sizes, _payload_offsets)        \
+    kenning_protocol_tests_setup_f();                                                                  \
+    protocol_write_data_fake.custom_fake = protocol_write_data_mock;                                   \
+    status = protocol_transmit(&_transmission);                                                        \
+    zassert_equal(status, STATUS_OK);                                                                  \
+    zassert_equal(protocol_write_data_fake.call_count, 2 * _message_count);                            \
+    mock_write_buffer_hdr_idx = 0;                                                                     \
+    for (unsigned int i = 0; i < _message_count; i++)                                                  \
+    {                                                                                                  \
+        const message_hdr_t *hdr = (message_hdr_t *)(mock_write_buffer + mock_write_buffer_hdr_idx);   \
+        const uint8_t *payload = protocol_write_data_fake.arg0_history[2 * i + 1];                     \
+        zassert_equal(hdr->flags.general_purpose_flags.success, 1);                                    \
+        zassert_equal(hdr->flags.general_purpose_flags.fail, 0);                                       \
+        zassert_equal(hdr->flags.flags_iospec.serialized, 1);                                          \
+        if (i == 0)                                                                                    \
+        {                                                                                              \
+            zassert_equal(hdr->flags.general_purpose_flags.first, 1);                                  \
+        }                                                                                              \
+        else                                                                                           \
+        {                                                                                              \
+            zassert_equal(hdr->flags.general_purpose_flags.first, 0);                                  \
+        }                                                                                              \
+        if (i == (_message_count - 1))                                                                 \
+        {                                                                                              \
+            zassert_equal(hdr->flags.general_purpose_flags.last, 1);                                   \
+        }                                                                                              \
+        else                                                                                           \
+        {                                                                                              \
+            zassert_equal(hdr->flags.general_purpose_flags.last, 0);                                   \
+        }                                                                                              \
+        zassert_equal(hdr->flags.general_purpose_flags.has_payload, 1);                                \
+        zassert_equal(hdr->flags.general_purpose_flags.is_host_message, 0);                            \
+        zassert_equal(hdr->payload_size, _payload_sizes[i]);                                           \
+        zassert_equal(hdr->flow_control_flags, FLOW_CONTROL_TRANSMISSION);                             \
+        zassert_equal(hdr->message_type, _transmission.hdr.message_type);                              \
+        zassert_equal((unsigned int)payload, (unsigned int)test_payload_buffer + _payload_offsets[i]); \
+        mock_write_buffer_hdr_idx += sizeof(message_hdr_t) + _payload_sizes[i];                        \
+    }
+
+    uint8_t test_payload_buffer[100];
+
+    flags_t test_flags;
+    test_flags.general_purpose_flags.success = 1;
+    test_flags.general_purpose_flags.fail = 0;
+    test_flags.flags_iospec.serialized = 1;
+
+    resp_message_t transmission;
+    transmission.hdr.message_type = MESSAGE_TYPE_IOSPEC;
+    transmission.hdr.flags = test_flags;
+    transmission.payload = test_payload_buffer;
+
+    // In prj.conf file for the tests we override the meximum message size (setting it to 8).
+    // Therefore 'protocol_transmit' function will splice the payload into 8-byte slices.
+    unsigned int payload_sizes_2_messages[] = {8, 6};
+    unsigned int payload_offsets_2_messages[] = {0, 8};
+    transmission.hdr.payload_size = 14;
+    TEST_PROTOCOL_TRANSMIT(transmission, 2, payload_sizes_2_messages, payload_offsets_2_messages);
+    unsigned int payload_sizes_1_message[] = {4};
+    unsigned int payload_offsets_1_message[] = {0};
+    transmission.hdr.payload_size = 4;
+    TEST_PROTOCOL_TRANSMIT(transmission, 1, payload_sizes_1_message, payload_offsets_1_message);
+    unsigned int payload_sizes_7_messages[] = {8, 8, 8, 8, 8, 8, 3};
+    unsigned int payload_offsets_7_messages[] = {0, 8, 16, 24, 32, 40, 48};
+    transmission.hdr.payload_size = 51;
+    TEST_PROTOCOL_TRANSMIT(transmission, 7, payload_sizes_7_messages, payload_offsets_7_messages);
+    unsigned int payload_sizes_2_messages_full[] = {8, 8};
+    unsigned int payload_offsets_2_messages_full[] = {0, 8};
+    transmission.hdr.payload_size = 16;
+    TEST_PROTOCOL_TRANSMIT(transmission, 2, payload_sizes_2_messages_full, payload_offsets_2_messages_full);
+    unsigned int payload_sizes_1_message_full[] = {8};
+    unsigned int payload_offsets_1_message_full[] = {0};
+    transmission.hdr.payload_size = 8;
+    TEST_PROTOCOL_TRANSMIT(transmission, 1, payload_sizes_1_message_full, payload_offsets_1_message_full);
+    unsigned int payload_sizes_7_messages_full[] = {8, 8, 8, 8, 8, 8, 8};
+    unsigned int payload_offsets_7_messages_full[] = {0, 8, 16, 24, 32, 40, 48};
+    transmission.hdr.payload_size = 56;
+    TEST_PROTOCOL_TRANSMIT(transmission, 7, payload_sizes_7_messages_full, payload_offsets_7_messages_full);
+
+#undef TEST_PROTOCOL_TRANSMIT
+}
 
 /**
  * Tests if protocol send message writes properly message without payload
