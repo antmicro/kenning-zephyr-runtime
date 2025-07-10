@@ -151,6 +151,14 @@ typedef struct
 #define LLEXT_NAME_MAX_LEN 32
 
 /**
+ * Sends payload with flags (either as one message or as a series of messages).
+ *
+ * @param msg Pointer to the message, that will be be sent or split into multiple messages.
+ *
+ * @returns status of the protocol
+ */
+status_t protocol_transmit(const resp_message_t *msg);
+/**
  * Waits for a message to be received
  *
  * @param msg received message
