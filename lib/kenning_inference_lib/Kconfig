@@ -9,8 +9,8 @@ config KENNING_INFERENCE_LIB
 
 config KENNING_PYTHON_PATH
         string "path to the model that would be used"
-        default "python3"
         depends on KENNING_INFERENCE_LIB
+        default "python3"
         help
           The path to a Python3 binary, by default a python3
           from current environment is used.
@@ -57,14 +57,17 @@ endchoice
 
 config KENNING_RESPONSE_PAYLOAD_SIZE
         int "Size in bytes of the response payload"
+        depends on KENNING_INFERENCE_LIB
         default 1024
 
 config KENNING_MESSAGE_RECV_BUFFER_SIZE
         int "Size in bytes of the buffer used for holding message chunks"
+        depends on KENNING_INFERENCE_LIB
         default 128
 
 config KENNING_PROTOCOL_MAX_OUTGOING_MESSAGE_SIZE
         int "Maximum size of message payload in bytes."
+        depends on KENNING_INFERENCE_LIB
         default 1048576
 
 config KENNING_INCREASE_MEMORY
