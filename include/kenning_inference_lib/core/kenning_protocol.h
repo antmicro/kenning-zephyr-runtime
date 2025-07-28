@@ -114,7 +114,9 @@ typedef union
         uint16_t has_payload : 1;
         uint16_t first : 1;
         uint16_t last : 1;
-        uint16_t reserved : 6; // Reserved for future use.
+        uint16_t is_kenning : 1;
+        uint16_t is_zephyr : 1;
+        uint16_t reserved : 4; // Reserved for future use.
         uint16_t _ : 4;        // Space for message-specific flags.
     } general_purpose_flags;
     /**
