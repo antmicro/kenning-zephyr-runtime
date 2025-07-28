@@ -7,6 +7,8 @@
 #ifndef KENNING_INFERENCE_LIB_CORE_KENNING_PROTOCOL_H_
 #define KENNING_INFERENCE_LIB_CORE_KENNING_PROTOCOL_H_
 
+#include <stdbool.h>
+
 #include "kenning_inference_lib/core/loaders.h"
 #include "kenning_inference_lib/core/protocol.h"
 
@@ -18,7 +20,7 @@
     if (STATUS_OK != (status))                                              \
     {                                                                       \
         LOG_ERR("Protocol error: %d (%s)", status, get_status_str(status)); \
-        return KENNING_PROTOCOL_STATUS_CLIENT_DISCONNECTED;                 \
+        return KENNING_PROTOCOL_STATUS_LOWER_LAYER_ERROR;                   \
     }
 
 #define MESSAGE_SIZE_FULL(payload_size) (sizeof(message_hdr_t) + (payload_size))
@@ -82,15 +84,12 @@ extern LOADER_TYPE g_msg_ldr_map[NUM_MESSAGE_TYPES];
 /**
  * Protocol custom error codes
  */
-#define KENNING_PROTOCOL_STATUSES(STATUS)               \
-    STATUS(KENNING_PROTOCOL_STATUS_CLIENT_CONNECTED)    \
-    STATUS(KENNING_PROTOCOL_STATUS_CLIENT_DISCONNECTED) \
-    STATUS(KENNING_PROTOCOL_STATUS_CLIENT_IGNORED)      \
-    STATUS(KENNING_PROTOCOL_STATUS_DATA_READY)          \
-    STATUS(KENNING_PROTOCOL_STATUS_DATA_INV)            \
-    STATUS(KENNING_PROTOCOL_STATUS_INTERNAL_ERROR)      \
-    STATUS(KENNING_PROTOCOL_STATUS_MSG_TOO_BIG)         \
-    STATUS(KENNING_PROTOCOL_STATUS_INV_MSG_SIZE)
+#define KENNING_PROTOCOL_STATUSES(STATUS)                \
+    STATUS(KENNING_PROTOCOL_STATUS_LOWER_LAYER_ERROR)    \
+    STATUS(KENNING_PROTOCOL_STATUS_INVALID_MESSAGE_TYPE) \
+    STATUS(KENNING_PROTOCOL_STATUS_EVENT_DENIED)         \
+    STATUS(KENNING_PROTOCOL_STATUS_MSG_TOO_BIG)          \
+    STATUS(KENNING_PROTOCOL_STATUS_FLOW_CONTROL_ERROR)
 
 GENERATE_MODULE_STATUSES(KENNING_PROTOCOL);
 
@@ -133,6 +132,9 @@ typedef union
     uint16_t raw_bytes;
 } flags_t;
 
+/**
+ * A packed struct representing message header.
+ */
 typedef struct __attribute__((packed))
 {
     message_type_t message_type : 6;
@@ -143,16 +145,37 @@ typedef struct __attribute__((packed))
 } message_hdr_t;
 
 /**
- * A struct that contains all parameters describing single message
+ * A struct describing a stream of bytes (either a pointer and size, or a loader)
+ */
+typedef struct
+{
+    union
+    {
+        uint8_t *raw_bytes;
+        struct msg_loader *loader;
+    };
+    payload_size_t size;
+} protocol_payload_t;
+
+/**
+ * A struct that contains all parameters describing single message.
  */
 typedef struct
 {
     message_hdr_t hdr;
     uint8_t *payload;
-} resp_message_t;
+} outgoing_message_t;
 
-/* Max length of LLEXT name */
-#define LLEXT_NAME_MAX_LEN 32
+/**
+ * A struct that contains all values transported in a transmission or a request.
+ */
+typedef struct
+{
+    message_type_t message_type;
+    flags_t flags;
+    protocol_payload_t payload;
+    bool is_request;
+} protocol_event_t;
 
 /**
  * Sends payload with flags (either as one message or as a series of messages).
@@ -161,44 +184,16 @@ typedef struct
  *
  * @returns status of the protocol
  */
-status_t protocol_transmit(const resp_message_t *msg);
-/**
- * Waits for a message to be received
- *
- * @param msg received message
- *
- * @returns status of the protocol
- */
-status_t protocol_recv_msg(message_hdr_t *hdr);
-/**
- * Sends given message
- *
- * @param msg message to be sent
- *
- * @returns status of the protocol
- */
-status_t protocol_send_msg(const resp_message_t *msg);
-/**
- * Create a message that indicates an successful action. The message type is OK
- * and the paylaod is empty
- *
- * @param response created message
- *
- * @returns status of the protocol
- */
-status_t protocol_prepare_success_resp(resp_message_t *response);
-/**
- * Create a message that indicates an error. The message type is ERROR and the
- * payload is empty
- *
- * @param response created message
- *
- * @returns status of the protocol
- */
-status_t protocol_prepare_fail_resp(resp_message_t *response);
+status_t protocol_transmit(const protocol_event_t *msg);
 
-status_t protocol_recv_msg_content(struct msg_loader *ldr, size_t n);
-
-status_t protocol_recv_msg_hdr(message_hdr_t *hdr);
+/**
+ * Waits for a transmission or a request.
+ *
+ * @param event received transmission/request
+ * @param Pointer to a function, matching a message type to a loader. Should return NULL if there is no loader.
+ *
+ * @returns status of the protocol
+ */
+status_t protocol_listen(protocol_event_t *event, struct msg_loader *(*loader_callback)(message_type_t));
 
 #endif // KENNING_INFERENCE_LIB_CORE_KENNING_PROTOCOL_H_
