@@ -125,8 +125,8 @@ status_t handle_message(message_hdr_t *hdr)
 {
     static uint8_t __attribute__((aligned(4))) resp_payload[CONFIG_KENNING_RESPONSE_PAYLOAD_SIZE];
     status_t status = STATUS_OK;
-    resp_message_t resp = {.payload = resp_payload};
-
+    resp_message_t resp = {.payload = resp_payload, .hdr = *hdr};
+    resp.hdr.flags.general_purpose_flags.is_zephyr = 1;
     if (!IS_VALID_POINTER(hdr))
     {
         LOG_WRN("Invalid message.");
@@ -153,14 +153,9 @@ status_t handle_message(message_hdr_t *hdr)
     LOG_DBG("Sending response. Size: %d, type: %d (%s), flow control value: %d (%s), flags: 0x%04x",
             resp.hdr.payload_size, resp.hdr.message_type, message_type_str, resp.hdr.flow_control_flags,
             flow_control_str, resp.hdr.flags.raw_bytes);
-    if (resp.hdr.payload_size == 0) // If the response doesn't have payload, we send an empty message.
-    {
-        status = protocol_send_msg(&resp);
-    }
-    else // Otheriwise we send a transmission (splitting the payload a series of messages)
-    {
-        status = protocol_transmit(&resp);
-    }
+
+    status = protocol_transmit(&resp);
+
     if (STATUS_OK != status)
     {
         LOG_ERR("Error sending message: 0x%x (%s)", status, get_status_str(status));

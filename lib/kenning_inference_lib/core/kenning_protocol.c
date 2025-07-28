@@ -151,7 +151,7 @@ status_t protocol_prepare_success_resp(resp_message_t *response)
 {
     RETURN_ERROR_IF_POINTER_INVALID(response, KENNING_PROTOCOL_STATUS_INV_PTR);
     response->hdr.payload_size = 0;
-    response->hdr.message_type = MESSAGE_TYPE_OK;
+    response->hdr.flags.general_purpose_flags.success = 1;
     return STATUS_OK;
 }
 
@@ -159,6 +159,6 @@ status_t protocol_prepare_fail_resp(resp_message_t *response)
 {
     RETURN_ERROR_IF_POINTER_INVALID(response, KENNING_PROTOCOL_STATUS_INV_PTR);
     response->hdr.payload_size = 0;
-    response->hdr.message_type = MESSAGE_TYPE_ERROR;
+    response->hdr.flags.general_purpose_flags.fail = 1;
     return STATUS_OK;
 }

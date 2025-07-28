@@ -67,8 +67,8 @@ typedef status_t (*callback_ptr_t)(message_hdr_t *, resp_message_t *);
  */
 #define CALLBACKS_TABLE(ENTRY)                               \
     /*    MessageType      Callback_function */              \
-    ENTRY(MESSAGE_TYPE_OK, ok_callback)                      \
-    ENTRY(MESSAGE_TYPE_ERROR, error_callback)                \
+    ENTRY(MESSAGE_TYPE_PING, data_callback)                  \
+    ENTRY(MESSAGE_TYPE_STATUS, model_callback)               \
     ENTRY(MESSAGE_TYPE_DATA, data_callback)                  \
     ENTRY(MESSAGE_TYPE_MODEL, model_callback)                \
     ENTRY(MESSAGE_TYPE_PROCESS, process_callback)            \
@@ -77,7 +77,8 @@ typedef status_t (*callback_ptr_t)(message_hdr_t *, resp_message_t *);
     ENTRY(MESSAGE_TYPE_IOSPEC, iospec_callback)              \
     ENTRY(MESSAGE_TYPE_OPTIMIZERS, unsupported_callback)     \
     ENTRY(MESSAGE_TYPE_OPTIMIZE_MODEL, unsupported_callback) \
-    ENTRY(MESSAGE_TYPE_RUNTIME, runtime_callback)
+    ENTRY(MESSAGE_TYPE_RUNTIME, runtime_callback)            \
+    ENTRY(MESSAGE_TYPE_UNOPTIMIZED_MODEL, unsupported_callback)
 
 #define ENTRY(msg_type, callback_func) status_t callback_func(message_hdr_t *, resp_message_t *);
 CALLBACKS_TABLE(ENTRY)

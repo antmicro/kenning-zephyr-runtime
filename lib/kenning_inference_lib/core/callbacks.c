@@ -53,42 +53,6 @@ status_t unsupported_callback(message_hdr_t *hdr, resp_message_t *resp)
 }
 
 /**
- * Handles OK message
- *
- * @param request incoming message. It is overwritten with NULL as there is no
- * response
- *
- * @returns error status of the callback
- */
-status_t ok_callback(message_hdr_t *hdr, resp_message_t *resp)
-{
-    status_t status = STATUS_OK;
-    VALIDATE_HEADER(MESSAGE_TYPE_OK, hdr);
-
-    LOG_WRN("Unexpected message received: MESSAGE_TYPE_OK");
-    status = protocol_prepare_fail_resp(resp);
-    return status;
-}
-
-/**
- * Handles ERROR message
- *
- * @param request incoming message. It is overwritten with NULL as there is no
- * response
- *
- * @returns error status of the callback
- */
-status_t error_callback(message_hdr_t *hdr, resp_message_t *resp)
-{
-    status_t status = STATUS_OK;
-    VALIDATE_HEADER(MESSAGE_TYPE_ERROR, hdr);
-
-    LOG_WRN("Unexpected message received: MESSAGE_TYPE_ERROR");
-    status = protocol_prepare_fail_resp(resp);
-    return status;
-}
-
-/**
  * Handles DATA message that contains model input. It calls model's function
  * that loads it.
  *
@@ -178,7 +142,7 @@ status_t output_callback(message_hdr_t *hdr, resp_message_t *resp)
     CHECK_STATUS_LOG(status, resp, "model_get_output returned 0x%x (%s)", status, get_status_str(status));
 
     resp->hdr.payload_size = model_output_size;
-    resp->hdr.message_type = MESSAGE_TYPE_OK;
+    resp->hdr.flags.general_purpose_flags.success = 1;
     return STATUS_OK;
 }
 
@@ -202,7 +166,7 @@ status_t stats_callback(message_hdr_t *hdr, resp_message_t *resp)
     CHECK_STATUS_LOG(status, resp, "model_get_statistics returned 0x%x (%s)", status, get_status_str(status));
 
     resp->hdr.payload_size = statistics_length;
-    resp->hdr.message_type = MESSAGE_TYPE_OK;
+    resp->hdr.flags.general_purpose_flags.success = 1;
 
     return STATUS_OK;
 }

@@ -27,18 +27,19 @@
 /**
  * An enum that describes message type
  */
-#define MESSAGE_TYPES(TYPE)           \
-    TYPE(MESSAGE_TYPE_OK)             \
-    TYPE(MESSAGE_TYPE_ERROR)          \
-    TYPE(MESSAGE_TYPE_DATA)           \
-    TYPE(MESSAGE_TYPE_MODEL)          \
-    TYPE(MESSAGE_TYPE_PROCESS)        \
-    TYPE(MESSAGE_TYPE_OUTPUT)         \
-    TYPE(MESSAGE_TYPE_STATS)          \
-    TYPE(MESSAGE_TYPE_IOSPEC)         \
-    TYPE(MESSAGE_TYPE_OPTIMIZERS)     \
-    TYPE(MESSAGE_TYPE_OPTIMIZE_MODEL) \
-    TYPE(MESSAGE_TYPE_RUNTIME)        \
+#define MESSAGE_TYPES(TYPE)              \
+    TYPE(MESSAGE_TYPE_PING)              \
+    TYPE(MESSAGE_TYPE_STATUS)            \
+    TYPE(MESSAGE_TYPE_DATA)              \
+    TYPE(MESSAGE_TYPE_MODEL)             \
+    TYPE(MESSAGE_TYPE_PROCESS)           \
+    TYPE(MESSAGE_TYPE_OUTPUT)            \
+    TYPE(MESSAGE_TYPE_STATS)             \
+    TYPE(MESSAGE_TYPE_IOSPEC)            \
+    TYPE(MESSAGE_TYPE_OPTIMIZERS)        \
+    TYPE(MESSAGE_TYPE_OPTIMIZE_MODEL)    \
+    TYPE(MESSAGE_TYPE_RUNTIME)           \
+    TYPE(MESSAGE_TYPE_UNOPTIMIZED_MODEL) \
     TYPE(NUM_MESSAGE_TYPES)
 
 #define FLOW_CONTROL_VALUES(TYPE)         \
@@ -58,19 +59,20 @@ typedef enum
     FLOW_CONTROL_VALUES(GENERATE_ENUM)
 } FLOW_CONTROL_VALUE;
 
-#define PREPARE_MSG_LDR_MAP                                      \
-    {                                                            \
-        LOADER_TYPE_NONE,        /*MESSAGE_TYPE_OK*/             \
-            LOADER_TYPE_NONE,    /*MESSAGE_TYPE_ERROR*/          \
-            LOADER_TYPE_DATA,    /*MESSAGE_TYPE_DATA*/           \
-            LOADER_TYPE_MODEL,   /*MESSAGE_TYPE_MODEL*/          \
-            LOADER_TYPE_NONE,    /*MESSAGE_TYPE_PROCESS*/        \
-            LOADER_TYPE_NONE,    /*MESSAGE_TYPE_OUTPUT*/         \
-            LOADER_TYPE_NONE,    /*MESSAGE_TYPE_STATS*/          \
-            LOADER_TYPE_IOSPEC,  /*MESSAGE_TYPE_IOSPEC*/         \
-            LOADER_TYPE_NONE,    /*MESSAGE_TYPE_OPTIMIZERS*/     \
-            LOADER_TYPE_NONE,    /*MESSAGE_TYPE_OPTIMIZE_MODEL*/ \
-            LOADER_TYPE_RUNTIME, /*MESSAGE_TYPE_RUNTIME*/        \
+#define PREPARE_MSG_LDR_MAP                                         \
+    {                                                               \
+        LOADER_TYPE_NONE,        /*MESSAGE_TYPE_PING*/              \
+            LOADER_TYPE_NONE,    /*MESSAGE_TYPE_STATUS*/            \
+            LOADER_TYPE_DATA,    /*MESSAGE_TYPE_DATA*/              \
+            LOADER_TYPE_MODEL,   /*MESSAGE_TYPE_MODEL*/             \
+            LOADER_TYPE_NONE,    /*MESSAGE_TYPE_PROCESS*/           \
+            LOADER_TYPE_NONE,    /*MESSAGE_TYPE_OUTPUT*/            \
+            LOADER_TYPE_NONE,    /*MESSAGE_TYPE_STATS*/             \
+            LOADER_TYPE_IOSPEC,  /*MESSAGE_TYPE_IOSPEC*/            \
+            LOADER_TYPE_NONE,    /*MESSAGE_TYPE_OPTIMIZERS*/        \
+            LOADER_TYPE_NONE,    /*MESSAGE_TYPE_OPTIMIZE_MODEL*/    \
+            LOADER_TYPE_RUNTIME, /*MESSAGE_TYPE_RUNTIME*/           \
+            LOADER_TYPE_NONE,    /*MESSAGE_TYPE_UNOPTIMIZED_MODEL*/ \
     }
 
 extern LOADER_TYPE g_msg_ldr_map[NUM_MESSAGE_TYPES];
