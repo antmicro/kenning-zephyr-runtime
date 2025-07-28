@@ -25,8 +25,9 @@ LOADER_TYPE g_msg_ldr_map[NUM_MESSAGE_TYPES] = PREPARE_MSG_LDR_MAP;
 status_t protocol_transmit(const resp_message_t *msg)
 {
     status_t status = STATUS_OK;
-    unsigned int message_count =
-        ((msg->hdr.payload_size - 1) / CONFIG_KENNING_PROTOCOL_MAX_OUTGOING_MESSAGE_SIZE) + 1; // Rounding
+    int has_payload = msg->hdr.payload_size > 0 ? 1 : 0;
+    unsigned int message_count = has_payload ?
+        ((msg->hdr.payload_size - 1) / CONFIG_KENNING_PROTOCOL_MAX_OUTGOING_MESSAGE_SIZE) + 1 : 1; // Rounding
                                                                                                // up.
     payload_size_t bytes_sent = 0;
     for (int i = 0; i < message_count; i++)
@@ -34,16 +35,22 @@ status_t protocol_transmit(const resp_message_t *msg)
         payload_size_t message_payload_size =
             MIN(msg->hdr.payload_size - bytes_sent, CONFIG_KENNING_PROTOCOL_MAX_OUTGOING_MESSAGE_SIZE);
         resp_message_t message;
-
         message.hdr.flags = msg->hdr.flags;
         message.hdr.message_type = msg->hdr.message_type;
         message.hdr.flow_control_flags = FLOW_CONTROL_TRANSMISSION;
         message.hdr.payload_size = message_payload_size;
         message.hdr.flags.general_purpose_flags.first = (i == 0) ? 1 : 0;
         message.hdr.flags.general_purpose_flags.last = (i == (message_count - 1)) ? 1 : 0;
-        message.hdr.flags.general_purpose_flags.has_payload = 1;
+        message.hdr.flags.general_purpose_flags.has_payload = has_payload;
         message.hdr.flags.general_purpose_flags.is_host_message = 0;
-        message.payload = msg->payload + bytes_sent;
+        if(has_payload)
+        {
+            message.payload = msg->payload + bytes_sent;
+        }
+        else
+        {
+            message.payload = NULL;
+        }
         status = protocol_send_msg(&message);
         CHECK_PROTOCOL_STATUS(status);
         bytes_sent += message_payload_size;
