@@ -36,21 +36,21 @@ GENERATE_MODULE_STATUSES(INFERENCE_SERVER);
 status_t init_server();
 
 /**
- * Wait for incoming message
+ * Wait for incoming transmission or request.
  *
- * @param msg pointer to the message
+ * @param msg pointer to the protocol event received
  *
- * @returns STATUS_OK if message was received
+ * @returns STATUS_OK if event was received
  */
-status_t wait_for_message(message_hdr_t *hdr);
+status_t wait_for_protocol_event(protocol_event_t *event);
 
 /**
- * Handle received message
+ * Handle received transmission or request.
  *
- * @param msg pointer to the message
+ * @param msg pointer to the protocol event to handle
  *
- * @returns status of message handling
+ * @returns status of event handling
  */
-status_t handle_message(message_hdr_t *hdr);
+status_t handle_protocol_event(protocol_event_t *event);
 
 #endif // KENNING_INFERENCE_LIB_CORE_INFERENCE_SERVER_H_

@@ -36,17 +36,17 @@ extern const char *const MESSAGE_TYPE_STR[];
 /**
  * Handles unsupported message
  *
- * @param request incoming message. It is overwritten with ERROR message
+ * @param request incoming request.
+ * @param resp_payload payload, that will be sent in response by the server (empty here)
  *
  * @returns error status of the callback
  */
-status_t unsupported_callback(message_hdr_t *hdr, resp_message_t *resp)
+status_t unsupported_callback(protocol_event_t *request, protocol_payload_t *resp_payload)
 {
     status_t status = STATUS_OK;
 
-    LOG_WRN("Unsupported message received: %d (%s)", hdr->message_type, MESSAGE_TYPE_STR[hdr->message_type]);
+    LOG_WRN("Unsupported message received: %d (%s)", request->message_type, MESSAGE_TYPE_STR[request->message_type]);
 
-    status = protocol_prepare_fail_resp(resp);
     RETURN_ON_ERROR(status, status);
 
     return STATUS_OK;
@@ -56,22 +56,21 @@ status_t unsupported_callback(message_hdr_t *hdr, resp_message_t *resp)
  * Handles DATA message that contains model input. It calls model's function
  * that loads it.
  *
- * @param request incoming message. It is overwritten by the response message
- * (OK/ERROR message)
+ * @param request incoming request.
+ * @param resp_payload payload, that will be sent in response by the server (empty here)
  *
  * @returns error status of the callback
  */
-status_t data_callback(message_hdr_t *hdr, resp_message_t *resp) // TODO
+status_t data_callback(protocol_event_t *request, protocol_payload_t *resp_payload) // TODO
 {
     status_t status = STATUS_OK;
 
-    VALIDATE_HEADER(MESSAGE_TYPE_DATA, hdr);
+    VALIDATE_HEADER(MESSAGE_TYPE_DATA, request);
 
-    status = model_load_input_from_loader(hdr->payload_size);
+    status = model_load_input_from_loader(request->payload.size);
 
-    CHECK_STATUS_LOG(status, resp, "model_load_input returned 0x%x (%s)", status, get_status_str(status));
+    CHECK_STATUS_LOG(status, "model_load_input returned 0x%x (%s)", status, get_status_str(status));
 
-    status = protocol_prepare_success_resp(resp);
     return status;
 }
 
@@ -79,22 +78,21 @@ status_t data_callback(message_hdr_t *hdr, resp_message_t *resp) // TODO
  * Handles MODEL message that contains model data. It calls model's function
  * that loads the model.
  *
- * @param request incoming message. It is overwritten by the response message
- * (OK/ERROR message)
+ * @param request incoming request.
+ * @param resp_payload payload, that will be sent in response by the server (empty here)
  *
  * @returns error status of the callback
  */
-status_t model_callback(message_hdr_t *hdr, resp_message_t *resp)
+status_t model_callback(protocol_event_t *request, protocol_payload_t *resp_payload)
 {
     status_t status = STATUS_OK;
 
-    VALIDATE_HEADER(MESSAGE_TYPE_MODEL, hdr);
+    VALIDATE_HEADER(MESSAGE_TYPE_MODEL, request);
 
     status = model_load_weights_from_loader();
 
-    CHECK_STATUS_LOG(status, resp, "model_load_weights returned 0x%x (%s)", status, get_status_str(status));
+    CHECK_STATUS_LOG(status, "model_load_weights returned 0x%x (%s)", status, get_status_str(status));
 
-    status = protocol_prepare_success_resp(resp);
     RETURN_ON_ERROR(status, status);
 
     return STATUS_OK;
@@ -103,93 +101,87 @@ status_t model_callback(message_hdr_t *hdr, resp_message_t *resp)
 /**
  * Handles PROCESS message. It calls model's function that runs it
  *
- * @param request incoming message. It is overwritten by the response message
- * (OK/ERROR message)
+ * @param request incoming request.
+ * @param resp_payload payload, that will be sent in response by the server (empty here)
  *
  * @returns error status of the callback
  */
-status_t process_callback(message_hdr_t *hdr, resp_message_t *resp)
+status_t process_callback(protocol_event_t *request, protocol_payload_t *resp_payload)
 {
     status_t status = STATUS_OK;
 
-    VALIDATE_HEADER(MESSAGE_TYPE_PROCESS, hdr);
+    VALIDATE_HEADER(MESSAGE_TYPE_PROCESS, request);
 
     status = model_run_bench();
 
-    CHECK_STATUS_LOG(status, resp, "model_run returned 0x%x (%s)", status, get_status_str(status));
+    CHECK_STATUS_LOG(status, "model_run returned 0x%x (%s)", status, get_status_str(status));
 
-    status = protocol_prepare_success_resp(resp);
     return status;
 }
 
 /**
  * Handles OUTPUT message. It retrieves model inference output and sends it back
  *
- * @param request incoming message. It is overwritten by the response message
- * (DATA message containing model output or ERROR message)
+ * @param request incoming request.
+ * @param resp_payload payload, that will be sent in response by the server (model output)
  *
  * @returns error status of the callback
  */
-status_t output_callback(message_hdr_t *hdr, resp_message_t *resp)
+status_t output_callback(protocol_event_t *request, protocol_payload_t *resp_payload)
 {
     status_t status = STATUS_OK;
     size_t model_output_size = 0;
 
-    VALIDATE_HEADER(MESSAGE_TYPE_OUTPUT, hdr);
+    VALIDATE_HEADER(MESSAGE_TYPE_OUTPUT, request);
 
-    status = model_get_output(CONFIG_KENNING_RESPONSE_PAYLOAD_SIZE, resp->payload, &model_output_size);
+    status = model_get_output(CONFIG_KENNING_RESPONSE_PAYLOAD_SIZE, resp_payload->raw_bytes, &model_output_size);
 
-    CHECK_STATUS_LOG(status, resp, "model_get_output returned 0x%x (%s)", status, get_status_str(status));
+    CHECK_STATUS_LOG(status, "model_get_output returned 0x%x (%s)", status, get_status_str(status));
 
-    resp->hdr.payload_size = model_output_size;
-    resp->hdr.flags.general_purpose_flags.success = 1;
+    resp_payload->size = model_output_size;
     return STATUS_OK;
 }
 
 /**
  * Handles STATS message. It retrieves model statistics
  *
- * @param request incoming message. It is overwritten by the response message
- * (STATS message containing model statistics or ERROR message)
+ * @param request incoming request.
+ * @param resp_payload payload, that will be sent in response by the server (inference statistics)
  *
  * @returns error status of the callback
  */
-status_t stats_callback(message_hdr_t *hdr, resp_message_t *resp)
+status_t stats_callback(protocol_event_t *request, protocol_payload_t *resp_payload)
 {
     status_t status = STATUS_OK;
     size_t statistics_length = 0;
 
-    VALIDATE_HEADER(MESSAGE_TYPE_STATS, hdr);
+    VALIDATE_HEADER(MESSAGE_TYPE_STATS, request);
 
-    status = model_get_statistics(CONFIG_KENNING_RESPONSE_PAYLOAD_SIZE, resp->payload, &statistics_length);
+    status = model_get_statistics(CONFIG_KENNING_RESPONSE_PAYLOAD_SIZE, resp_payload->raw_bytes, &statistics_length);
 
-    CHECK_STATUS_LOG(status, resp, "model_get_statistics returned 0x%x (%s)", status, get_status_str(status));
+    CHECK_STATUS_LOG(status, "model_get_statistics returned 0x%x (%s)", status, get_status_str(status));
 
-    resp->hdr.payload_size = statistics_length;
-    resp->hdr.flags.general_purpose_flags.success = 1;
-
+    resp_payload->size = statistics_length;
     return STATUS_OK;
 }
 
 /**
  * Handles IOSPEC message. It loads model IO specification
  *
- * @param request incoming message. It is overwritten by the response message
- * (OK/ERROR message)
+ * @param request incoming request.
+ * @param resp_payload payload, that will be sent in response by the server (empty here)
  *
  * @returns error status of the callback
  */
-status_t iospec_callback(message_hdr_t *hdr, resp_message_t *resp)
+status_t iospec_callback(protocol_event_t *request, protocol_payload_t *resp_payload)
 {
     status_t status = STATUS_OK;
 
-    VALIDATE_HEADER(MESSAGE_TYPE_IOSPEC, hdr);
+    VALIDATE_HEADER(MESSAGE_TYPE_IOSPEC, request);
 
     status = model_load_struct_from_loader();
 
-    CHECK_STATUS_LOG(status, resp, "model_load_struct returned 0x%x (%s)", status, get_status_str(status));
-
-    status = protocol_prepare_success_resp(resp);
+    CHECK_STATUS_LOG(status, "model_load_struct returned 0x%x (%s)", status, get_status_str(status));
 
     return status;
 }
@@ -199,18 +191,19 @@ status_t iospec_callback(message_hdr_t *hdr, resp_message_t *resp)
 /**
  * Handles RUNTIME message. It loads runtime provided as loadable linkable extension.
  *
- * @param request incoming message. It is overwritten by the response message (OK/ERROR message)
+ * @param request incoming request.
+ * @param resp_payload payload, that will be sent in response by the server (empty here)
  *
  * @returns error status of the callback
  */
-status_t runtime_callback(message_hdr_t *hdr, resp_message_t *resp)
+status_t runtime_callback(protocol_event_t *request, protocol_payload_t *resp_payload)
 {
     status_t status = STATUS_OK;
     int llext_status = 0;
 
-    VALIDATE_HEADER(MESSAGE_TYPE_RUNTIME, hdr);
+    VALIDATE_HEADER(MESSAGE_TYPE_RUNTIME, request);
 
-    size_t llext_size = hdr->payload_size;
+    size_t llext_size = request->payload.size;
 
     LOG_INF("Attempting to load %d", llext_size);
     struct llext_buf_loader buf_loader = LLEXT_BUF_LOADER(g_ldr_tables[0][LOADER_TYPE_RUNTIME]->addr, llext_size);
@@ -255,9 +248,8 @@ status_t runtime_callback(message_hdr_t *hdr, resp_message_t *resp)
         status = model_init();
     }
 
-    CHECK_STATUS_LOG(status, resp, "LLEXT runtime load returned: 0x%x (%s)", status, get_status_str(status));
+    CHECK_STATUS_LOG(status, "LLEXT runtime load returned: 0x%x (%s)", status, get_status_str(status));
 
-    status = protocol_prepare_success_resp(resp);
     RETURN_ON_ERROR(status, status);
 
     return status;

@@ -27,15 +27,14 @@ GENERATE_MODULE_STATUSES(CALLBACKS);
         }                                                               \
     } while (0);
 
-#define CHECK_STATUS_LOG(status, response, log_format, log_args...) \
-    do                                                              \
-    {                                                               \
-        if (STATUS_OK != status)                                    \
-        {                                                           \
-            LOG_ERR(log_format, ##log_args);                        \
-            return protocol_prepare_fail_resp(response);            \
-        }                                                           \
-        LOG_DBG(log_format, ##log_args);                            \
+#define CHECK_STATUS_LOG(status, log_format, log_args...) \
+    do                                                    \
+    {                                                     \
+        if (STATUS_OK != status)                          \
+        {                                                 \
+            LOG_ERR(log_format, ##log_args);              \
+        }                                                 \
+        LOG_DBG(log_format, ##log_args);                  \
     } while (0);
 
 #define PREPARE_RESPONSE(status)                               \
@@ -56,7 +55,7 @@ GENERATE_MODULE_STATUSES(CALLBACKS);
 /**
  * Type of callback function
  */
-typedef status_t (*callback_ptr_t)(message_hdr_t *, resp_message_t *);
+typedef status_t (*callback_ptr_t)(protocol_event_t *, protocol_payload_t *);
 
 #if !defined(CONFIG_LLEXT) && !defined(CONFIG_ZTEST)
 #define runtime_callback unsupported_callback
@@ -67,8 +66,8 @@ typedef status_t (*callback_ptr_t)(message_hdr_t *, resp_message_t *);
  */
 #define CALLBACKS_TABLE(ENTRY)                               \
     /*    MessageType      Callback_function */              \
-    ENTRY(MESSAGE_TYPE_PING, data_callback)                  \
-    ENTRY(MESSAGE_TYPE_STATUS, model_callback)               \
+    ENTRY(MESSAGE_TYPE_PING, unsupported_callback)           \
+    ENTRY(MESSAGE_TYPE_STATUS, unsupported_callback)         \
     ENTRY(MESSAGE_TYPE_DATA, data_callback)                  \
     ENTRY(MESSAGE_TYPE_MODEL, model_callback)                \
     ENTRY(MESSAGE_TYPE_PROCESS, process_callback)            \
@@ -80,7 +79,7 @@ typedef status_t (*callback_ptr_t)(message_hdr_t *, resp_message_t *);
     ENTRY(MESSAGE_TYPE_RUNTIME, runtime_callback)            \
     ENTRY(MESSAGE_TYPE_UNOPTIMIZED_MODEL, unsupported_callback)
 
-#define ENTRY(msg_type, callback_func) status_t callback_func(message_hdr_t *, resp_message_t *);
+#define ENTRY(msg_type, callback_func) status_t callback_func(protocol_event_t *, protocol_payload_t *);
 CALLBACKS_TABLE(ENTRY)
 #undef ENTRY
 

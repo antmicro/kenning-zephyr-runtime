@@ -94,12 +94,29 @@ status_t init_server()
     return STATUS_OK;
 }
 
-status_t wait_for_message(message_hdr_t *hdr)
+struct msg_loader *loader_picker(message_type_t message_type)
+{
+    struct msg_loader *ldr = NULL;
+    for (int i = 0; i < LDR_TABLE_COUNT; i++)
+    {
+        struct msg_loader *n_ldr = g_ldr_tables[i][MSGT_TO_LDRT(message_type)];
+        if (n_ldr != NULL)
+        {
+            ldr = n_ldr;
+        }
+    }
+    return ldr;
+}
+
+status_t wait_for_protocol_event(protocol_event_t *event)
 {
     status_t status = STATUS_OK;
-    LOG_DBG("Waiting for message");
-
-    status = protocol_recv_msg(hdr);
+    if (!IS_VALID_POINTER(event))
+    {
+        LOG_WRN("Invalid message.");
+        return INFERENCE_SERVER_STATUS_INV_PTR;
+    }
+    status = protocol_listen(event, loader_picker);
     if (PROTOCOL_STATUS_TIMEOUT == status)
     {
         LOG_WRN("Receive message timeout");
@@ -111,59 +128,53 @@ status_t wait_for_message(message_hdr_t *hdr)
         return INFERENCE_SERVER_STATUS_ERROR;
     }
     const char *message_type_str =
-        hdr->message_type < NUM_MESSAGE_TYPES ? MESSAGE_TYPE_STR[hdr->message_type] : "UNKNOWN";
-    const char *flow_control_str =
-        hdr->flow_control_flags < NUM_FLOW_CONTROL_VALUES ? FLOW_CONTROL_STR[hdr->flow_control_flags] : "UNKNOWN";
+        event->message_type < NUM_MESSAGE_TYPES ? MESSAGE_TYPE_STR[event->message_type] : "UNKNOWN";
 
-    LOG_DBG("Received message. Size: %d, type: %d (%s), flow control value: %d (%s), flags: 0x%04x", hdr->payload_size,
-            hdr->message_type, message_type_str, hdr->flow_control_flags, flow_control_str, hdr->flags.raw_bytes);
+    LOG_DBG("Received event. Size: %d, type: %d (%s), flags: 0x%04x", event->payload.size, event->message_type,
+            message_type_str, event->flags.raw_bytes);
 
     return STATUS_OK;
 }
 
-status_t handle_message(message_hdr_t *hdr)
+status_t handle_protocol_event(protocol_event_t *event)
 {
     static uint8_t __attribute__((aligned(4))) resp_payload[CONFIG_KENNING_RESPONSE_PAYLOAD_SIZE];
     status_t status = STATUS_OK;
-    resp_message_t resp = {.payload = resp_payload, .hdr = *hdr};
-    resp.hdr.flags.general_purpose_flags.is_zephyr = 1;
-    if (!IS_VALID_POINTER(hdr))
+    if (!IS_VALID_POINTER(event))
     {
-        LOG_WRN("Invalid message.");
+        LOG_WRN("Invalid event.");
         return INFERENCE_SERVER_STATUS_INV_PTR;
     }
+    protocol_event_t resp = {.payload.size = 0, .payload.raw_bytes = resp_payload, .message_type = event->message_type};
+    resp.flags.general_purpose_flags.is_zephyr = 1;
 
-    if (hdr->message_type >= NUM_MESSAGE_TYPES)
-    {
-        LOG_WRN("Unknown message type. Ignoring.");
-        return INFERENCE_SERVER_STATUS_INV_ARG;
-    }
-
-    status = g_msg_callback[hdr->message_type](hdr, &resp);
+    status = g_msg_callback[event->message_type](event, &resp.payload);
     if (STATUS_OK != status)
     {
         LOG_ERR("Runtime error: 0x%x (%s)", status, get_status_str(status));
-        return status;
-    }
-    const char *message_type_str =
-        resp.hdr.message_type < NUM_MESSAGE_TYPES ? MESSAGE_TYPE_STR[resp.hdr.message_type] : "UNKNOWN";
-    const char *flow_control_str = resp.hdr.flow_control_flags < NUM_FLOW_CONTROL_VALUES
-                                       ? FLOW_CONTROL_STR[resp.hdr.flow_control_flags]
-                                       : "UNKNOWN";
-    LOG_DBG("Sending response. Size: %d, type: %d (%s), flow control value: %d (%s), flags: 0x%04x",
-            resp.hdr.payload_size, resp.hdr.message_type, message_type_str, resp.hdr.flow_control_flags,
-            flow_control_str, resp.hdr.flags.raw_bytes);
-
-    status = protocol_transmit(&resp);
-
-    if (STATUS_OK != status)
-    {
-        LOG_ERR("Error sending message: 0x%x (%s)", status, get_status_str(status));
+        resp.flags.general_purpose_flags.fail = 1;
     }
     else
     {
-        LOG_DBG("Response sent");
+        resp.flags.general_purpose_flags.success = 1;
     }
+    if (event->is_request)
+    {
+        const char *message_type_str =
+            resp.message_type < NUM_MESSAGE_TYPES ? MESSAGE_TYPE_STR[resp.message_type] : "UNKNOWN";
+        LOG_DBG("Sending response. Size: %d, type: %d (%s), flags: 0x%04x", resp.payload.size, resp.message_type,
+                message_type_str, resp.flags.raw_bytes);
 
+        status = protocol_transmit(&resp);
+
+        if (STATUS_OK != status)
+        {
+            LOG_ERR("Error sending message: 0x%x (%s)", status, get_status_str(status));
+        }
+        else
+        {
+            LOG_DBG("Response sent");
+        }
+    }
     return status;
 }
