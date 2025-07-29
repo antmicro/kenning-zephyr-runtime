@@ -19,11 +19,11 @@ int main(void)
     // main runtime loop
     while (1)
     {
-        message_hdr_t hdr;
+        protocol_event_t event;
 
-        if (STATUS_OK == wait_for_message(&hdr))
+        if (STATUS_OK == wait_for_protocol_event(&event))
         {
-            handle_message(&hdr);
+            handle_protocol_event(&event);
         }
     }
     return 0;
