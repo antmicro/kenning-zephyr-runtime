@@ -20,8 +20,6 @@ GENERATE_MODULE_STATUSES_STR(KENNING_PROTOCOL);
 const char *const MESSAGE_TYPE_STR[] = {MESSAGE_TYPES(GENERATE_STR)};
 const char *const FLOW_CONTROL_STR[] = {FLOW_CONTROL_VALUES(GENERATE_STR)};
 
-LOADER_TYPE g_msg_ldr_map[NUM_MESSAGE_TYPES] = PREPARE_MSG_LDR_MAP;
-
 /**
  * Receives a single message header.
  *

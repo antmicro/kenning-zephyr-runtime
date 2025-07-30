@@ -8,7 +8,28 @@
 #define KENNING_INFERENCE_LIB_CORE_INFERENCE_SERVER_H_
 
 #include "kenning_inference_lib/core/kenning_protocol.h"
+#include "kenning_inference_lib/core/loaders.h"
 #include "kenning_inference_lib/core/utils.h"
+
+#define PREPARE_MSG_LDR_MAP                                     \
+    {                                                           \
+        LOADER_TYPE_NONE,    /*MESSAGE_TYPE_PING*/              \
+        LOADER_TYPE_NONE,    /*MESSAGE_TYPE_STATUS*/            \
+        LOADER_TYPE_DATA,    /*MESSAGE_TYPE_DATA*/              \
+        LOADER_TYPE_MODEL,   /*MESSAGE_TYPE_MODEL*/             \
+        LOADER_TYPE_NONE,    /*MESSAGE_TYPE_PROCESS*/           \
+        LOADER_TYPE_NONE,    /*MESSAGE_TYPE_OUTPUT*/            \
+        LOADER_TYPE_NONE,    /*MESSAGE_TYPE_STATS*/             \
+        LOADER_TYPE_IOSPEC,  /*MESSAGE_TYPE_IOSPEC*/            \
+        LOADER_TYPE_NONE,    /*MESSAGE_TYPE_OPTIMIZERS*/        \
+        LOADER_TYPE_NONE,    /*MESSAGE_TYPE_OPTIMIZE_MODEL*/    \
+        LOADER_TYPE_RUNTIME, /*MESSAGE_TYPE_RUNTIME*/           \
+        LOADER_TYPE_NONE,    /*MESSAGE_TYPE_UNOPTIMIZED_MODEL*/ \
+    }
+
+extern LOADER_TYPE g_msg_ldr_map[NUM_MESSAGE_TYPES];
+
+#define MSGT_TO_LDRT(msg) g_msg_ldr_map[(msg)]
 
 /**
  * Runtime custom error codes

@@ -29,6 +29,8 @@ extern const char *const MESSAGE_TYPE_STR[];
 extern const char *const FLOW_CONTROL_STR[];
 extern const callback_ptr_t g_msg_callback[];
 
+LOADER_TYPE g_msg_ldr_map[NUM_MESSAGE_TYPES] = PREPARE_MSG_LDR_MAP;
+
 #if defined(CONFIG_LLEXT)
 
 int reset_runtime_alloc(struct msg_loader *ldr, size_t n)
