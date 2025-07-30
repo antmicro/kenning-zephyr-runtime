@@ -341,15 +341,6 @@ kenning optimize test report \
     --to-html \
     --verbosity INFO
 ```
-Alternatively, build and evaluation can be done in a single step:
-```bash
-kenning optimize test report \
-    --cfg kenning-scenarios/renode-zephyr-auto-tvm-llext-magic-wand-inference.yml \
-    --measurements results.json --verbosity INFO \
-    --report-path reports/stm32-renode-auto-tvm-llext-magic-wand/report.md \
-    --to-html \
-    --verbosity INFO
-```
 
 The above two steps (`west build` and `kenning ...`) can be also performed by Kenning automatically using `ZephyrRuntimeBuilder`:
 
