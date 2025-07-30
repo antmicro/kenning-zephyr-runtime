@@ -34,8 +34,6 @@ DEFINE_FFF_GLOBALS;
 
 #define MOCKS(MOCK)                                                                                        \
     MOCK(const char *, get_status_str, status_t)                                                           \
-    MOCK(status_t, protocol_prepare_success_resp, resp_message_t *)                                        \
-    MOCK(status_t, protocol_prepare_fail_resp, resp_message_t *)                                           \
     MOCK(status_t, model_load_struct_from_loader)                                                          \
     MOCK(status_t, model_load_weights_from_loader)                                                         \
     MOCK(status_t, model_load_input_from_loader, const size_t)                                             \
@@ -65,7 +63,7 @@ int llext_load_success_mock(struct llext_loader *ldr, const char *name, struct l
 // helper functions declarations
 // ========================================================
 
-message_hdr_t prepare_message_header(message_type_t msg_type, size_t payload_size);
+protocol_event_t prepare_request(message_type_t msg_type, size_t payload_size);
 
 /**
  * Prepares message of given type and payload
@@ -88,9 +86,6 @@ static void callbacks_tests_setup_f()
 {
     MOCKS(RESET_MOCK);
 
-    protocol_prepare_success_resp_fake.return_val = STATUS_OK;
-    protocol_prepare_fail_resp_fake.return_val = STATUS_OK;
-
     static struct msg_loader msg_loader_llext = {0};
     g_ldr_tables[0][LOADER_TYPE_RUNTIME] = &msg_loader_llext;
 }
@@ -107,16 +102,16 @@ ZTEST_SUITE(kenning_inference_lib_test_callbacks, NULL, NULL, callbacks_tests_se
 ZTEST(kenning_inference_lib_test_callbacks, test_unsupported_callback)
 {
     status_t status = STATUS_OK;
-    message_hdr_t hdr;
-    resp_message_t resp;
+    protocol_event_t request;
+    protocol_payload_t resp_payload;
 
-#define TEST_UNSUPPORTED_CALLBACK(_message_type)    \
-    hdr = prepare_message_header(_message_type, 0); \
-    status = unsupported_callback(&hdr, &resp);     \
+#define TEST_UNSUPPORTED_CALLBACK(_message_type)            \
+    request = prepare_request(_message_type, 0);            \
+    status = unsupported_callback(&request, &resp_payload); \
     zassert_equal(STATUS_OK, status);
 
-    TEST_UNSUPPORTED_CALLBACK(MESSAGE_TYPE_OK);
-    TEST_UNSUPPORTED_CALLBACK(MESSAGE_TYPE_ERROR);
+    TEST_UNSUPPORTED_CALLBACK(MESSAGE_TYPE_PING);
+    TEST_UNSUPPORTED_CALLBACK(MESSAGE_TYPE_STATUS);
     TEST_UNSUPPORTED_CALLBACK(MESSAGE_TYPE_DATA);
     TEST_UNSUPPORTED_CALLBACK(MESSAGE_TYPE_MODEL);
     TEST_UNSUPPORTED_CALLBACK(MESSAGE_TYPE_PROCESS);
@@ -131,124 +126,6 @@ ZTEST(kenning_inference_lib_test_callbacks, test_unsupported_callback)
 }
 
 // ========================================================
-// ok_callback
-// ========================================================
-
-/**
- * Tests if ok callback has no response
- */
-ZTEST(kenning_inference_lib_test_callbacks, test_ok_callback)
-{
-    status_t status = STATUS_OK;
-    message_hdr_t hdr = prepare_message_header(MESSAGE_TYPE_OK, 0);
-    resp_message_t resp;
-
-    status = ok_callback(&hdr, &resp);
-
-    zassert_equal(STATUS_OK, status);
-    zassert_equal(protocol_prepare_fail_resp_fake.call_count, 1);
-}
-
-/**
- * Tests if ok callback fails for invalid pointer
- */
-ZTEST(kenning_inference_lib_test_callbacks, test_ok_callback_invalid_pointer)
-{
-    status_t status = STATUS_OK;
-    resp_message_t resp;
-    status = ok_callback(NULL, &resp);
-
-    zassert_equal(CALLBACKS_STATUS_INV_PTR, status);
-}
-
-/**
- * Tests if ok callback fails for invalid request message type
- */
-ZTEST(kenning_inference_lib_test_callbacks, test_ok_callback_invalid_message_type)
-{
-    status_t status = STATUS_OK;
-    message_hdr_t hdr;
-    resp_message_t resp;
-
-#define TEST_OK_CALLBACK(_message_type)             \
-    hdr = prepare_message_header(_message_type, 0); \
-    status = ok_callback(&hdr, &resp);              \
-    zassert_equal(CALLBACKS_STATUS_INV_MSG_TYPE, status);
-
-    TEST_OK_CALLBACK(MESSAGE_TYPE_ERROR);
-    TEST_OK_CALLBACK(MESSAGE_TYPE_DATA);
-    TEST_OK_CALLBACK(MESSAGE_TYPE_MODEL);
-    TEST_OK_CALLBACK(MESSAGE_TYPE_PROCESS);
-    TEST_OK_CALLBACK(MESSAGE_TYPE_OUTPUT);
-    TEST_OK_CALLBACK(MESSAGE_TYPE_STATS);
-    TEST_OK_CALLBACK(MESSAGE_TYPE_IOSPEC);
-    TEST_OK_CALLBACK(MESSAGE_TYPE_OPTIMIZERS);
-    TEST_OK_CALLBACK(MESSAGE_TYPE_OPTIMIZE_MODEL);
-    TEST_OK_CALLBACK(MESSAGE_TYPE_RUNTIME);
-
-#undef TEST_OK_CALLBACK
-}
-
-// ========================================================
-// error_callback
-// ========================================================
-
-/**
- * Tests if error callback has no response
- */
-ZTEST(kenning_inference_lib_test_callbacks, test_error_callback)
-{
-    status_t status = STATUS_OK;
-    message_hdr_t hdr = prepare_message_header(MESSAGE_TYPE_ERROR, 0);
-    resp_message_t resp;
-
-    status = error_callback(&hdr, &resp);
-
-    zassert_equal(STATUS_OK, status);
-    zassert_equal(protocol_prepare_fail_resp_fake.call_count, 1);
-}
-
-/**
- * Tests if error callback fails for invalid pointer
- */
-ZTEST(kenning_inference_lib_test_callbacks, test_error_callback_invalid_pointer)
-{
-    status_t status = STATUS_OK;
-    resp_message_t resp;
-    status = error_callback(NULL, &resp);
-
-    zassert_equal(CALLBACKS_STATUS_INV_PTR, status);
-}
-
-/**
- * Tests if error callback fails for invalid request message type
- */
-ZTEST(kenning_inference_lib_test_callbacks, test_error_callback_invalid_message_type)
-{
-    status_t status = STATUS_OK;
-    message_hdr_t hdr;
-    resp_message_t resp;
-
-#define TEST_ERROR_CALLBACK(_message_type)          \
-    hdr = prepare_message_header(_message_type, 0); \
-    status = error_callback(&hdr, &resp);           \
-    zassert_equal(CALLBACKS_STATUS_INV_MSG_TYPE, status);
-
-    TEST_ERROR_CALLBACK(MESSAGE_TYPE_OK);
-    TEST_ERROR_CALLBACK(MESSAGE_TYPE_DATA);
-    TEST_ERROR_CALLBACK(MESSAGE_TYPE_MODEL);
-    TEST_ERROR_CALLBACK(MESSAGE_TYPE_PROCESS);
-    TEST_ERROR_CALLBACK(MESSAGE_TYPE_OUTPUT);
-    TEST_ERROR_CALLBACK(MESSAGE_TYPE_STATS);
-    TEST_ERROR_CALLBACK(MESSAGE_TYPE_IOSPEC);
-    TEST_ERROR_CALLBACK(MESSAGE_TYPE_OPTIMIZERS);
-    TEST_ERROR_CALLBACK(MESSAGE_TYPE_OPTIMIZE_MODEL);
-    TEST_ERROR_CALLBACK(MESSAGE_TYPE_RUNTIME);
-
-#undef TEST_ERROR_CALLBACK
-}
-
-// ========================================================
 // data_callback
 // ========================================================
 
@@ -258,16 +135,16 @@ ZTEST(kenning_inference_lib_test_callbacks, test_error_callback_invalid_message_
 ZTEST(kenning_inference_lib_test_callbacks, test_data_callback)
 {
     status_t status = STATUS_OK;
-    message_hdr_t hdr = prepare_message_header(MESSAGE_TYPE_DATA, 0);
-    resp_message_t resp;
+
+    protocol_event_t request = prepare_request(MESSAGE_TYPE_DATA, 0);
+    protocol_payload_t resp_payload;
 
     model_load_input_from_loader_fake.return_val = STATUS_OK;
 
-    status = data_callback(&hdr, &resp);
+    status = data_callback(&request, &resp_payload);
 
     zassert_equal(STATUS_OK, status);
     zassert_equal(model_load_input_from_loader_fake.call_count, 1);
-    zassert_equal(protocol_prepare_success_resp_fake.call_count, 1);
 }
 /**
  * Tests if data callback fails if model input loading fails
@@ -275,16 +152,15 @@ ZTEST(kenning_inference_lib_test_callbacks, test_data_callback)
 ZTEST(kenning_inference_lib_test_callbacks, test_data_callback_model_error)
 {
     status_t status = STATUS_OK;
-    message_hdr_t hdr = prepare_message_header(MESSAGE_TYPE_DATA, 0);
-    resp_message_t resp;
+    protocol_event_t request = prepare_request(MESSAGE_TYPE_DATA, 0);
+    protocol_payload_t resp_payload;
 
     model_load_input_from_loader_fake.return_val = MODEL_STATUS_INV_STATE;
 
-    status = data_callback(&hdr, &resp);
+    status = data_callback(&request, &resp_payload);
 
-    zassert_equal(STATUS_OK, status);
+    zassert_equal(MODEL_STATUS_INV_STATE, status);
     zassert_equal(model_load_input_from_loader_fake.call_count, 1);
-    zassert_equal(protocol_prepare_fail_resp_fake.call_count, 1);
 }
 
 /**
@@ -293,9 +169,9 @@ ZTEST(kenning_inference_lib_test_callbacks, test_data_callback_model_error)
 ZTEST(kenning_inference_lib_test_callbacks, test_data_callback_invalid_pointer)
 {
     status_t status = STATUS_OK;
-    resp_message_t resp;
+    protocol_payload_t resp_payload;
 
-    status = data_callback(NULL, &resp);
+    status = data_callback(NULL, &resp_payload);
 
     zassert_equal(CALLBACKS_STATUS_INV_PTR, status);
     zassert_equal(model_load_input_from_loader_fake.call_count, 0);
@@ -307,17 +183,17 @@ ZTEST(kenning_inference_lib_test_callbacks, test_data_callback_invalid_pointer)
 ZTEST(kenning_inference_lib_test_callbacks, test_data_callback_invalid_message_type)
 {
     status_t status = STATUS_OK;
-    message_hdr_t hdr;
-    resp_message_t resp;
+    protocol_event_t request = prepare_request(MESSAGE_TYPE_DATA, 0);
+    protocol_payload_t resp_payload;
 
 #define TEST_DATA_CALLBACK(_message_type)                 \
-    hdr = prepare_message_header(_message_type, 0);       \
-    status = data_callback(&hdr, &resp);                  \
+    request = prepare_request(_message_type, 0);          \
+    status = data_callback(&request, &resp_payload);      \
     zassert_equal(CALLBACKS_STATUS_INV_MSG_TYPE, status); \
     zassert_equal(model_load_input_from_loader_fake.call_count, 0);
 
-    TEST_DATA_CALLBACK(MESSAGE_TYPE_OK);
-    TEST_DATA_CALLBACK(MESSAGE_TYPE_ERROR);
+    TEST_DATA_CALLBACK(MESSAGE_TYPE_PING);
+    TEST_DATA_CALLBACK(MESSAGE_TYPE_STATUS);
     TEST_DATA_CALLBACK(MESSAGE_TYPE_MODEL);
     TEST_DATA_CALLBACK(MESSAGE_TYPE_PROCESS);
     TEST_DATA_CALLBACK(MESSAGE_TYPE_OUTPUT);
@@ -340,16 +216,15 @@ ZTEST(kenning_inference_lib_test_callbacks, test_data_callback_invalid_message_t
 ZTEST(kenning_inference_lib_test_callbacks, test_model_callback)
 {
     status_t status = STATUS_OK;
-    message_hdr_t hdr = prepare_message_header(MESSAGE_TYPE_MODEL, 0);
-    resp_message_t resp;
+    protocol_event_t request = prepare_request(MESSAGE_TYPE_MODEL, 0);
+    protocol_payload_t resp_payload;
 
     model_load_weights_from_loader_fake.return_val = STATUS_OK;
 
-    status = model_callback(&hdr, &resp);
+    status = model_callback(&request, &resp_payload);
 
     zassert_equal(STATUS_OK, status);
     zassert_equal(model_load_weights_from_loader_fake.call_count, 1);
-    zassert_equal(protocol_prepare_success_resp_fake.call_count, 1);
 }
 
 /**
@@ -358,16 +233,15 @@ ZTEST(kenning_inference_lib_test_callbacks, test_model_callback)
 ZTEST(kenning_inference_lib_test_callbacks, test_model_callback_model_error)
 {
     status_t status = STATUS_OK;
-    message_hdr_t hdr = prepare_message_header(MESSAGE_TYPE_MODEL, 0);
-    resp_message_t resp;
+    protocol_event_t request = prepare_request(MESSAGE_TYPE_MODEL, 0);
+    protocol_payload_t resp_payload;
 
     model_load_weights_from_loader_fake.return_val = MODEL_STATUS_ERROR;
 
-    status = model_callback(&hdr, &resp);
+    status = model_callback(&request, &resp_payload);
 
-    zassert_equal(STATUS_OK, status);
+    zassert_equal(MODEL_STATUS_ERROR, status);
     zassert_equal(model_load_weights_from_loader_fake.call_count, 1);
-    zassert_equal(protocol_prepare_fail_resp_fake.call_count, 1);
 }
 
 /**
@@ -376,9 +250,8 @@ ZTEST(kenning_inference_lib_test_callbacks, test_model_callback_model_error)
 ZTEST(kenning_inference_lib_test_callbacks, test_model_callback_invalid_pointer)
 {
     status_t status = STATUS_OK;
-    resp_message_t resp;
-
-    status = model_callback(NULL, &resp);
+    protocol_payload_t resp_payload;
+    status = model_callback(NULL, &resp_payload);
 
     zassert_equal(CALLBACKS_STATUS_INV_PTR, status);
     zassert_equal(model_load_weights_from_loader_fake.call_count, 0);
@@ -390,17 +263,17 @@ ZTEST(kenning_inference_lib_test_callbacks, test_model_callback_invalid_pointer)
 ZTEST(kenning_inference_lib_test_callbacks, test_model_callback_invalid_message_type)
 {
     status_t status = STATUS_OK;
-    message_hdr_t hdr;
-    resp_message_t resp;
+    protocol_event_t request = prepare_request(MESSAGE_TYPE_MODEL, 0);
+    protocol_payload_t resp_payload;
 
 #define TEST_MODEL_CALLBACK(_message_type)                \
-    hdr = prepare_message_header(_message_type, 0);       \
-    status = model_callback(&hdr, &resp);                 \
+    request = prepare_request(_message_type, 0);          \
+    status = model_callback(&request, &resp_payload);     \
     zassert_equal(CALLBACKS_STATUS_INV_MSG_TYPE, status); \
     zassert_equal(model_load_weights_from_loader_fake.call_count, 0);
 
-    TEST_MODEL_CALLBACK(MESSAGE_TYPE_OK);
-    TEST_MODEL_CALLBACK(MESSAGE_TYPE_ERROR);
+    TEST_MODEL_CALLBACK(MESSAGE_TYPE_PING);
+    TEST_MODEL_CALLBACK(MESSAGE_TYPE_STATUS);
     TEST_MODEL_CALLBACK(MESSAGE_TYPE_DATA);
     TEST_MODEL_CALLBACK(MESSAGE_TYPE_PROCESS);
     TEST_MODEL_CALLBACK(MESSAGE_TYPE_OUTPUT);
@@ -423,15 +296,15 @@ ZTEST(kenning_inference_lib_test_callbacks, test_model_callback_invalid_message_
 ZTEST(kenning_inference_lib_test_callbacks, test_process_callback)
 {
     status_t status = STATUS_OK;
-    message_hdr_t hdr = prepare_message_header(MESSAGE_TYPE_PROCESS, 0);
-    resp_message_t resp;
+    protocol_event_t request = prepare_request(MESSAGE_TYPE_PROCESS, 0);
+    protocol_payload_t resp_payload;
 
     model_run_bench_fake.return_val = STATUS_OK;
 
-    status = process_callback(&hdr, &resp);
+    status = process_callback(&request, &resp_payload);
 
     zassert_equal(STATUS_OK, status);
-    zassert_equal(protocol_prepare_success_resp_fake.call_count, 1);
+
     zassert_equal(model_run_bench_fake.call_count, 1);
 }
 
@@ -441,16 +314,15 @@ ZTEST(kenning_inference_lib_test_callbacks, test_process_callback)
 ZTEST(kenning_inference_lib_test_callbacks, test_process_callback_model_error)
 {
     status_t status = STATUS_OK;
-    message_hdr_t hdr = prepare_message_header(MESSAGE_TYPE_PROCESS, 0);
-    resp_message_t resp;
+    protocol_event_t request = prepare_request(MESSAGE_TYPE_PROCESS, 0);
+    protocol_payload_t resp_payload;
 
     model_run_bench_fake.return_val = MODEL_STATUS_ERROR;
 
-    status = process_callback(&hdr, &resp);
+    status = process_callback(&request, &resp_payload);
 
-    zassert_equal(STATUS_OK, status);
+    zassert_equal(MODEL_STATUS_ERROR, status);
     zassert_equal(model_run_bench_fake.call_count, 1);
-    zassert_equal(protocol_prepare_fail_resp_fake.call_count, 1);
 }
 
 /**
@@ -459,13 +331,12 @@ ZTEST(kenning_inference_lib_test_callbacks, test_process_callback_model_error)
 ZTEST(kenning_inference_lib_test_callbacks, test_process_callback_invalid_pointer)
 {
     status_t status = STATUS_OK;
-    resp_message_t resp;
+    protocol_payload_t resp_payload;
 
-    status = process_callback(NULL, &resp);
+    status = process_callback(NULL, &resp_payload);
 
     zassert_equal(CALLBACKS_STATUS_INV_PTR, status);
     zassert_equal(model_run_bench_fake.call_count, 0);
-    zassert_equal(model_load_input_from_loader_fake.call_count, 0);
 }
 
 /**
@@ -474,17 +345,17 @@ ZTEST(kenning_inference_lib_test_callbacks, test_process_callback_invalid_pointe
 ZTEST(kenning_inference_lib_test_callbacks, test_process_callback_invalid_message_type)
 {
     status_t status = STATUS_OK;
-    message_hdr_t hdr;
-    resp_message_t resp;
+    protocol_event_t request = prepare_request(MESSAGE_TYPE_PROCESS, 0);
+    protocol_payload_t resp_payload;
 
 #define TEST_PROCESS_CALLBACK(_message_type)              \
-    hdr = prepare_message_header(_message_type, 0);       \
-    status = process_callback(&hdr, &resp);               \
+    request = prepare_request(_message_type, 0);          \
+    status = process_callback(&request, &resp_payload);   \
     zassert_equal(CALLBACKS_STATUS_INV_MSG_TYPE, status); \
     zassert_equal(model_run_bench_fake.call_count, 0);
 
-    TEST_PROCESS_CALLBACK(MESSAGE_TYPE_OK);
-    TEST_PROCESS_CALLBACK(MESSAGE_TYPE_ERROR);
+    TEST_PROCESS_CALLBACK(MESSAGE_TYPE_PING);
+    TEST_PROCESS_CALLBACK(MESSAGE_TYPE_STATUS);
     TEST_PROCESS_CALLBACK(MESSAGE_TYPE_DATA);
     TEST_PROCESS_CALLBACK(MESSAGE_TYPE_MODEL);
     TEST_PROCESS_CALLBACK(MESSAGE_TYPE_OUTPUT);
@@ -507,18 +378,17 @@ ZTEST(kenning_inference_lib_test_callbacks, test_process_callback_invalid_messag
 ZTEST(kenning_inference_lib_test_callbacks, test_output_callback)
 {
     status_t status = STATUS_OK;
-    message_hdr_t hdr = prepare_message_header(MESSAGE_TYPE_OUTPUT, 0);
-    resp_message_t resp = {.payload = (uint8_t *)0x12345};
+    protocol_event_t request = prepare_request(MESSAGE_TYPE_OUTPUT, 0);
+    protocol_payload_t resp_payload;
 
     model_get_output_fake.custom_fake = model_get_output_mock;
 
-    status = output_callback(&hdr, &resp);
+    status = output_callback(&request, &resp_payload);
 
     zassert_equal(STATUS_OK, status);
     zassert_equal(model_get_output_fake.call_count, 1);
-    zassert_equal(resp.hdr.payload_size, MODEL_OUTPUT_SIZE);
-    zassert_equal(model_get_output_fake.arg1_val, resp.payload);
-    zassert_equal(resp.hdr.message_type, MESSAGE_TYPE_OK);
+    zassert_equal(resp_payload.size, MODEL_OUTPUT_SIZE);
+    zassert_equal(model_get_output_fake.arg1_val, resp_payload.raw_bytes);
 }
 
 /**
@@ -527,16 +397,15 @@ ZTEST(kenning_inference_lib_test_callbacks, test_output_callback)
 ZTEST(kenning_inference_lib_test_callbacks, test_output_callback_model_error)
 {
     status_t status = STATUS_OK;
-    message_hdr_t hdr = prepare_message_header(MESSAGE_TYPE_OUTPUT, 0);
-    resp_message_t resp = {.payload = (uint8_t *)0x12345};
+    protocol_event_t request = prepare_request(MESSAGE_TYPE_OUTPUT, 0);
+    protocol_payload_t resp_payload = {.raw_bytes = (uint8_t *)0x12345};
 
     model_get_output_fake.return_val = MODEL_STATUS_ERROR;
 
-    status = output_callback(&hdr, &resp);
+    status = output_callback(&request, &resp_payload);
 
     zassert_equal(STATUS_OK, status);
     zassert_equal(model_get_output_fake.call_count, 1);
-    zassert_equal(protocol_prepare_fail_resp_fake.call_count, 1);
 }
 
 /**
@@ -545,9 +414,9 @@ ZTEST(kenning_inference_lib_test_callbacks, test_output_callback_model_error)
 ZTEST(kenning_inference_lib_test_callbacks, test_output_callback_invalid_pointer)
 {
     status_t status = STATUS_OK;
-    resp_message_t resp;
+    protocol_payload_t resp_payload;
 
-    status = output_callback(NULL, &resp);
+    status = output_callback(NULL, &resp_payload);
 
     zassert_equal(CALLBACKS_STATUS_INV_PTR, status);
     zassert_equal(model_get_output_fake.call_count, 0);
@@ -559,17 +428,17 @@ ZTEST(kenning_inference_lib_test_callbacks, test_output_callback_invalid_pointer
 ZTEST(kenning_inference_lib_test_callbacks, test_output_callback_invalid_message_type)
 {
     status_t status = STATUS_OK;
-    message_hdr_t hdr;
-    resp_message_t resp;
+    protocol_event_t request;
+    protocol_payload_t resp_payload;
 
 #define TEST_OUTPUT_CALLBACK(_message_type)               \
-    hdr = prepare_message_header(_message_type, 0);       \
-    status = output_callback(&hdr, &resp);                \
+    request = prepare_request(_message_type, 0);          \
+    status = output_callback(&request, &resp_payload);    \
     zassert_equal(CALLBACKS_STATUS_INV_MSG_TYPE, status); \
     zassert_equal(model_get_output_fake.call_count, 0);
 
-    TEST_OUTPUT_CALLBACK(MESSAGE_TYPE_OK);
-    TEST_OUTPUT_CALLBACK(MESSAGE_TYPE_ERROR);
+    TEST_OUTPUT_CALLBACK(MESSAGE_TYPE_PING);
+    TEST_OUTPUT_CALLBACK(MESSAGE_TYPE_STATUS);
     TEST_OUTPUT_CALLBACK(MESSAGE_TYPE_DATA);
     TEST_OUTPUT_CALLBACK(MESSAGE_TYPE_MODEL);
     TEST_OUTPUT_CALLBACK(MESSAGE_TYPE_PROCESS);
@@ -592,18 +461,17 @@ ZTEST(kenning_inference_lib_test_callbacks, test_output_callback_invalid_message
 ZTEST(kenning_inference_lib_test_callbacks, test_stats_callback)
 {
     status_t status = STATUS_OK;
-    message_hdr_t hdr = prepare_message_header(MESSAGE_TYPE_STATS, 0);
-    resp_message_t resp = {.hdr = {.payload_size = 0}, .payload = (uint8_t *)0x12345};
+    protocol_event_t request = prepare_request(MESSAGE_TYPE_STATS, 0);
+    protocol_payload_t resp_payload = {.size = 0, .raw_bytes = (uint8_t *)0x12345};
 
     model_get_statistics_fake.custom_fake = model_get_statistics_mock;
 
-    status = stats_callback(&hdr, &resp);
+    status = stats_callback(&request, &resp_payload);
 
     zassert_equal(STATUS_OK, status);
     zassert_equal(model_get_statistics_fake.call_count, 1);
-    zassert_equal(resp.hdr.payload_size, STATISTICS_SIZE);
-    zassert_equal(model_get_statistics_fake.arg1_val, resp.payload);
-    zassert_equal(resp.hdr.message_type, MESSAGE_TYPE_OK);
+    zassert_equal(resp_payload.size, STATISTICS_SIZE);
+    zassert_equal(model_get_statistics_fake.arg1_val, resp_payload.raw_bytes);
 }
 
 /**
@@ -612,16 +480,15 @@ ZTEST(kenning_inference_lib_test_callbacks, test_stats_callback)
 ZTEST(kenning_inference_lib_test_callbacks, test_stats_callback_model_error)
 {
     status_t status = STATUS_OK;
-    message_hdr_t hdr = prepare_message_header(MESSAGE_TYPE_STATS, 0);
-    resp_message_t resp = {.payload = (uint8_t *)0x12345};
+    protocol_event_t request = prepare_request(MESSAGE_TYPE_STATS, 0);
+    protocol_payload_t resp_payload = {.raw_bytes = (uint8_t *)0x12345};
 
     model_get_statistics_fake.return_val = MODEL_STATUS_ERROR;
 
-    status = stats_callback(&hdr, &resp);
+    status = stats_callback(&request, &resp_payload);
 
     zassert_equal(STATUS_OK, status);
     zassert_equal(model_get_statistics_fake.call_count, 1);
-    zassert_equal(protocol_prepare_fail_resp_fake.call_count, 1);
 }
 
 /**
@@ -630,9 +497,9 @@ ZTEST(kenning_inference_lib_test_callbacks, test_stats_callback_model_error)
 ZTEST(kenning_inference_lib_test_callbacks, test_stats_callback_invalid_pointer)
 {
     status_t status = STATUS_OK;
-    resp_message_t resp;
+    protocol_payload_t resp_payload;
 
-    status = stats_callback(NULL, &resp);
+    status = stats_callback(NULL, &resp_payload);
 
     zassert_equal(CALLBACKS_STATUS_INV_PTR, status);
     zassert_equal(model_get_statistics_fake.call_count, 0);
@@ -644,17 +511,17 @@ ZTEST(kenning_inference_lib_test_callbacks, test_stats_callback_invalid_pointer)
 ZTEST(kenning_inference_lib_test_callbacks, test_stats_callback_invalid_message_type)
 {
     status_t status = STATUS_OK;
-    message_hdr_t hdr;
-    resp_message_t resp;
+    protocol_event_t request = prepare_request(MESSAGE_TYPE_STATS, 0);
+    protocol_payload_t resp_payload;
 
 #define TEST_STATS_CALLBACK(_message_type)                \
-    hdr = prepare_message_header(_message_type, 0);       \
-    status = stats_callback(&hdr, &resp);                 \
+    request = prepare_request(_message_type, 0);          \
+    status = stats_callback(&request, &resp_payload);     \
     zassert_equal(CALLBACKS_STATUS_INV_MSG_TYPE, status); \
     zassert_equal(model_get_statistics_fake.call_count, 0);
 
-    TEST_STATS_CALLBACK(MESSAGE_TYPE_OK);
-    TEST_STATS_CALLBACK(MESSAGE_TYPE_ERROR);
+    TEST_STATS_CALLBACK(MESSAGE_TYPE_PING);
+    TEST_STATS_CALLBACK(MESSAGE_TYPE_STATUS);
     TEST_STATS_CALLBACK(MESSAGE_TYPE_DATA);
     TEST_STATS_CALLBACK(MESSAGE_TYPE_MODEL);
     TEST_STATS_CALLBACK(MESSAGE_TYPE_PROCESS);
@@ -677,16 +544,15 @@ ZTEST(kenning_inference_lib_test_callbacks, test_stats_callback_invalid_message_
 ZTEST(kenning_inference_lib_test_callbacks, test_iospec_callback)
 {
     status_t status = STATUS_OK;
-    message_hdr_t hdr = prepare_message_header(MESSAGE_TYPE_IOSPEC, 0);
-    resp_message_t resp;
+    protocol_event_t request = prepare_request(MESSAGE_TYPE_IOSPEC, 0);
+    protocol_payload_t resp_payload;
 
     model_load_struct_from_loader_fake.return_val = STATUS_OK;
 
-    status = iospec_callback(&hdr, &resp);
+    status = iospec_callback(&request, &resp_payload);
 
     zassert_equal(STATUS_OK, status);
     zassert_equal(model_load_struct_from_loader_fake.call_count, 1);
-    zassert_equal(protocol_prepare_success_resp_fake.call_count, 1);
 }
 
 /**
@@ -695,16 +561,15 @@ ZTEST(kenning_inference_lib_test_callbacks, test_iospec_callback)
 ZTEST(kenning_inference_lib_test_callbacks, test_iospec_callback_model_error)
 {
     status_t status = STATUS_OK;
-    message_hdr_t hdr = prepare_message_header(MESSAGE_TYPE_IOSPEC, 0);
-    resp_message_t resp;
+    protocol_event_t request = prepare_request(MESSAGE_TYPE_IOSPEC, 0);
+    protocol_payload_t resp_payload;
 
     model_load_struct_from_loader_fake.return_val = MODEL_STATUS_ERROR;
 
-    status = iospec_callback(&hdr, &resp);
+    status = iospec_callback(&request, &resp_payload);
 
-    zassert_equal(STATUS_OK, status);
+    zassert_equal(MODEL_STATUS_ERROR, status);
     zassert_equal(model_load_struct_from_loader_fake.call_count, 1);
-    zassert_equal(protocol_prepare_fail_resp_fake.call_count, 1);
 }
 
 /**
@@ -713,9 +578,9 @@ ZTEST(kenning_inference_lib_test_callbacks, test_iospec_callback_model_error)
 ZTEST(kenning_inference_lib_test_callbacks, test_iospec_callback_invalid_pointer)
 {
     status_t status = STATUS_OK;
-    resp_message_t resp;
+    protocol_payload_t resp_payload;
 
-    status = iospec_callback(NULL, &resp);
+    status = iospec_callback(NULL, &resp_payload);
 
     zassert_equal(CALLBACKS_STATUS_INV_PTR, status);
     zassert_equal(model_load_struct_from_loader_fake.call_count, 0);
@@ -727,17 +592,17 @@ ZTEST(kenning_inference_lib_test_callbacks, test_iospec_callback_invalid_pointer
 ZTEST(kenning_inference_lib_test_callbacks, test_iospec_callback_invalid_message_type)
 {
     status_t status = STATUS_OK;
-    message_hdr_t hdr;
-    resp_message_t resp;
+    protocol_event_t request;
+    protocol_payload_t resp_payload;
 
 #define TEST_IOSPEC_CALLBACK(_message_type)               \
-    hdr = prepare_message_header(_message_type, 0);       \
-    status = iospec_callback(&hdr, &resp);                \
+    request = prepare_request(_message_type, 0);          \
+    status = iospec_callback(&request, &resp_payload);    \
     zassert_equal(CALLBACKS_STATUS_INV_MSG_TYPE, status); \
     zassert_equal(model_load_struct_from_loader_fake.call_count, 0);
 
-    TEST_IOSPEC_CALLBACK(MESSAGE_TYPE_OK);
-    TEST_IOSPEC_CALLBACK(MESSAGE_TYPE_ERROR);
+    TEST_IOSPEC_CALLBACK(MESSAGE_TYPE_PING);
+    TEST_IOSPEC_CALLBACK(MESSAGE_TYPE_STATUS);
     TEST_IOSPEC_CALLBACK(MESSAGE_TYPE_DATA);
     TEST_IOSPEC_CALLBACK(MESSAGE_TYPE_MODEL);
     TEST_IOSPEC_CALLBACK(MESSAGE_TYPE_PROCESS);
@@ -760,8 +625,8 @@ ZTEST(kenning_inference_lib_test_callbacks, test_iospec_callback_invalid_message
 ZTEST(kenning_inference_lib_test_callbacks, test_runtime_callback)
 {
     status_t status = STATUS_OK;
-    message_hdr_t hdr = prepare_message_header(MESSAGE_TYPE_RUNTIME, 1234);
-    resp_message_t resp;
+    protocol_event_t request = prepare_request(MESSAGE_TYPE_RUNTIME, 1234);
+    protocol_payload_t resp_payload;
 
     llext_by_name_fake.return_val = NULL;
 
@@ -773,7 +638,7 @@ ZTEST(kenning_inference_lib_test_callbacks, test_runtime_callback)
     model_init_fake.return_val = STATUS_OK;
     runtime_deinit_fake.return_val = STATUS_OK;
 
-    status = runtime_callback(&hdr, &resp);
+    status = runtime_callback(&request, &resp_payload);
 
     zassert_equal(1, llext_load_fake.call_count);
     zassert_equal(1, llext_bringup_fake.call_count);
@@ -790,8 +655,8 @@ ZTEST(kenning_inference_lib_test_callbacks, test_runtime_callback)
 ZTEST(kenning_inference_lib_test_callbacks, test_runtime_callback_fail)
 {
     status_t status = STATUS_OK;
-    message_hdr_t hdr = prepare_message_header(MESSAGE_TYPE_RUNTIME, 1234);
-    resp_message_t resp;
+    protocol_event_t request = prepare_request(MESSAGE_TYPE_RUNTIME, 1234);
+    protocol_payload_t resp_payload;
 
     llext_by_name_fake.return_val = (struct llext *)0x123456;
 
@@ -803,26 +668,25 @@ ZTEST(kenning_inference_lib_test_callbacks, test_runtime_callback_fail)
     model_init_fake.return_val = STATUS_OK;
     runtime_deinit_fake.return_val = STATUS_OK;
 
-    status = runtime_callback(&hdr, &resp);
+    status = runtime_callback(&request, &resp_payload);
 
     zassert_equal(0, llext_load_fake.call_count);
     zassert_equal(0, llext_bringup_fake.call_count);
     zassert_equal(0, llext_unload_fake.call_count);
     zassert_equal(0, llext_teardown_fake.call_count);
-
-    zassert_equal(STATUS_OK, status);
+    zassert_equal(CALLBACKS_STATUS_ERROR, status);
 }
 
 // ========================================================
 // helper functions
 // ========================================================
 
-message_hdr_t prepare_message_header(message_type_t msg_type, size_t payload_size)
+protocol_event_t prepare_request(message_type_t msg_type, size_t payload_size)
 {
-    message_hdr_t hdr;
-    hdr.payload_size = payload_size;
-    hdr.message_type = msg_type;
-    return hdr;
+    protocol_event_t event;
+    event.payload.size = payload_size;
+    event.message_type = msg_type;
+    return event;
 }
 
 struct llext *prepare_llext()
