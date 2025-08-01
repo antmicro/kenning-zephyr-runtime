@@ -25,6 +25,7 @@
         LOADER_TYPE_NONE,    /*MESSAGE_TYPE_OPTIMIZE_MODEL*/    \
         LOADER_TYPE_RUNTIME, /*MESSAGE_TYPE_RUNTIME*/           \
         LOADER_TYPE_NONE,    /*MESSAGE_TYPE_UNOPTIMIZED_MODEL*/ \
+        LOADER_TYPE_NONE,    /*MESSAGE_TYPE_LOGS*/              \
     }
 
 extern LOADER_TYPE g_msg_ldr_map[NUM_MESSAGE_TYPES];

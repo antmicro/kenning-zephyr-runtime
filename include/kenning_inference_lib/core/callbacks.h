@@ -64,20 +64,21 @@ typedef status_t (*callback_ptr_t)(protocol_event_t *, protocol_payload_t *);
 /**
  * List of callbacks for each message type
  */
-#define CALLBACKS_TABLE(ENTRY)                               \
-    /*    MessageType      Callback_function */              \
-    ENTRY(MESSAGE_TYPE_PING, unsupported_callback)           \
-    ENTRY(MESSAGE_TYPE_STATUS, unsupported_callback)         \
-    ENTRY(MESSAGE_TYPE_DATA, data_callback)                  \
-    ENTRY(MESSAGE_TYPE_MODEL, model_callback)                \
-    ENTRY(MESSAGE_TYPE_PROCESS, process_callback)            \
-    ENTRY(MESSAGE_TYPE_OUTPUT, output_callback)              \
-    ENTRY(MESSAGE_TYPE_STATS, stats_callback)                \
-    ENTRY(MESSAGE_TYPE_IOSPEC, iospec_callback)              \
-    ENTRY(MESSAGE_TYPE_OPTIMIZERS, unsupported_callback)     \
-    ENTRY(MESSAGE_TYPE_OPTIMIZE_MODEL, unsupported_callback) \
-    ENTRY(MESSAGE_TYPE_RUNTIME, runtime_callback)            \
-    ENTRY(MESSAGE_TYPE_UNOPTIMIZED_MODEL, unsupported_callback)
+#define CALLBACKS_TABLE(ENTRY)                                  \
+    /*    MessageType      Callback_function */                 \
+    ENTRY(MESSAGE_TYPE_PING, unsupported_callback)              \
+    ENTRY(MESSAGE_TYPE_STATUS, unsupported_callback)            \
+    ENTRY(MESSAGE_TYPE_DATA, data_callback)                     \
+    ENTRY(MESSAGE_TYPE_MODEL, model_callback)                   \
+    ENTRY(MESSAGE_TYPE_PROCESS, process_callback)               \
+    ENTRY(MESSAGE_TYPE_OUTPUT, output_callback)                 \
+    ENTRY(MESSAGE_TYPE_STATS, stats_callback)                   \
+    ENTRY(MESSAGE_TYPE_IOSPEC, iospec_callback)                 \
+    ENTRY(MESSAGE_TYPE_OPTIMIZERS, unsupported_callback)        \
+    ENTRY(MESSAGE_TYPE_OPTIMIZE_MODEL, unsupported_callback)    \
+    ENTRY(MESSAGE_TYPE_RUNTIME, runtime_callback)               \
+    ENTRY(MESSAGE_TYPE_UNOPTIMIZED_MODEL, unsupported_callback) \
+    ENTRY(MESSAGE_TYPE_LOGS, unsupported_callback)
 
 #define ENTRY(msg_type, callback_func) status_t callback_func(protocol_event_t *, protocol_payload_t *);
 CALLBACKS_TABLE(ENTRY)
