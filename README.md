@@ -174,12 +174,15 @@ pip install "kenning[tvm,tensorflow,reports,renode] @ git+https://github.com/ant
 ```
 
 The [pyrenode3](https://github.com/antmicro/pyrenode3/) module requires installing Renode to work.
-The easiest way is to use the latest Renode package and store its location in `PYRENODE_PKG`:
+
+The easiest way is to use a script, that will install the latest Renode release, store its location in `PYRENODE_BIN`, as well as temporarily
+add its directory to `PATH` and select a runtime (stored in `PYRENODE_RUNTIME` environmenal variable).
 
 ```bash
-wget https://builds.renode.io/renode-latest.pkg.tar.xz
-export PYRENODE_PKG=`pwd`/renode-latest.pkg.tar.xz
+source ./scripts/prepare_renode.sh
 ```
+
+This script needs to be run every time a new terminal session is started.
 
 For other configuration options check [pyrenode3 README.md](https://github.com/antmicro/pyrenode3/blob/main/README.md).
 
