@@ -107,7 +107,7 @@
 
 #define INT_TO_BOOL(x) (!!(x))
 /* extracts least significant one */
-#define LS_ONE(x) ((x) & ((x) ^ ((x)-1)))
+#define LS_ONE(x) ((x) & ((x) ^ ((x) - 1)))
 /* counts tailing zeros */
 #define TR_ZEROS(x)                                                                        \
     (INT_TO_BOOL(LS_ONE(x) & 0xFFFF0000) << 4 | INT_TO_BOOL(LS_ONE(x) & 0xFF00FF00) << 3 | \
