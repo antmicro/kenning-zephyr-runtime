@@ -40,6 +40,7 @@ DEFINE_FFF_GLOBALS;
     MOCK(status_t, protocol_init)                                                  \
     MOCK(status_t, model_init)                                                     \
     MOCK(status_t, unsupported_callback, protocol_event_t *, protocol_payload_t *) \
+    MOCK(status_t, ping_callback, protocol_event_t *, protocol_payload_t *)        \
     MOCK(status_t, ok_callback, protocol_event_t *, protocol_payload_t *)          \
     MOCK(status_t, error_callback, protocol_event_t *, protocol_payload_t *)       \
     MOCK(status_t, data_callback, protocol_event_t *, protocol_payload_t *)        \
