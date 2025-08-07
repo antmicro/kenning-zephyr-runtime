@@ -55,6 +55,20 @@ config KENNING_COMMUNICATION_PROTOCOL_UART
 
 endchoice
 
+config KENNING_SEND_LOGS
+        bool
+        prompt "Module for sending logs back do the Kenning client."
+        depends on LOG_MODE_IMMEDIATE=y
+        depends on KENNING_COMMUNICATION_PROTOCOL_NONE=n
+        select LOG_OUTPUT
+        select LOG_BACKEND_SUPPORTS_FORMAT_TIMESTAMP
+        default 1
+
+config KENNING_LOG_BUFFER_SIZE
+        int "Size in bytes of a buffer used to store log messages, before sending them to the Kenning client."
+        depends on KENNING_SEND_LOGS
+        default 512
+
 config KENNING_RESPONSE_PAYLOAD_SIZE
         int "Size in bytes of the response payload"
         depends on KENNING_INFERENCE_LIB
@@ -249,4 +263,8 @@ source "subsys/logging/Kconfig.template.log_config"
 
 module = UART
 module-str = uart
+source "subsys/logging/Kconfig.template.log_config"
+
+module = LOGGER
+module-str = logger
 source "subsys/logging/Kconfig.template.log_config"
