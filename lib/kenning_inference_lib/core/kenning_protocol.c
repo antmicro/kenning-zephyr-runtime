@@ -20,6 +20,13 @@ GENERATE_MODULE_STATUSES_STR(KENNING_PROTOCOL);
 const char *const MESSAGE_TYPE_STR[] = {MESSAGE_TYPES(GENERATE_STR)};
 const char *const FLOW_CONTROL_STR[] = {FLOW_CONTROL_VALUES(GENERATE_STR)};
 
+/*
+ Flag informing us whether the protocol is just now in progress of sending a message.
+ If it is, we cannot send any other messages, because they could end up being sent
+ between header and payload of the message that is already being sent.
+*/
+static bool protocol_busy = false;
+
 /**
  * Receives a single message header.
  *
@@ -58,6 +65,7 @@ status_t receive_message_payload(struct msg_loader *ldr, size_t n)
     {
         int to_read = (buffer_size > n) ? n : buffer_size;
         status = protocol_read_data(msg_recv_buffer, to_read);
+
         CHECK_PROTOCOL_STATUS(status);
         if (ldr->save(ldr, msg_recv_buffer, to_read))
         {
@@ -138,9 +146,14 @@ status_t send_message(const outgoing_message_t *msg)
 
 status_t protocol_transmit(const protocol_event_t *event)
 {
+    if (protocol_busy)
+    {
+        LOG_DBG("Attempted to start a transmission, while a message was being sent.");
+        return KENNING_PROTOCOL_STATUS_BUSY;
+    }
     status_t status = STATUS_OK;
     RETURN_ERROR_IF_POINTER_INVALID(event, KENNING_PROTOCOL_STATUS_INV_PTR);
-    int has_payload = event->payload.size > 0 ? 1 : 0;
+    bool has_payload = event->payload.size > 0;
     unsigned int message_count =
         has_payload ? ((event->payload.size - 1) / CONFIG_KENNING_PROTOCOL_MAX_OUTGOING_MESSAGE_SIZE) + 1
                     : 1; // Rounding
@@ -159,15 +172,10 @@ status_t protocol_transmit(const protocol_event_t *event)
         message.hdr.flags.general_purpose_flags.last = (i == (message_count - 1)) ? 1 : 0;
         message.hdr.flags.general_purpose_flags.has_payload = has_payload;
         message.hdr.flags.general_purpose_flags.is_host_message = 0;
-        if (has_payload)
-        {
-            message.payload = event->payload.raw_bytes + bytes_sent;
-        }
-        else
-        {
-            message.payload = NULL;
-        }
+        message.payload = has_payload ? event->payload.raw_bytes + bytes_sent : NULL;
+        protocol_busy = true;
         status = send_message(&message);
+        protocol_busy = false;
         RETURN_ON_ERROR(status, status);
         bytes_sent += message_payload_size;
     }
