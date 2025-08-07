@@ -66,7 +66,7 @@ typedef status_t (*callback_ptr_t)(protocol_event_t *, protocol_payload_t *);
  */
 #define CALLBACKS_TABLE(ENTRY)                                  \
     /*    MessageType      Callback_function */                 \
-    ENTRY(MESSAGE_TYPE_PING, unsupported_callback)              \
+    ENTRY(MESSAGE_TYPE_PING, ping_callback)                     \
     ENTRY(MESSAGE_TYPE_STATUS, unsupported_callback)            \
     ENTRY(MESSAGE_TYPE_DATA, data_callback)                     \
     ENTRY(MESSAGE_TYPE_MODEL, model_callback)                   \

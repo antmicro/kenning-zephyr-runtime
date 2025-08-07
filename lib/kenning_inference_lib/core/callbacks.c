@@ -4,6 +4,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+#include <stdbool.h>
+
 #include <kenning_inference_lib/core/callbacks.h>
 #include <kenning_inference_lib/core/loaders.h>
 #include <kenning_inference_lib/core/model.h>
@@ -22,6 +24,10 @@
 #include "mocks/log.h"
 #endif
 
+#ifdef CONFIG_KENNING_SEND_LOGS
+#include "kenning_inference_lib/core/logger.h"
+#endif
+
 LOG_MODULE_REGISTER(callbacks, CONFIG_CALLBACKS_LOG_LEVEL);
 
 GENERATE_MODULE_STATUSES_STR(CALLBACKS);
@@ -32,6 +38,8 @@ const callback_ptr_t g_msg_callback[NUM_MESSAGE_TYPES] = {
 };
 
 extern const char *const MESSAGE_TYPE_STR[];
+
+static bool client_connected = false;
 
 /**
  * Handles unsupported message
@@ -49,6 +57,47 @@ status_t unsupported_callback(protocol_event_t *request, protocol_payload_t *res
 
     RETURN_ON_ERROR(status, status);
 
+    return STATUS_OK;
+}
+
+/**
+ * Serves as a way for client (Kenning) to initiate communication or signal end of communication.
+ * PING request with the SUCCESS flag set means that Kenning has connected and wants to start
+ * an inference session. Request with FAIL flag set means that the inference sessions has ended and
+ * Kenning is disconnecting. Request with both flags set means ending the previous session and starting a new one.
+ *
+ * @param request incoming request
+ * @param resp_payload payload, that will be sent in response by the server (empty here)
+ *
+ * @returns error status of the callback
+ */
+status_t ping_callback(protocol_event_t *request, protocol_payload_t *resp_payload)
+{
+    if (request->flags.general_purpose_flags.fail)
+    {
+        client_connected = false;
+        LOG_INF("Client disconnected.");
+#ifdef CONFIG_KENNING_SEND_LOGS
+        logger_stop();
+#endif
+    }
+    if (request->flags.general_purpose_flags.success)
+    {
+        if (client_connected)
+        {
+            LOG_ERR("Client already connected.");
+            return CALLBACKS_STATUS_ERROR;
+        }
+        else
+        {
+            client_connected = true;
+#ifdef CONFIG_KENNING_SEND_LOGS
+            logger_start();
+#endif
+            LOG_INF("Client connected");
+            return STATUS_OK;
+        }
+    }
     return STATUS_OK;
 }
 
