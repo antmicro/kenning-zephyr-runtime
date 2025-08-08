@@ -25,6 +25,7 @@ LOG_MODULE_REGISTER(tflite_runtime, CONFIG_RUNTIME_WRAPPER_LOG_LEVEL);
 extern model_spec_t g_model_spec;
 
 static runtime_statistics_execution_time_t gp_tflite_time_stats;
+static uint64_t g_peak_allocation;
 
 extern tflite::MicroMutableOpResolver<TFLITE_RESOLVER_SIZE> g_tflite_resolver;
 static tflite::MicroInterpreter *gp_tflite_interpreter = nullptr;
@@ -62,6 +63,7 @@ status_t runtime_init()
 {
     prepare_tflite_ldr_table();
     tflite_initialize_resolver();
+    g_peak_allocation = 0;
     return STATUS_OK;
 }
 
@@ -103,7 +105,6 @@ status_t runtime_init_weights()
         LOG_ERR("AllocateTensors() failed\n");
         return RUNTIME_WRAPPER_STATUS_ERROR;
     }
-
     TfLiteTensor *input = gp_tflite_interpreter->input(0);
     msg_loader_input->addr = input->data.data;
     msg_loader_input->max_size = input->bytes;
@@ -123,6 +124,7 @@ status_t runtime_run_model_bench()
 status_t runtime_run_model()
 {
     TfLiteStatus status = gp_tflite_interpreter->Invoke();
+    g_peak_allocation = MAX(g_peak_allocation, gp_tflite_interpreter->arena_used_bytes());
     if (status == kTfLiteOk)
     {
         return STATUS_OK;
@@ -154,9 +156,11 @@ status_t runtime_get_statistics(const size_t statistics_buffer_size, uint8_t *st
 
     runtime_stats_ptr = (runtime_statistic_t *)statistics_buffer;
 
-    LOAD_RUNTIME_STAT(runtime_stats_ptr, 0, gp_tflite_time_stats, target_inference_step,
+    LOAD_RUNTIME_STAT_FROM_VALUE(runtime_stats_ptr, 0, g_peak_allocation, peak_allocated,
+                                 RUNTIME_STATISTICS_ALLOCATION);
+    LOAD_RUNTIME_STAT(runtime_stats_ptr, 1, gp_tflite_time_stats, target_inference_step,
                       RUNTIME_STATISTICS_INFERENCE_TIME);
-    LOAD_RUNTIME_STAT(runtime_stats_ptr, 1, gp_tflite_time_stats, target_inference_step_timestamp,
+    LOAD_RUNTIME_STAT(runtime_stats_ptr, 2, gp_tflite_time_stats, target_inference_step_timestamp,
                       RUNTIME_STATISTICS_INFERENCE_TIME);
 
     *statistics_size = stats_size;
