@@ -178,12 +178,16 @@ GENERATE_MODEL_SPEC_LENGTH_FUNCTIONS(GENERATE_MODEL_SPEC_LENGTH_FUNCTION_DECLARA
 
 #undef GENERATE_MODEL_SPEC_LENGTH_FUNCTION_DECLARATION
 
-// Loads runtime stat into stats array
-#define LOAD_RUNTIME_STAT(stats_array, stat_idx, src_struct, src_stat_name, stats_type)   \
-    memset(stats_array[stat_idx].stat_name, 0, RUNTIME_STAT_NAME_MAX_LEN);                \
-    snprintf(stats_array[stat_idx].stat_name, RUNTIME_STAT_NAME_MAX_LEN, #src_stat_name); \
-    stats_array[stat_idx].stat_value = src_struct.src_stat_name;                          \
-    stats_array[stat_idx].stat_type = (uint64_t)(stats_type)
+// Load an integer into stats array as a runtime statistic.
+#define LOAD_RUNTIME_STAT_FROM_VALUE(stats_array, stat_idx, value, name, type)   \
+    memset(stats_array[stat_idx].stat_name, 0, RUNTIME_STAT_NAME_MAX_LEN);       \
+    snprintf(stats_array[stat_idx].stat_name, RUNTIME_STAT_NAME_MAX_LEN, #name); \
+    stats_array[stat_idx].stat_value = value;                                    \
+    stats_array[stat_idx].stat_type = (uint64_t)(type)
+
+// Loads value from a struct into stats array.
+#define LOAD_RUNTIME_STAT(stats_array, stat_idx, src_struct, src_stat_name, stats_type) \
+    LOAD_RUNTIME_STAT_FROM_VALUE(stats_array, stat_idx, src_struct.src_stat_name, src_stat_name, stats_type)
 
 #define MEASURE_TIME(stats, func)                                                     \
     do                                                                                \
