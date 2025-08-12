@@ -115,18 +115,18 @@ status_t wait_for_protocol_event(protocol_event_t *event)
     status_t status = STATUS_OK;
     if (!IS_VALID_POINTER(event))
     {
-        LOG_WRN("Invalid message.");
+        LOG_WRN("Invalid event.");
         return INFERENCE_SERVER_STATUS_INV_PTR;
     }
     status = protocol_listen(event, loader_picker);
-    if (PROTOCOL_STATUS_TIMEOUT == status)
+    if (KENNING_PROTOCOL_STATUS_TIMEOUT == status)
     {
-        LOG_WRN("Receive message timeout");
+        LOG_WRN("Listening timeout.");
         return INFERENCE_SERVER_STATUS_TIMEOUT;
     }
     if (STATUS_OK != status)
     {
-        LOG_ERR("Error receiving message: %d (%s)", status, get_status_str(status));
+        LOG_ERR("Error listening: %d (%s)", status, get_status_str(status));
         return INFERENCE_SERVER_STATUS_ERROR;
     }
     const char *message_type_str =
