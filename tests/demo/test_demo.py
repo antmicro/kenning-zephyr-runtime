@@ -62,7 +62,7 @@ class TestDemo:
 
         assert any(
             tester.WaitFor(
-                "I: inference done",
+                "I: inference finished successfully",
                 timeout=None,
                 treatAsRegex=False,
                 includeUnfinishedLine=True,
@@ -82,7 +82,7 @@ class TestDemo:
 
         assert len(EXPECTED_PREDICTIONS) == len(
             predictions
-        ), f"invalid predictions:\n{predictions}"
+        ), f"Invalid predictions:\n{predictions}"
 
         predictions = np.array(predictions, dtype=np.float32).argmax(axis=1)
 
