@@ -9,12 +9,16 @@
 #include <kenning_inference_lib/core/model.h>
 #include <kenning_inference_lib/core/utils.h>
 #include <model_data.h> /* header with model weights generated during build from ./model/<runtime>/ */
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <zephyr/kernel.h>
 #include <zephyr/logging/log.h>
 
 LOG_MODULE_REGISTER(demo_app, CONFIG_DEMO_APP_LOG_LEVEL);
+
+// Maximum number of separate inference statistics, that can be collected.
+#define INFERENCE_STATISTICS_BUFFER_LENGTH 8
 
 /**
  * Magic Wand dataset classes
@@ -35,6 +39,11 @@ void postprocess_output(uint8_t *data_in, float *data_out, size_t model_output_s
  * Helper function for formatting model output
  */
 void format_output(uint8_t *buffer, const size_t buffer_size, float *model_output);
+
+/**
+ * Helper function that extracts inference statistics and prints them to logs.
+ */
+void log_statistics(int64_t total_inference_time);
 
 int main(void)
 {
@@ -95,6 +104,7 @@ int main(void)
             LOG_INF("model output: %s", output_str);
         }
         timer_end = k_uptime_get();
+
     } while (0);
 
     if (IS_VALID_POINTER(model_output))
@@ -105,11 +115,16 @@ int main(void)
     {
         free(model_input);
     }
-    if (STATUS_OK == status)
+
+    if (STATUS_OK != status)
     {
-        LOG_INF("inference done in %lld ms (%lld ms per batch)", timer_end - timer_start,
-                (timer_end - timer_start) * sizeof(data[0]) / sizeof(data));
+        return 1;
     }
+
+    log_statistics(timer_end - timer_start);
+
+    LOG_INF("inference finished successfully");
+
     return 0;
 }
 
@@ -128,6 +143,28 @@ void format_output(uint8_t *buffer, const size_t buffer_size, float *model_outpu
         buffer += snprintf(buffer, buffer_end - buffer, "%f", (double)model_output[i]);
     }
     buffer += snprintf(buffer, buffer_end - buffer, "]");
+}
+
+void log_statistics(int64_t total_inference_time)
+{
+    runtime_statistic_t stats[INFERENCE_STATISTICS_BUFFER_LENGTH];
+    size_t stats_size;
+    LOG_INF("inference session statistics:");
+    LOG_INF("\ttotal inference time: %lld ms", total_inference_time);
+    LOG_INF("\tinference time per batch: %lld ms", total_inference_time * sizeof(data[0]) / sizeof(data));
+    if (STATUS_OK != model_get_statistics(sizeof(stats), (uint8_t *)stats, &stats_size))
+    {
+        return;
+    }
+    for (int i = 0; i < stats_size / sizeof(runtime_statistic_t); ++i)
+    {
+        // Inference time statistics are only used in remote inference initiated from Kenning, here they will always be
+        // empty.
+        if (stats[i].stat_type != RUNTIME_STATISTICS_INFERENCE_TIME)
+        {
+            LOG_INF("\t%s: %llu", stats[i].stat_name, stats[i].stat_value);
+        }
+    }
 }
 
 #ifndef CONFIG_KENNING_DEMO_USE_QUANTIZED_MODEL
