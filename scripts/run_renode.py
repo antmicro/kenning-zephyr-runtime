@@ -113,7 +113,7 @@ if __name__ == "__main__":
             logs_tail = logs_tail.split("\n")[-1] + logs if logs_tail else logs
             if (
                 "demo_app" == project_name
-                and "I: inference done" in logs_tail
+                and "I: inference finished successfully" in logs_tail
                 and "\n" in logs_tail
             ):
                 break
