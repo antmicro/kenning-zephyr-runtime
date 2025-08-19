@@ -84,10 +84,12 @@ void process(const struct log_backend *const backend, union log_msg_generic *msg
     curr_msg_len = 0;
     log_output_msg_process(&out, &msg->log, log_backend_std_get_flags());
     // We insert message size in front of the message in the buffer.
-    msg_buffer[msg_buffer_len] = curr_msg_len;
+    msg_buffer[msg_buffer_len] = curr_msg_len - 1; // We are subtracting 1 from 'curr_msg_len', because we are
+                                                   // ignoring the last character of the message, since it's always a
+                                                   // Line Feed, which we don't need.
     msg_buffer_len += curr_msg_len; // Normally we should add here 'curr_msg_len + 1' (to account for that 1 byte size
-                                    // field). However in this case we want to deliberately ignore the last character,
-                                    // since it's always Line Feed, which we don't need.
+                                    // field). However in this case we want to deliberately ignore the last character
+                                    // of the message (Line Feed)
     send_all_messages();
     sending_logs = false;
 }
