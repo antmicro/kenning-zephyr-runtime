@@ -28,45 +28,86 @@ GENERATE_MODULE_STATUSES_STR(INFERENCE_SERVER);
 extern const char *const MESSAGE_TYPE_STR[];
 extern const char *const FLOW_CONTROL_STR[];
 extern const callback_ptr_t g_msg_callback[];
+extern struct k_heap llext_heap;
 
 LOADER_TYPE g_msg_ldr_map[NUM_MESSAGE_TYPES] = PREPARE_MSG_LDR_MAP;
 
 #if defined(CONFIG_LLEXT)
 
-int reset_runtime_alloc(struct msg_loader *ldr, size_t n)
+// Size in bytes of the field at the beginning of the runtime transmission/request payload,
+// that denotes size of the runtime itself.
+#define RUNTIME_SIZE_FIELD_SIZE 4
+
+int reset_runtime(struct msg_loader *ldr, size_t n)
 {
-    int status;
-    extern struct k_heap llext_heap;
+    if (ldr->addr != NULL)
+    {
+        k_heap_free(&llext_heap, ldr->addr);
+        ldr->addr = NULL;
+    }
+    ldr->written = 0;
+    ldr->max_size = 0;
     struct llext *ext = llext_by_name("runtime");
     if (NULL != ext)
     {
+        int status;
         status = llext_teardown(ext);
         RETURN_ON_ERROR_LOG(status, status, "LLEXT runtime teardown error: %d", status);
 
         status = llext_unload(&ext);
         RETURN_ON_ERROR_LOG(status, status, "LLEXT runtime unload error: %d", status);
     }
-    k_heap_free(&llext_heap, ldr->addr);
-    ldr->addr = NULL;
-    ldr->addr = k_heap_aligned_alloc(&llext_heap, 64, n, K_NO_WAIT);
+
+    return STATUS_OK;
+}
+
+status_t save_runtime(struct msg_loader *ldr, const uint8_t *src, size_t n)
+{
+
+    if (ldr->addr != NULL)
+    {
+        return buf_save(ldr, src, n);
+    }
+    // First 4 bytes of the payload in the runtime transmission/request denotes size of the runtime.
+    // It is needed to poperly allocate memory on the llext heap, so on the first call to the 'save_runtime'
+    // function after reset the buffer needs to be at least 4 bytes long, to properly read size of the
+    // memory to allocate.
+    if (n < RUNTIME_SIZE_FIELD_SIZE)
+    {
+        RETURN_LOG_ERROR(LOADERS_STATUS_ERROR,
+                         "First buffer saved to the runtime loader after reset needs to be at least %d bytes long, "
+                         "but it is %d bytes long.",
+                         RUNTIME_SIZE_FIELD_SIZE, n);
+    }
+    size_t full_runtime_size = ((uint32_t *)src)[0];
+    ldr->addr = k_heap_aligned_alloc(&llext_heap, 64, full_runtime_size, K_NO_WAIT);
     ldr->written = 0;
 
     if (ldr->addr == NULL)
     {
         ldr->max_size = 0;
-        LOG_ERR("Couldn't allocate ELF buffer on LLEXT heap");
-        return -1;
+        RETURN_LOG_ERROR(LOADERS_STATUS_NOT_ENOUGH_MEMORY, "Couldn't allocate ELF buffer of size %d on LLEXT heap.",
+                         full_runtime_size);
     }
 
-    ldr->max_size = n;
-    return 0;
+    ldr->max_size = full_runtime_size;
+    if (n > RUNTIME_SIZE_FIELD_SIZE)
+    {
+        return buf_save(ldr, src + RUNTIME_SIZE_FIELD_SIZE, n - RUNTIME_SIZE_FIELD_SIZE);
+    }
+    return STATUS_OK;
+}
+
+status_t save_one_runtime(struct msg_loader *ldr, void *c)
+{
+    RETURN_LOG_ERROR(LOADERS_STATUS_ERROR, "LLEXT loaders do not support 'save_one' function.");
 }
 
 status_t prepare_llext_loader()
 {
-    static struct msg_loader msg_loader_llext = {.save = buf_save,
-                                                 .save_one = buf_save_one,
-                                                 .reset = reset_runtime_alloc,
+    static struct msg_loader msg_loader_llext = {.save = save_runtime,
+                                                 .save_one = save_one_runtime,
+                                                 .reset = reset_runtime,
                                                  .written = 0,
                                                  .max_size = 0,
                                                  .addr = NULL};
