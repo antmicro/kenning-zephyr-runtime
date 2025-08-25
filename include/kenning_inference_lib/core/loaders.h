@@ -21,7 +21,7 @@ struct msg_loader
 {
     int (*save)(struct msg_loader *, const uint8_t *, size_t);
     int (*save_one)(struct msg_loader *, void *);
-    int (*reset)(struct msg_loader *, size_t);
+    int (*reset)(struct msg_loader *);
     size_t written;
     size_t max_size;
     void *addr;
@@ -32,7 +32,7 @@ int buf_save(struct msg_loader *ldr, const uint8_t *src, size_t n);
 
 int buf_save_one(struct msg_loader *ldr, void *c);
 
-int buf_reset(struct msg_loader *ldr, size_t n);
+int buf_reset(struct msg_loader *ldr);
 
 #define MSG_LOADER_BUF(_addr, _max_size) \
     {.save = buf_save,                   \

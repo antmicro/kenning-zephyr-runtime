@@ -34,7 +34,7 @@ status_t buf_save_one(struct msg_loader *ldr, void *c)
     return STATUS_OK;
 }
 
-status_t buf_reset(struct msg_loader *ldr, size_t n)
+status_t buf_reset(struct msg_loader *ldr)
 {
     ldr->written = 0;
     return STATUS_OK;

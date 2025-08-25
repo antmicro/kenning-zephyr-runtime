@@ -248,7 +248,7 @@ status_t model_load_weights(const uint8_t *model_weights_data, const size_t data
     RETURN_ERROR_IF_POINTER_INVALID(model_weights_data, MODEL_STATUS_INV_PTR);
     RETURN_ERROR_IF_POINTER_INVALID(msg_loader_model, MODEL_STATUS_INV_PTR);
 
-    msg_loader_model->reset(msg_loader_model, 0);
+    msg_loader_model->reset(msg_loader_model);
     status = msg_loader_model->save(msg_loader_model, model_weights_data, data_size);
     RETURN_ON_ERROR_LOG(status, status, "Model loader failed: %d", status);
 
@@ -263,7 +263,7 @@ status_t model_load_struct(const uint8_t *model_spec_data, const size_t data_siz
     RETURN_ERROR_IF_POINTER_INVALID(model_spec_data, MODEL_STATUS_INV_PTR);
     RETURN_ERROR_IF_POINTER_INVALID(msg_loader_iospec, MODEL_STATUS_INV_PTR);
 
-    msg_loader_iospec->reset(msg_loader_iospec, 0);
+    msg_loader_iospec->reset(msg_loader_iospec);
     status = msg_loader_iospec->save(msg_loader_iospec, model_spec_data, data_size);
     RETURN_ON_ERROR_LOG(status, status, "iospec loader failed: %d", status);
 
@@ -278,7 +278,7 @@ status_t model_load_input(const uint8_t *model_input, const size_t model_input_s
     RETURN_ERROR_IF_POINTER_INVALID(model_input, MODEL_STATUS_INV_PTR);
     RETURN_ERROR_IF_POINTER_INVALID(msg_loader_data, MODEL_STATUS_INV_PTR);
 
-    msg_loader_data->reset(msg_loader_data, 0);
+    msg_loader_data->reset(msg_loader_data);
     status = msg_loader_data->save(msg_loader_data, model_input, model_input_size);
     RETURN_ON_ERROR_LOG(status, status, "Data loader failed: %d", status);
 

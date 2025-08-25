@@ -223,8 +223,7 @@ status_t protocol_listen(protocol_event_t *event, struct msg_loader *(*loader_ca
     event->payload.loader = ldr;
     if (header.flags.general_purpose_flags.has_payload)
     {
-        // Passing first message size, because we don't know size of the whole transmission.
-        status_t loader_status = ldr->reset(ldr, header.payload_size);
+        status_t loader_status = ldr->reset(ldr);
         if (loader_status)
         {
             LOG_ERR("Loader reset failure, status: %d", loader_status);

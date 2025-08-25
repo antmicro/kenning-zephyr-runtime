@@ -38,7 +38,7 @@ LOADER_TYPE g_msg_ldr_map[NUM_MESSAGE_TYPES] = PREPARE_MSG_LDR_MAP;
 // that denotes size of the runtime itself.
 #define RUNTIME_SIZE_FIELD_SIZE 4
 
-int reset_runtime(struct msg_loader *ldr, size_t n)
+int reset_runtime(struct msg_loader *ldr)
 {
     if (ldr->addr != NULL)
     {
