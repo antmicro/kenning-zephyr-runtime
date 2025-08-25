@@ -106,7 +106,7 @@ status_t protocol_write_data_mock(const uint8_t *data, size_t data_length)
     return STATUS_OK;
 }
 
-int loader_reset_mock(struct msg_loader *ldr, size_t n)
+int loader_reset_mock(struct msg_loader *ldr)
 {
     mock_loader_buffer_idx = 0;
     ldr->written = 0;
@@ -121,7 +121,7 @@ int loader_save_mock(struct msg_loader *ldr, const uint8_t *src, size_t n)
     return 0;
 }
 
-int loader_reset_failure_mock(struct msg_loader *ldr, size_t n) { return MOCK_LOADER_RESET_ERROR; }
+int loader_reset_failure_mock(struct msg_loader *ldr) { return MOCK_LOADER_RESET_ERROR; }
 
 int loader_save_failure_mock(struct msg_loader *ldr, const uint8_t *src, size_t n) { return 1; }
 
