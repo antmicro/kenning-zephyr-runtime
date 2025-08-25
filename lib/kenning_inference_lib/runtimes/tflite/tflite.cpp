@@ -32,7 +32,7 @@ static tflite::MicroInterpreter *gp_tflite_interpreter = nullptr;
 
 static uint8_t __attribute__((aligned(8))) g_tfliteBuffer[CONFIG_KENNING_TFLITE_BUFFER_SIZE * 1024];
 
-status_t tflite_reset_buf(struct msg_loader *ldr, size_t n)
+status_t tflite_reset_buf(struct msg_loader *ldr)
 {
     ldr->written = 0;
 
