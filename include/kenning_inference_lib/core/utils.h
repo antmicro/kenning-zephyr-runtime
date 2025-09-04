@@ -51,6 +51,11 @@
         return err_code;                                       \
     }
 
+/* returns given error code and logs the given message */
+#define RETURN_LOG_ERROR(err_code, ...) \
+    LOG_ERR(__VA_ARGS__);               \
+    return err_code;
+
 /* breaks loop on error */
 #define BREAK_ON_ERROR(status) \
     if (STATUS_OK != (status)) \
