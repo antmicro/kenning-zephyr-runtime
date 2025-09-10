@@ -3,6 +3,8 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  */
+#include "kenning_inference_lib/core/runtime_wrapper.h"
+#include "tvm.h"
 
 #include <dlpack/dlpack.h>
 #include <stdint.h>
@@ -12,8 +14,6 @@
 #include <zephyr/random/random.h>
 #include <zephyr/sys/reboot.h>
 #include <zephyr/timing/timing.h>
-
-#include "tvm.h"
 
 LOG_MODULE_REGISTER(tvm_platform, CONFIG_RUNTIME_WRAPPER_LOG_LEVEL);
 
@@ -154,7 +154,7 @@ const uint8_t *tvm_graph_params_ptr(const tvm_graph_t *tvm_graph)
     return &(tvm_graph->graph_data[tvm_graph->graph_json_size]);
 }
 
-void tvm_get_allocation_stats(tvm_alloc_stats_t *tvm_alloc_stats)
+void tvm_get_allocation_stats(runtime_statistics_allocation_t *tvm_alloc_stats)
 {
     tvm_alloc_stats->total_allocated = g_total_allocated;
     tvm_alloc_stats->total_freed = g_total_freed;

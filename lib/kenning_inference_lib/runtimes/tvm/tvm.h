@@ -32,16 +32,6 @@ typedef struct
 } tvm_graph_t;
 
 /**
- * Struct with TVM allocation statistics
- */
-typedef struct
-{
-    uint64_t total_allocated;
-    uint64_t total_freed;
-    uint64_t peak_allocated;
-} tvm_alloc_stats_t;
-
-/**
  * Returns pointer to graph JSON
  *
  * @param tvm_graph struct with graph data
@@ -64,6 +54,6 @@ const uint8_t *tvm_graph_params_ptr(const tvm_graph_t *tvm_graph);
  *
  * @param tvm_alloc_stats struct to save allocation statistics
  */
-void tvm_get_allocation_stats(tvm_alloc_stats_t *tvm_alloc_stats);
+void tvm_get_allocation_stats(runtime_statistics_allocation_t *tvm_alloc_stats);
 
 #endif // KENNING_INFERENCE_LIB_RUNTIMES_TVM_H_
