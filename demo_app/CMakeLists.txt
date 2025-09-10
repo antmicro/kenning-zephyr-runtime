@@ -20,5 +20,7 @@ endif(CONFIG_KENNING_MODEL_PATH MATCHES "^\./.*")
 kenning_gen_model_header("${CMAKE_CURRENT_BINARY_DIR}/src/model_data.h")
 kenning_add_board_repl_target()
 
+add_dependencies(app board-repl)
+
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}/src" "${CMAKE_CURRENT_BINARY_DIR}/src")
 target_sources(app PRIVATE src/main.c)

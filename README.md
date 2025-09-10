@@ -40,7 +40,6 @@ At this point you should be able to build the demo app and run it
 
 ```
 west build -p always -b stm32f746g_disco demo_app -- -DEXTRA_CONF_FILE=tvm.conf
-west build -t board-repl
 python ./scripts/run_renode.py
 ```
 
@@ -461,15 +460,8 @@ With the build environment configured as described in the [Cloning the project a
   ```
 
 After building the application with a board specified, we can either flash the hardware with it, or simulate it in Renode.
-To simulate it in Renode, generate the board's `repl` platform file using:
 
-```bash
-west build -t board-repl
-```
-
-The result can be found under `./build/<board_name>.repl`.
-
-Finally, run the demo with:
+To simulate it in Renode, run the demo with:
 
 ```bash skip
 python ./scripts/run_renode.py
