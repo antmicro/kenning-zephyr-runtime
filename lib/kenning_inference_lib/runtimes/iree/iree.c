@@ -361,6 +361,9 @@ status_t runtime_init()
     iree_status_t iree_status = iree_ok_status();
     iree_allocator_t host_allocator = iree_allocator_zephyr();
 
+    status = iree_allocator_reset_stats();
+    RETURN_ON_ERROR(status, status);
+
     if (runtime_initialized)
     {
         return STATUS_OK;
@@ -502,11 +505,13 @@ status_t runtime_get_model_output(uint8_t *model_output)
 status_t runtime_get_statistics(const size_t statistics_buffer_size, uint8_t *statistics_buffer,
                                 size_t *statistics_size)
 {
-    iree_hal_allocator_statistics_t iree_alloc_stats;
+    iree_hal_allocator_statistics_t iree_alloc_stats_from_runtime;
+    runtime_statistics_allocation_t iree_alloc_stats_from_heap;
     runtime_statistic_t *runtime_stats_ptr;
     size_t stats_size =
-        sizeof(runtime_statistic_t) * (sizeof(iree_hal_allocator_statistics_t) / sizeof(iree_device_size_t) +
-                                       sizeof(runtime_statistics_execution_time_t) / sizeof(uint64_t));
+        sizeof(runtime_statistic_t) *
+        (sizeof(iree_hal_allocator_statistics_t) / sizeof(iree_device_size_t) +
+         (sizeof(runtime_statistics_execution_time_t) + sizeof(runtime_statistics_allocation_t)) / sizeof(uint64_t));
 
     RETURN_ERROR_IF_POINTER_INVALID(statistics_buffer, RUNTIME_WRAPPER_STATUS_INV_PTR);
     RETURN_ERROR_IF_POINTER_INVALID(statistics_size, RUNTIME_WRAPPER_STATUS_INV_PTR);
@@ -517,21 +522,34 @@ status_t runtime_get_statistics(const size_t statistics_buffer_size, uint8_t *st
         return RUNTIME_WRAPPER_STATUS_INV_ARG;
     }
 
-    iree_hal_allocator_query_statistics(iree_hal_device_allocator(gp_device), &iree_alloc_stats);
+    iree_hal_allocator_query_statistics(iree_hal_device_allocator(gp_device), &iree_alloc_stats_from_runtime);
+
+    status_t status = iree_allocator_get_stats(&iree_alloc_stats_from_heap);
+    RETURN_ON_ERROR(status, status);
 
     runtime_stats_ptr = (runtime_statistic_t *)statistics_buffer;
 
-    LOAD_RUNTIME_STAT(runtime_stats_ptr, 0, iree_alloc_stats, device_bytes_allocated, RUNTIME_STATISTICS_ALLOCATION);
-    LOAD_RUNTIME_STAT(runtime_stats_ptr, 1, iree_alloc_stats, device_bytes_freed, RUNTIME_STATISTICS_ALLOCATION);
-    LOAD_RUNTIME_STAT(runtime_stats_ptr, 2, iree_alloc_stats, device_bytes_peak, RUNTIME_STATISTICS_ALLOCATION);
-    LOAD_RUNTIME_STAT(runtime_stats_ptr, 3, iree_alloc_stats, host_bytes_allocated, RUNTIME_STATISTICS_ALLOCATION);
-    LOAD_RUNTIME_STAT(runtime_stats_ptr, 4, iree_alloc_stats, host_bytes_freed, RUNTIME_STATISTICS_ALLOCATION);
-    LOAD_RUNTIME_STAT(runtime_stats_ptr, 5, iree_alloc_stats, host_bytes_peak, RUNTIME_STATISTICS_ALLOCATION);
-
-    LOAD_RUNTIME_STAT(runtime_stats_ptr, 6, gp_iree_time_stats, target_inference_step,
+    LOAD_RUNTIME_STAT(runtime_stats_ptr, 0, iree_alloc_stats_from_runtime, device_bytes_allocated,
+                      RUNTIME_STATISTICS_ALLOCATION);
+    LOAD_RUNTIME_STAT(runtime_stats_ptr, 1, iree_alloc_stats_from_runtime, device_bytes_freed,
+                      RUNTIME_STATISTICS_ALLOCATION);
+    LOAD_RUNTIME_STAT(runtime_stats_ptr, 2, iree_alloc_stats_from_runtime, device_bytes_peak,
+                      RUNTIME_STATISTICS_ALLOCATION);
+    LOAD_RUNTIME_STAT(runtime_stats_ptr, 3, iree_alloc_stats_from_runtime, host_bytes_allocated,
+                      RUNTIME_STATISTICS_ALLOCATION);
+    LOAD_RUNTIME_STAT(runtime_stats_ptr, 4, iree_alloc_stats_from_runtime, host_bytes_freed,
+                      RUNTIME_STATISTICS_ALLOCATION);
+    LOAD_RUNTIME_STAT(runtime_stats_ptr, 5, iree_alloc_stats_from_runtime, host_bytes_peak,
+                      RUNTIME_STATISTICS_ALLOCATION);
+    LOAD_RUNTIME_STAT(runtime_stats_ptr, 6, iree_alloc_stats_from_heap, total_allocated, RUNTIME_STATISTICS_ALLOCATION);
+    LOAD_RUNTIME_STAT(runtime_stats_ptr, 7, iree_alloc_stats_from_heap, total_freed, RUNTIME_STATISTICS_ALLOCATION);
+    LOAD_RUNTIME_STAT(runtime_stats_ptr, 8, iree_alloc_stats_from_heap, peak_allocated, RUNTIME_STATISTICS_ALLOCATION);
+    LOAD_RUNTIME_STAT(runtime_stats_ptr, 9, gp_iree_time_stats, target_inference_step,
                       RUNTIME_STATISTICS_INFERENCE_TIME);
-    LOAD_RUNTIME_STAT(runtime_stats_ptr, 7, gp_iree_time_stats, target_inference_step_timestamp,
+    LOAD_RUNTIME_STAT(runtime_stats_ptr, 10, gp_iree_time_stats, target_inference_step_timestamp,
                       RUNTIME_STATISTICS_INFERENCE_TIME);
+    LOAD_RUNTIME_STAT(runtime_stats_ptr, 11, iree_alloc_stats_from_runtime, host_bytes_peak,
+                      RUNTIME_STATISTICS_ALLOCATION);
     *statistics_size = stats_size;
 
     return STATUS_OK;

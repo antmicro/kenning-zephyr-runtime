@@ -14,6 +14,9 @@
 
 #include <zephyr/logging/log.h>
 
+#include "kenning_inference_lib/core/runtime_wrapper.h"
+#include "kenning_inference_lib/core/utils.h"
+
 #define BREAK_ON_IREE_ERROR(status)                                                                 \
     if (!iree_status_is_ok(status))                                                                 \
     {                                                                                               \
@@ -41,5 +44,9 @@
  */
 iree_status_t create_device(iree_vm_instance_t *instance, iree_allocator_t host_allocator,
                             iree_hal_device_t **out_device);
+
+status_t iree_allocator_reset_stats();
+
+status_t iree_allocator_get_stats(runtime_statistics_allocation_t *allocation_stats);
 
 iree_allocator_t iree_allocator_zephyr(void);
