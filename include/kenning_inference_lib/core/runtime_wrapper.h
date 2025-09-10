@@ -223,6 +223,16 @@ typedef struct
 } runtime_statistic_t;
 
 /**
+ * Generic struct for alocation statistics of a runtime
+ */
+typedef struct
+{
+    uint64_t total_allocated;
+    uint64_t total_freed;
+    uint64_t peak_allocated;
+} runtime_statistics_allocation_t;
+
+/**
  * Initializes runtime
  *
  * @returns status of the runtime
