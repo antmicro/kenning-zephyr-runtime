@@ -18,7 +18,7 @@
 LOG_MODULE_REGISTER(demo_app, CONFIG_DEMO_APP_LOG_LEVEL);
 
 // Maximum number of separate inference statistics, that can be collected.
-#define INFERENCE_STATISTICS_BUFFER_LENGTH 8
+#define INFERENCE_STATISTICS_BUFFER_LENGTH 16
 
 /**
  * Magic Wand dataset classes
