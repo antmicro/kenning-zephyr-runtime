@@ -58,7 +58,7 @@ static iree_hal_element_type_t kenning_elem_dtype_to_iree_hal_elem_type(data_typ
         default:
         {
             LOG_ERR("Unsupported signed integer size: %d", dtype->bits);
-            return NULL;
+            return IREE_HAL_ELEMENT_TYPE_NONE;
         }
         }
     };
@@ -82,7 +82,7 @@ static iree_hal_element_type_t kenning_elem_dtype_to_iree_hal_elem_type(data_typ
         default:
         {
             LOG_ERR("Unsupported unsigned integer size: %d", dtype->bits);
-            return NULL;
+            return IREE_HAL_ELEMENT_TYPE_NONE;
         }
         }
     };
@@ -100,7 +100,7 @@ static iree_hal_element_type_t kenning_elem_dtype_to_iree_hal_elem_type(data_typ
         default:
         {
             LOG_ERR("Unsupported IEEE float size: %d", dtype->bits);
-            return NULL;
+            return IREE_HAL_ELEMENT_TYPE_NONE;
         }
         }
     }
@@ -108,7 +108,7 @@ static iree_hal_element_type_t kenning_elem_dtype_to_iree_hal_elem_type(data_typ
     default:
     {
         LOG_ERR("Unsupported type code: %d", dtype->code);
-        return NULL;
+        return IREE_HAL_ELEMENT_TYPE_NONE;
     }
     }
 }
@@ -271,7 +271,7 @@ static iree_status_t prepare_input_hal_buffer_views(const uint8_t *model_input,
     {
         iree_status = iree_hal_buffer_view_allocate_buffer_copy(
             gp_device, iree_hal_device_allocator(gp_device), g_model_spec.num_input_dim[i], g_model_spec.input_shape[i],
-            kenning_elem_dtype_to_iree_hal_elem_type(&g_model_spec.input_data_type),
+            kenning_elem_dtype_to_iree_hal_elem_type(&g_model_spec.input_data_type[i]),
             IREE_HAL_ENCODING_TYPE_DENSE_ROW_MAJOR, buffer_params, *byte_span[i], &(arg_buffer_views[i]));
         BREAK_ON_IREE_ERROR(iree_status);
     }
