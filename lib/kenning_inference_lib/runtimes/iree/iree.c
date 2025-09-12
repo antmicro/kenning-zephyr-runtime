@@ -251,15 +251,14 @@ static iree_status_t prepare_input_hal_buffer_views(const uint8_t *model_input,
 {
     iree_status_t iree_status = iree_ok_status();
 
-    iree_const_byte_span_t *byte_span[MAX_MODEL_INPUT_NUM] = {NULL};
+    iree_const_byte_span_t byte_span[MAX_MODEL_INPUT_NUM];
     size_t offset = 0;
 
     for (int i = 0; i < g_model_spec.num_input; ++i)
     {
         size_t size =
             compute_structure_size_bytes(model_spec_input_length(&g_model_spec, i), g_model_spec.input_data_type[i]);
-        byte_span[i] = malloc(sizeof(iree_const_byte_span_t));
-        *byte_span[i] = iree_make_const_byte_span(model_input + offset, size);
+        byte_span[i] = iree_make_const_byte_span(model_input + offset, size);
         offset += size;
     }
 
@@ -272,17 +271,8 @@ static iree_status_t prepare_input_hal_buffer_views(const uint8_t *model_input,
         iree_status = iree_hal_buffer_view_allocate_buffer_copy(
             gp_device, iree_hal_device_allocator(gp_device), g_model_spec.num_input_dim[i], g_model_spec.input_shape[i],
             kenning_elem_dtype_to_iree_hal_elem_type(&g_model_spec.input_data_type[i]),
-            IREE_HAL_ENCODING_TYPE_DENSE_ROW_MAJOR, buffer_params, *byte_span[i], &(arg_buffer_views[i]));
+            IREE_HAL_ENCODING_TYPE_DENSE_ROW_MAJOR, buffer_params, byte_span[i], &(arg_buffer_views[i]));
         BREAK_ON_IREE_ERROR(iree_status);
-    }
-
-    for (int i = 0; i < g_model_spec.num_input; ++i)
-    {
-        if (NULL != byte_span[i])
-        {
-            free(byte_span[i]);
-            byte_span[i] = NULL;
-        }
     }
 
     return iree_status;

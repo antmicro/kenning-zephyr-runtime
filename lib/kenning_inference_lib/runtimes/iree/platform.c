@@ -17,10 +17,7 @@ K_HEAP_DEFINE(iree_heap, 1024 * CONFIG_KENNING_IREE_HEAP_SIZE);
 // ===============================================================
 
 // Current allocation statistics (total allocated bytes, total freed bytes, peak allocation).
-runtime_statistics_allocation_t iree_total_alloc_stats;
-
-// Number of bytes that are currently allocated.
-static uint64_t currently_allocated;
+static runtime_statistics_allocation_t iree_total_alloc_stats;
 
 /**
  * Note an allocation of N bytes in the statistics.
@@ -31,8 +28,9 @@ static uint64_t currently_allocated;
  */
 static void report_allocation(uint64_t size)
 {
-    currently_allocated += size;
-    iree_total_alloc_stats.peak_allocated = MAX(iree_total_alloc_stats.peak_allocated, currently_allocated);
+    iree_total_alloc_stats.peak_allocated =
+        MAX(iree_total_alloc_stats.peak_allocated,
+            iree_total_alloc_stats.total_allocated - iree_total_alloc_stats.total_freed);
     iree_total_alloc_stats.total_allocated += size;
 }
 
@@ -43,11 +41,7 @@ static void report_allocation(uint64_t size)
  *
  * @returns None
  */
-static void report_deallocation(uint64_t size)
-{
-    currently_allocated -= size;
-    iree_total_alloc_stats.total_freed += size;
-}
+static void report_deallocation(uint64_t size) { iree_total_alloc_stats.total_freed += size; }
 
 /**
  * Note a deallocation of bytes from a given pointer in the statistics.
@@ -68,7 +62,6 @@ status_t iree_allocator_reset_stats()
     iree_total_alloc_stats.peak_allocated = 0;
     iree_total_alloc_stats.total_allocated = 0;
     iree_total_alloc_stats.total_freed = 0;
-    currently_allocated = 0;
     return STATUS_OK;
 }
 
@@ -109,7 +102,7 @@ iree_status_t iree_allocator_system_alloc(iree_allocator_command_t command, cons
     {
         if (IS_VALID_POINTER(*inout_ptr))
         {
-            report_deallocation_ptr(existing_ptr);
+            report_deallocation_ptr(*inout_ptr);
             new_ptr = k_heap_realloc(&iree_heap, *inout_ptr, byte_length, K_NO_WAIT);
         }
         else
