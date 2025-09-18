@@ -57,12 +57,12 @@ west build -p always -b stm32f746g_disco app -- -DEXTRA_CONF_FILE=tvm.conf
 And then execute Kenning to compile the model, run benchmark and generate report
 
 ```
-kenning optimize test report
-    --cfg ./kenning-scenarios/renode-zephyr-tvm-magic-wand-inference.yml
-    --measurements ./results-tvm.json
-    --report-path ./report-tvm.md
-    --report-types performance classification renode_stats
-    --to-html
+kenning optimize test report \
+    --cfg ./kenning-scenarios/renode-zephyr-tvm-magic-wand-inference.yml \
+    --measurements ./results-tvm.json \
+    --report-path ./report-tvm.md \
+    --report-types performance classification renode_stats \
+    --to-html \
     --verbosity INFO
 ```
 
