@@ -7,62 +7,60 @@
 #ifdef __cplusplus
 extern "C"
 #endif
-    TVM_DLL int32_t
-    tvmgen_default_fused_nn_batch_flatten(void *args, int32_t *arg_type_ids, int32_t num_args, void *out_ret_value,
-                                          int32_t *out_ret_tcode, void *resource_handle);
+    TVM_DLL int32_t tvmgen_default_fused_nn_batch_flatten(void *args, int32_t *arg_type_ids, int32_t num_args,
+                                                          void *out_ret_value, int32_t *out_ret_tcode,
+                                                          void *resource_handle);
 #ifdef __cplusplus
 extern "C"
 #endif
-    TVM_DLL int32_t
-    tvmgen_default_fused_nn_conv2d_add_nn_relu(void *args, int32_t *arg_type_ids, int32_t num_args, void *out_ret_value,
-                                               int32_t *out_ret_tcode, void *resource_handle);
+    TVM_DLL int32_t tvmgen_default_fused_nn_conv2d_add_nn_relu(void *args, int32_t *arg_type_ids, int32_t num_args,
+                                                               void *out_ret_value, int32_t *out_ret_tcode,
+                                                               void *resource_handle);
 #ifdef __cplusplus
 extern "C"
 #endif
-    TVM_DLL int32_t
-    tvmgen_default_fused_nn_conv2d_add_nn_relu_1(void *args, int32_t *arg_type_ids, int32_t num_args,
-                                                 void *out_ret_value, int32_t *out_ret_tcode, void *resource_handle);
+    TVM_DLL int32_t tvmgen_default_fused_nn_conv2d_add_nn_relu_1(void *args, int32_t *arg_type_ids, int32_t num_args,
+                                                                 void *out_ret_value, int32_t *out_ret_tcode,
+                                                                 void *resource_handle);
 #ifdef __cplusplus
 extern "C"
 #endif
-    TVM_DLL int32_t
-    tvmgen_default_fused_nn_dense_add(void *args, int32_t *arg_type_ids, int32_t num_args, void *out_ret_value,
-                                      int32_t *out_ret_tcode, void *resource_handle);
+    TVM_DLL int32_t tvmgen_default_fused_nn_dense_add(void *args, int32_t *arg_type_ids, int32_t num_args,
+                                                      void *out_ret_value, int32_t *out_ret_tcode,
+                                                      void *resource_handle);
 #ifdef __cplusplus
 extern "C"
 #endif
-    TVM_DLL int32_t
-    tvmgen_default_fused_nn_dense_add_nn_relu(void *args, int32_t *arg_type_ids, int32_t num_args, void *out_ret_value,
-                                              int32_t *out_ret_tcode, void *resource_handle);
+    TVM_DLL int32_t tvmgen_default_fused_nn_dense_add_nn_relu(void *args, int32_t *arg_type_ids, int32_t num_args,
+                                                              void *out_ret_value, int32_t *out_ret_tcode,
+                                                              void *resource_handle);
 #ifdef __cplusplus
 extern "C"
 #endif
-    TVM_DLL int32_t
-    tvmgen_default_fused_nn_max_pool2d(void *args, int32_t *arg_type_ids, int32_t num_args, void *out_ret_value,
-                                       int32_t *out_ret_tcode, void *resource_handle);
+    TVM_DLL int32_t tvmgen_default_fused_nn_max_pool2d(void *args, int32_t *arg_type_ids, int32_t num_args,
+                                                       void *out_ret_value, int32_t *out_ret_tcode,
+                                                       void *resource_handle);
 #ifdef __cplusplus
 extern "C"
 #endif
-    TVM_DLL int32_t
-    tvmgen_default_fused_nn_max_pool2d_1(void *args, int32_t *arg_type_ids, int32_t num_args, void *out_ret_value,
-                                         int32_t *out_ret_tcode, void *resource_handle);
+    TVM_DLL int32_t tvmgen_default_fused_nn_max_pool2d_1(void *args, int32_t *arg_type_ids, int32_t num_args,
+                                                         void *out_ret_value, int32_t *out_ret_tcode,
+                                                         void *resource_handle);
 #ifdef __cplusplus
 extern "C"
 #endif
-    TVM_DLL int32_t
-    tvmgen_default_fused_nn_softmax(void *args, int32_t *arg_type_ids, int32_t num_args, void *out_ret_value,
-                                    int32_t *out_ret_tcode, void *resource_handle);
+    TVM_DLL int32_t tvmgen_default_fused_nn_softmax(void *args, int32_t *arg_type_ids, int32_t num_args,
+                                                    void *out_ret_value, int32_t *out_ret_tcode, void *resource_handle);
 #ifdef __cplusplus
 extern "C"
 #endif
-    TVM_DLL float
-    expf(float);
+    TVM_DLL float expf(float);
 #ifdef __cplusplus
 extern "C"
 #endif
-    TVM_DLL int32_t
-    tvmgen_default_fused_nn_batch_flatten(void *args, int32_t *arg_type_ids, int32_t num_args, void *out_ret_value,
-                                          int32_t *out_ret_tcode, void *resource_handle)
+    TVM_DLL int32_t tvmgen_default_fused_nn_batch_flatten(void *args, int32_t *arg_type_ids, int32_t num_args,
+                                                          void *out_ret_value, int32_t *out_ret_tcode,
+                                                          void *resource_handle)
 {
     int32_t p0_code = arg_type_ids[0];
     int32_t tensor_code = arg_type_ids[1];
@@ -95,9 +93,9 @@ extern "C"
 #ifdef __cplusplus
 extern "C"
 #endif
-    TVM_DLL int32_t
-    tvmgen_default_fused_nn_conv2d_add_nn_relu(void *args, int32_t *arg_type_ids, int32_t num_args, void *out_ret_value,
-                                               int32_t *out_ret_tcode, void *resource_handle)
+    TVM_DLL int32_t tvmgen_default_fused_nn_conv2d_add_nn_relu(void *args, int32_t *arg_type_ids, int32_t num_args,
+                                                               void *out_ret_value, int32_t *out_ret_tcode,
+                                                               void *resource_handle)
 {
     int32_t p0_code = arg_type_ids[0];
     int32_t p1_code = arg_type_ids[1];
@@ -180,9 +178,9 @@ extern "C"
 #ifdef __cplusplus
 extern "C"
 #endif
-    TVM_DLL int32_t
-    tvmgen_default_fused_nn_conv2d_add_nn_relu_1(void *args, int32_t *arg_type_ids, int32_t num_args,
-                                                 void *out_ret_value, int32_t *out_ret_tcode, void *resource_handle)
+    TVM_DLL int32_t tvmgen_default_fused_nn_conv2d_add_nn_relu_1(void *args, int32_t *arg_type_ids, int32_t num_args,
+                                                                 void *out_ret_value, int32_t *out_ret_tcode,
+                                                                 void *resource_handle)
 {
     int32_t p0_code = arg_type_ids[0];
     int32_t p1_code = arg_type_ids[1];
@@ -272,9 +270,9 @@ extern "C"
 #ifdef __cplusplus
 extern "C"
 #endif
-    TVM_DLL int32_t
-    tvmgen_default_fused_nn_dense_add(void *args, int32_t *arg_type_ids, int32_t num_args, void *out_ret_value,
-                                      int32_t *out_ret_tcode, void *resource_handle)
+    TVM_DLL int32_t tvmgen_default_fused_nn_dense_add(void *args, int32_t *arg_type_ids, int32_t num_args,
+                                                      void *out_ret_value, int32_t *out_ret_tcode,
+                                                      void *resource_handle)
 {
     int32_t p0_code = arg_type_ids[0];
     int32_t p1_code = arg_type_ids[1];
@@ -340,9 +338,9 @@ extern "C"
 #ifdef __cplusplus
 extern "C"
 #endif
-    TVM_DLL int32_t
-    tvmgen_default_fused_nn_dense_add_nn_relu(void *args, int32_t *arg_type_ids, int32_t num_args, void *out_ret_value,
-                                              int32_t *out_ret_tcode, void *resource_handle)
+    TVM_DLL int32_t tvmgen_default_fused_nn_dense_add_nn_relu(void *args, int32_t *arg_type_ids, int32_t num_args,
+                                                              void *out_ret_value, int32_t *out_ret_tcode,
+                                                              void *resource_handle)
 {
     int32_t p0_code = arg_type_ids[0];
     int32_t p1_code = arg_type_ids[1];
@@ -427,9 +425,9 @@ extern "C"
 #ifdef __cplusplus
 extern "C"
 #endif
-    TVM_DLL int32_t
-    tvmgen_default_fused_nn_max_pool2d(void *args, int32_t *arg_type_ids, int32_t num_args, void *out_ret_value,
-                                       int32_t *out_ret_tcode, void *resource_handle)
+    TVM_DLL int32_t tvmgen_default_fused_nn_max_pool2d(void *args, int32_t *arg_type_ids, int32_t num_args,
+                                                       void *out_ret_value, int32_t *out_ret_tcode,
+                                                       void *resource_handle)
 {
     int32_t p0_code = arg_type_ids[0];
     int32_t pool_max_code = arg_type_ids[1];
@@ -471,9 +469,9 @@ extern "C"
 #ifdef __cplusplus
 extern "C"
 #endif
-    TVM_DLL int32_t
-    tvmgen_default_fused_nn_max_pool2d_1(void *args, int32_t *arg_type_ids, int32_t num_args, void *out_ret_value,
-                                         int32_t *out_ret_tcode, void *resource_handle)
+    TVM_DLL int32_t tvmgen_default_fused_nn_max_pool2d_1(void *args, int32_t *arg_type_ids, int32_t num_args,
+                                                         void *out_ret_value, int32_t *out_ret_tcode,
+                                                         void *resource_handle)
 {
     int32_t p0_code = arg_type_ids[0];
     int32_t pool_max_code = arg_type_ids[1];
@@ -512,9 +510,8 @@ extern "C"
 #ifdef __cplusplus
 extern "C"
 #endif
-    TVM_DLL int32_t
-    tvmgen_default_fused_nn_softmax(void *args, int32_t *arg_type_ids, int32_t num_args, void *out_ret_value,
-                                    int32_t *out_ret_tcode, void *resource_handle)
+    TVM_DLL int32_t tvmgen_default_fused_nn_softmax(void *args, int32_t *arg_type_ids, int32_t num_args,
+                                                    void *out_ret_value, int32_t *out_ret_tcode, void *resource_handle)
 {
     int32_t p0_code = arg_type_ids[0];
     int32_t T_softmax_norm_code = arg_type_ids[1];

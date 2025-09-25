@@ -6,10 +6,9 @@
 #ifdef __cplusplus
 extern "C"
 #endif
-    TVM_DLL int32_t
-    tvmgen_default_fused_layout_transform_cast_subtract(void *args, int32_t *arg_type_ids, int32_t num_args,
-                                                        void *out_ret_value, int32_t *out_ret_tcode,
-                                                        void *resource_handle)
+    TVM_DLL int32_t tvmgen_default_fused_layout_transform_cast_subtract(void *args, int32_t *arg_type_ids,
+                                                                        int32_t num_args, void *out_ret_value,
+                                                                        int32_t *out_ret_tcode, void *resource_handle)
 {
     void *arg_p0 = (((TVMValue *)args)[0].v_handle);
     int32_t arg_p0_code = arg_type_ids[0];
@@ -47,10 +46,10 @@ extern "C"
 #ifdef __cplusplus
 extern "C"
 #endif
-    TVM_DLL int32_t
-    tvmgen_default_fused_layout_transform_reshape_cast_subtract(void *args, int32_t *arg_type_ids, int32_t num_args,
-                                                                void *out_ret_value, int32_t *out_ret_tcode,
-                                                                void *resource_handle)
+    TVM_DLL int32_t tvmgen_default_fused_layout_transform_reshape_cast_subtract(void *args, int32_t *arg_type_ids,
+                                                                                int32_t num_args, void *out_ret_value,
+                                                                                int32_t *out_ret_tcode,
+                                                                                void *resource_handle)
 {
     void *arg_p0 = (((TVMValue *)args)[0].v_handle);
     int32_t arg_p0_code = arg_type_ids[0];
@@ -88,12 +87,9 @@ extern "C"
 #ifdef __cplusplus
 extern "C"
 #endif
-    TVM_DLL int32_t
-    tvmgen_default_fused_nn_conv2d_add_fixed_point_multiply_per_axis_add_clip_cast(void *args, int32_t *arg_type_ids,
-                                                                                   int32_t num_args,
-                                                                                   void *out_ret_value,
-                                                                                   int32_t *out_ret_tcode,
-                                                                                   void *resource_handle)
+    TVM_DLL int32_t tvmgen_default_fused_nn_conv2d_add_fixed_point_multiply_per_axis_add_clip_cast(
+        void *args, int32_t *arg_type_ids, int32_t num_args, void *out_ret_value, int32_t *out_ret_tcode,
+        void *resource_handle)
 {
     void *arg_p0 = (((TVMValue *)args)[0].v_handle);
     int32_t arg_p0_code = arg_type_ids[0];
@@ -272,12 +268,9 @@ extern "C"
 #ifdef __cplusplus
 extern "C"
 #endif
-    TVM_DLL int32_t
-    tvmgen_default_fused_nn_conv2d_add_fixed_point_multiply_per_axis_add_clip_cast_1(void *args, int32_t *arg_type_ids,
-                                                                                     int32_t num_args,
-                                                                                     void *out_ret_value,
-                                                                                     int32_t *out_ret_tcode,
-                                                                                     void *resource_handle)
+    TVM_DLL int32_t tvmgen_default_fused_nn_conv2d_add_fixed_point_multiply_per_axis_add_clip_cast_1(
+        void *args, int32_t *arg_type_ids, int32_t num_args, void *out_ret_value, int32_t *out_ret_tcode,
+        void *resource_handle)
 {
     void *arg_p0 = (((TVMValue *)args)[0].v_handle);
     int32_t arg_p0_code = arg_type_ids[0];
@@ -436,10 +429,9 @@ extern "C"
 #ifdef __cplusplus
 extern "C"
 #endif
-    TVM_DLL int32_t
-    tvmgen_default_fused_nn_dense_add_fixed_point_multiply_add_clip_cast(void *args, int32_t *arg_type_ids,
-                                                                         int32_t num_args, void *out_ret_value,
-                                                                         int32_t *out_ret_tcode, void *resource_handle)
+    TVM_DLL int32_t tvmgen_default_fused_nn_dense_add_fixed_point_multiply_add_clip_cast(
+        void *args, int32_t *arg_type_ids, int32_t num_args, void *out_ret_value, int32_t *out_ret_tcode,
+        void *resource_handle)
 {
     void *arg_p0 = (((TVMValue *)args)[0].v_handle);
     int32_t arg_p0_code = arg_type_ids[0];
@@ -539,8 +531,7 @@ extern "C"
 #ifdef __cplusplus
 extern "C"
 #endif
-    TVM_DLL int32_t
-    tvmgen_default_fused_nn_dense_add_fixed_point_multiply_add_clip_subtract_cast_multiply(
+    TVM_DLL int32_t tvmgen_default_fused_nn_dense_add_fixed_point_multiply_add_clip_subtract_cast_multiply(
         void *args, int32_t *arg_type_ids, int32_t num_args, void *out_ret_value, int32_t *out_ret_tcode,
         void *resource_handle)
 {
@@ -617,9 +608,9 @@ extern "C"
 #ifdef __cplusplus
 extern "C"
 #endif
-    TVM_DLL int32_t
-    tvmgen_default_fused_nn_max_pool2d(void *args, int32_t *arg_type_ids, int32_t num_args, void *out_ret_value,
-                                       int32_t *out_ret_tcode, void *resource_handle)
+    TVM_DLL int32_t tvmgen_default_fused_nn_max_pool2d(void *args, int32_t *arg_type_ids, int32_t num_args,
+                                                       void *out_ret_value, int32_t *out_ret_tcode,
+                                                       void *resource_handle)
 {
     void *arg_p0 = (((TVMValue *)args)[0].v_handle);
     int32_t arg_p0_code = arg_type_ids[0];
@@ -658,9 +649,9 @@ extern "C"
 #ifdef __cplusplus
 extern "C"
 #endif
-    TVM_DLL int32_t
-    tvmgen_default_fused_nn_max_pool2d_cast_subtract(void *args, int32_t *arg_type_ids, int32_t num_args,
-                                                     void *out_ret_value, int32_t *out_ret_tcode, void *resource_handle)
+    TVM_DLL int32_t tvmgen_default_fused_nn_max_pool2d_cast_subtract(void *args, int32_t *arg_type_ids,
+                                                                     int32_t num_args, void *out_ret_value,
+                                                                     int32_t *out_ret_tcode, void *resource_handle)
 {
     void *arg_p0 = (((TVMValue *)args)[0].v_handle);
     int32_t arg_p0_code = arg_type_ids[0];
@@ -716,10 +707,10 @@ extern "C"
 #ifdef __cplusplus
 extern "C"
 #endif
-    TVM_DLL int32_t
-    tvmgen_default_fused_nn_softmax_divide_round_add_clip_cast(void *args, int32_t *arg_type_ids, int32_t num_args,
-                                                               void *out_ret_value, int32_t *out_ret_tcode,
-                                                               void *resource_handle)
+    TVM_DLL int32_t tvmgen_default_fused_nn_softmax_divide_round_add_clip_cast(void *args, int32_t *arg_type_ids,
+                                                                               int32_t num_args, void *out_ret_value,
+                                                                               int32_t *out_ret_tcode,
+                                                                               void *resource_handle)
 {
     void *arg_p0 = (((TVMValue *)args)[0].v_handle);
     int32_t arg_p0_code = arg_type_ids[0];
@@ -773,9 +764,9 @@ extern "C"
 #ifdef __cplusplus
 extern "C"
 #endif
-    TVM_DLL int32_t
-    tvmgen_default_fused_reshape_cast_subtract(void *args, int32_t *arg_type_ids, int32_t num_args, void *out_ret_value,
-                                               int32_t *out_ret_tcode, void *resource_handle)
+    TVM_DLL int32_t tvmgen_default_fused_reshape_cast_subtract(void *args, int32_t *arg_type_ids, int32_t num_args,
+                                                               void *out_ret_value, int32_t *out_ret_tcode,
+                                                               void *resource_handle)
 {
     void *arg_p0 = (((TVMValue *)args)[0].v_handle);
     int32_t arg_p0_code = arg_type_ids[0];
