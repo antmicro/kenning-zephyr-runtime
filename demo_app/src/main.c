@@ -109,11 +109,11 @@ int main(void)
 
     if (IS_VALID_POINTER(model_output))
     {
-        free(model_output);
+        k_free(model_output);
     }
     if (IS_VALID_POINTER(model_input))
     {
-        free(model_input);
+        k_free(model_input);
     }
 
     if (STATUS_OK != status)
