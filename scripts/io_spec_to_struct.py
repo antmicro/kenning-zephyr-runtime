@@ -90,7 +90,6 @@ if __name__ == "__main__":
         args.output_path.parent.mkdir(parents=True, exist_ok=True)
 
     io_spec = json.loads(input_path.read_text())
-
     io_spec_input = io_spec.get("processed_input", io_spec["input"])
     io_spec_output = io_spec["output"]
 
@@ -108,7 +107,7 @@ if __name__ == "__main__":
         num_output_dim=py_arr_to_c_arr([len(out["shape"]) for out in io_spec_output]),
         output_shape=py_arr_to_c_arr([out["shape"] for out in io_spec_output]),
         output_data_type=py_tuple_to_c_struct(py_arr_to_c_arr(IOSpecSerializer.io_spec_parse_types(io_spec_output))),
-        entry_func="module.main",
+        entry_func=io_spec.get("entry_func", ""),
         model_name="module",
     )
 

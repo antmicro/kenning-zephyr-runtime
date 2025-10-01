@@ -193,21 +193,6 @@ endmacro(kenning_gen_tflite_model_sources)
 #                    added.
 macro(kenning_gen_iree_model_sources runtime_src)
   set(model_vmfb_path "runtimes/iree/generated/model.vmfb")
-  set(import_path "runtimes/iree/generated/model.mlir")
-
-  add_custom_command(
-    OUTPUT
-      ${import_path}
-    COMMAND
-      iree-import-tflite -o ${import_path} ${CONFIG_KENNING_MODEL_PATH}
-  )
-
-  add_custom_command(
-    OUTPUT
-      ${model_vmfb_path}.json
-    COMMAND
-      cp ${CONFIG_KENNING_MODEL_PATH}.json ${model_vmfb_path}.json
-  )
 
   set(target_cpu_features "")
   if("${CONFIG_ARM64}")
@@ -238,35 +223,32 @@ macro(kenning_gen_iree_model_sources runtime_src)
     add_custom_command(
       OUTPUT
         ${model_vmfb_path}
+        ${model_vmfb_path}.json
       DEPENDS
-        ${import_path}
+        ${CONFIG_KENNING_MODEL_PATH}
       COMMAND
-        iree-compile
-          --iree-input-type=tosa
-          --iree-hal-target-backends vmvx
-          -o ${model_vmfb_path}
-          ${import_path}
+        ${CONFIG_KENNING_PYTHON_PATH} ${KENNING_LIB_DIR}/scripts/build_iree.py
+          --input-model-path ${CONFIG_KENNING_MODEL_PATH}
+          --output-model-path ${model_vmfb_path}
+          --iree-backend vmvx
     )
   elseif("${CONFIG_KENNING_IREE_LOADER_EMBEDDED_ELF}")
     add_custom_command(
       OUTPUT
         ${model_vmfb_path}
+        ${model_vmfb_path}.json
       DEPENDS
-        ${import_path}
+        ${CONFIG_KENNING_MODEL_PATH}
       COMMAND
-        iree-compile
-          --iree-input-type=tosa
-          --iree-hal-target-backends llvm-cpu
-          --iree-vm-bytecode-module-strip-source-map=true
-          --iree-vm-emit-polyglot-zip=false
-          --iree-llvm-debug-symbols=false
-          --iree-llvm-target-triple="${target_triple}"
-          --iree-llvm-target-cpu="${target_cpu}"
-          --iree-llvm-target-cpu-features="${target_cpu_features}"
-          -o ${model_vmfb_path}
-          ${import_path}
+        ${CONFIG_KENNING_PYTHON_PATH} ${KENNING_LIB_DIR}/scripts/build_iree.py
+          --input-model-path ${CONFIG_KENNING_MODEL_PATH}
+          --output-model-path ${model_vmfb_path}
+          --iree-backend elf
+          --target-triple ${target_triple}
+          --target-cpu ${target_cpu}
+          --target-cpu-features ${target_cpu_features}
     )
-  elseif()
+  else()
     message(FATAL_ERROR "Invalid IREE loader")
   endif()
 
