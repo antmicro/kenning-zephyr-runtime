@@ -236,6 +236,14 @@ config KENNING_IREE_LOADER_EMBEDDED_ELF
 
 endchoice
 
+config KENNING_IREE_HEAP_SIZE
+        int "Size in kilobytes of the heap used by IREE"
+        depends on KENNING_ML_RUNTIME_IREE
+        default 16
+        help
+          This option sets the size in kilobytes of the heap used by IREE.
+
+
 config KENNING_AI8X_CNN_TIMEOUT_MS
         int "CNN accelerator timeout"
         depends on KENNING_ML_RUNTIME_AI8X

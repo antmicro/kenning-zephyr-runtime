@@ -199,7 +199,7 @@ status_t create_context(const uint8_t *model_data, const size_t model_data_size)
 
     do
     {
-        iree_allocator_t host_allocator = iree_allocator_system();
+        iree_allocator_t host_allocator = iree_allocator_zephyr();
 
         // create hal_module
         iree_status = iree_hal_module_create(gp_instance, iree_hal_module_device_policy_default(), 1, &gp_device,
@@ -218,7 +218,6 @@ status_t create_context(const uint8_t *model_data, const size_t model_data_size)
         // allocate context
         iree_status = iree_vm_context_create_with_modules(
             gp_instance, IREE_VM_CONTEXT_FLAG_NONE, IREE_ARRAYSIZE(modules), &modules[0], host_allocator, &gp_context);
-
     } while (0);
 
     // cleanup
@@ -295,7 +294,7 @@ status_t prepare_input_buffer(const uint8_t *model_input)
 
     iree_status = iree_vm_list_create(
         /*element_type=*/iree_vm_make_undefined_type_def(), /*initial_capacity=*/g_model_spec.num_input,
-        iree_allocator_system(), &gp_model_inputs);
+        iree_allocator_zephyr(), &gp_model_inputs);
     CHECK_IREE_STATUS(iree_status);
 
     iree_hal_buffer_view_t *arg_buffer_views[MAX_MODEL_INPUT_NUM] = {NULL};
@@ -318,8 +317,8 @@ status_t prepare_output_buffer()
     iree_status_t iree_status = iree_ok_status();
 
     iree_status = iree_vm_list_create(
-        /*element_type=*/iree_vm_make_undefined_type_def(), /*initial_capacity=*/1, iree_allocator_system(),
-        &gp_model_outputs);
+        /*element_type=*/iree_vm_make_undefined_type_def(), /*initial_capacity=*/g_model_spec.num_output,
+        iree_allocator_zephyr(), &gp_model_outputs);
     CHECK_IREE_STATUS(iree_status);
 
     return STATUS_OK;
@@ -360,7 +359,7 @@ status_t runtime_init()
     prepare_iree_ldr_table();
     status_t status = STATUS_OK;
     iree_status_t iree_status = iree_ok_status();
-    iree_allocator_t host_allocator = iree_allocator_system();
+    iree_allocator_t host_allocator = iree_allocator_zephyr();
 
     if (runtime_initialized)
     {
@@ -407,7 +406,6 @@ status_t runtime_init_weights()
     release_input_buffer();
 
     status = create_context(gp_ireeModelBuffer, msg_loader_model->written);
-
     RETURN_ON_ERROR(status, status);
 
     return STATUS_OK;
@@ -453,7 +451,7 @@ status_t runtime_run_model()
 
     // invoke model
     iree_status = iree_vm_invoke(gp_context, main_function, IREE_VM_INVOCATION_FLAG_NONE,
-                                 /*policy=*/NULL, gp_model_inputs, gp_model_outputs, iree_allocator_system());
+                                 /*policy=*/NULL, gp_model_inputs, gp_model_outputs, iree_allocator_zephyr());
     CHECK_IREE_STATUS(iree_status);
 
     return status;

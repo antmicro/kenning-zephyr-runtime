@@ -41,3 +41,5 @@
  */
 iree_status_t create_device(iree_vm_instance_t *instance, iree_allocator_t host_allocator,
                             iree_hal_device_t **out_device);
+
+iree_allocator_t iree_allocator_zephyr(void);

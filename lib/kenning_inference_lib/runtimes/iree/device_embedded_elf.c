@@ -22,7 +22,7 @@ iree_status_t create_device(iree_vm_instance_t *instance, iree_allocator_t host_
 
     do
     {
-        iree_allocator_t host_allocator = iree_allocator_system();
+        iree_allocator_t host_allocator = iree_allocator_zephyr();
         // prepare params
         iree_hal_sync_device_params_t params;
         iree_hal_sync_device_params_initialize(&params);
