@@ -41,6 +41,6 @@ manifest:
 
     - name: iree
       remote: iree-org
-      revision: 2f40854c548cbe082190d1dd1691a342ffd9006b
+      revision: v3.6.0
       submodules:
         - path: third_party/flatcc
