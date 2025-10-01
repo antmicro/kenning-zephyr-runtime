@@ -1,7 +1,7 @@
 platform:
   type: ZephyrPlatform
   parameters:
-    name: stm32f746g_disco
+    name: hifive_unleashed/fu540/e51
     simulated: false
     uart_port: /dev/ttyUSB1
 dataset:
@@ -15,12 +15,13 @@ model_wrapper:
 optimizers:
 - type: IREECompiler
   parameters:
-    compiled_model_path: ./output/magic-wand-iree-rv64.vmfb
+    compiled_model_path: ./output/magic-wand-iree-riscv64.vmfb
     backend: llvm-cpu
     model_framework: keras
     compiler_args:
-    - iree-vm-bytecode-module-strip-source-map=true
-    - iree-vm-emit-polyglot-zip=false
-    - iree-llvm-debug-symbols=false
-    - iree-llvm-target-cpu=cortex-m33
-    - iree-llvm-target-triple=arm
+      - iree-vm-bytecode-module-strip-source-map=true
+      - iree-vm-emit-polyglot-zip=false
+      - iree-llvmcpu-debug-symbols=false
+      - iree-llvmcpu-target-triple=riscv64-pc-linux-elf
+      - iree-llvmcpu-target-cpu=generic-rv64
+      - iree-llvmcpu-target-cpu-features=+m,+f

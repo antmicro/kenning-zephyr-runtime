@@ -1,0 +1,19 @@
+platform:
+  type: ZephyrPlatform
+  parameters:
+    name: b_u585i_iot02a
+    simulated: false
+    uart_port: /dev/ttyUSB1
+dataset:
+  type: MagicWandDataset
+  parameters:
+    dataset_root: ./output/MagicWandDataset
+model_wrapper:
+  type: MagicWandModelWrapper
+  parameters:
+    model_path: kenning:///models/classification/magic_wand.h5
+optimizers:
+- type: IREECompiler
+  parameters:
+    compiled_model_path: ./output/magic-wand-iree-vmvx.vmfb
+    backend: vmvx

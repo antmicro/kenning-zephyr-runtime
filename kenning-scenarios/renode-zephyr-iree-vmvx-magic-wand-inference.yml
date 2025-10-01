@@ -1,0 +1,19 @@
+platform:
+  type: ZephyrPlatform
+  parameters:
+    name: hifive_unmatched/fu740/s7
+    simulated: true
+    zephyr_build_path: ./build
+dataset:
+  type: MagicWandDataset
+  parameters:
+    dataset_root: ./output/MagicWandDataset
+model_wrapper:
+  type: MagicWandModelWrapper
+  parameters:
+    model_path: kenning:///models/classification/magic_wand.h5
+optimizers:
+- type: IREECompiler
+  parameters:
+    compiled_model_path: ./output/magic-wand-iree-vmvx.vmfb
+    backend: vmvx

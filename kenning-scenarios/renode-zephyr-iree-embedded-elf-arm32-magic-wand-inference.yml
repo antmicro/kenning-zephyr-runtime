@@ -1,8 +1,9 @@
 platform:
   type: ZephyrPlatform
   parameters:
-    name: hifive_unmatched/fu740
-    simulated: false
+    name: b_u585i_iot02a
+    simulated: true
+    zephyr_build_path: ./build
 dataset:
   type: MagicWandDataset
   parameters:
@@ -14,13 +15,11 @@ model_wrapper:
 optimizers:
 - type: IREECompiler
   parameters:
-    compiled_model_path: ./output/magic-wand-iree-rv64.vmfb
+    compiled_model_path: ./output/magic-wand-iree-arm.vmfb
     backend: llvm-cpu
     model_framework: keras
     compiler_args:
-    - iree-vm-bytecode-module-strip-source-map=true
-    - iree-vm-emit-polyglot-zip=false
-    - iree-llvm-debug-symbols=false
-    - iree-llvm-target-triple=riscv64-pc-linux-elf
-    - iree-llvm-target-cpu=generic-rv64
-    - iree-llvm-target-cpu-features=+m,+f
+      - iree-llvmcpu-target-cpu=cortex-m33
+      - iree-llvmcpu-debug-symbols=false
+      - iree-vm-bytecode-module-strip-source-map=true
+      - iree-llvmcpu-target-triple=arm

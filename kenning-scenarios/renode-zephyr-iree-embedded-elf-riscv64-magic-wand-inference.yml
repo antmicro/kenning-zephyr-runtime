@@ -1,0 +1,27 @@
+platform:
+  type: ZephyrPlatform
+  parameters:
+    name: hifive_unmatched/fu740/u74
+    simulated: true
+    zephyr_build_path: ./build
+dataset:
+  type: MagicWandDataset
+  parameters:
+    dataset_root: ./output/MagicWandDataset
+model_wrapper:
+  type: MagicWandModelWrapper
+  parameters:
+    model_path: kenning:///models/classification/magic_wand.h5
+optimizers:
+- type: IREECompiler
+  parameters:
+    compiled_model_path: ./output/magic-wand-iree-riscv64.vmfb
+    backend: llvm-cpu
+    model_framework: keras
+    compiler_args:
+      - iree-vm-bytecode-module-strip-source-map=true
+      - iree-vm-emit-polyglot-zip=false
+      - iree-llvmcpu-debug-symbols=false
+      - iree-llvmcpu-target-triple=riscv64-pc-linux-elf
+      - iree-llvmcpu-target-cpu=generic-rv64
+      - iree-llvmcpu-target-cpu-features=+m,+f
