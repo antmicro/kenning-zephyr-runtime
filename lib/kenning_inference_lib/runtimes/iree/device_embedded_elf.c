@@ -28,13 +28,12 @@ iree_status_t create_device(iree_vm_instance_t *instance, iree_allocator_t host_
         iree_hal_sync_device_params_initialize(&params);
 
         // create loader
-        iree_status =
-            iree_hal_embedded_elf_loader_create(iree_hal_executable_import_provider_default(), host_allocator, &loader);
+        iree_status = iree_hal_embedded_elf_loader_create(NULL, host_allocator, &loader);
 
         BREAK_ON_IREE_ERROR(iree_status);
 
         // allocate buffers
-        iree_string_view_t identifier = iree_make_cstring_view("sync");
+        iree_string_view_t identifier = iree_make_cstring_view("local");
         iree_status = iree_hal_allocator_create_heap(identifier, host_allocator, host_allocator, &device_allocator);
         BREAK_ON_IREE_ERROR(iree_status);
 

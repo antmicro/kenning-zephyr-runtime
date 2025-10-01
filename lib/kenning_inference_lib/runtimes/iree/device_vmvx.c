@@ -32,7 +32,7 @@ iree_status_t create_device(iree_vm_instance_t *instance, iree_allocator_t host_
         BREAK_ON_IREE_ERROR(iree_status);
 
         // allocate buffers
-        iree_string_view_t identifier = iree_make_cstring_view("vmvx");
+        iree_string_view_t identifier = iree_make_cstring_view("local");
         iree_status = iree_hal_allocator_create_heap(identifier, host_allocator, host_allocator, &device_allocator);
         BREAK_ON_IREE_ERROR(iree_status);
 

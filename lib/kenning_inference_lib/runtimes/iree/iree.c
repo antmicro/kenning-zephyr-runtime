@@ -14,7 +14,7 @@
 
 #include <iree/base/status.h>
 #include <iree/modules/hal/module.h>
-#include <iree/vm/bytecode_module.h>
+#include <iree/vm/bytecode/module.h>
 #include <iree/vm/ref.h>
 #include <zephyr/kernel.h>
 
@@ -201,15 +201,16 @@ status_t create_context(const uint8_t *model_data, const size_t model_data_size)
     {
         iree_allocator_t host_allocator = iree_allocator_system();
 
+        // create hal_module
+        iree_status = iree_hal_module_create(gp_instance, iree_hal_module_device_policy_default(), 1, &gp_device,
+                                             IREE_HAL_MODULE_FLAG_SYNCHRONOUS, iree_hal_module_debug_sink_null(),
+                                             host_allocator, &hal_module);
+        BREAK_ON_IREE_ERROR(iree_status);
+
         // create bytecode module
         iree_status =
             iree_vm_bytecode_module_create(gp_instance, iree_make_const_byte_span(model_data, model_data_size),
                                            iree_allocator_null(), host_allocator, &module);
-        BREAK_ON_IREE_ERROR(iree_status);
-
-        // create hal_module
-        iree_status = iree_hal_module_create(gp_instance, gp_device, IREE_HAL_MODULE_FLAG_SYNCHRONOUS, host_allocator,
-                                             &hal_module);
         BREAK_ON_IREE_ERROR(iree_status);
 
         iree_vm_module_t *modules[] = {hal_module, module};
@@ -217,6 +218,7 @@ status_t create_context(const uint8_t *model_data, const size_t model_data_size)
         // allocate context
         iree_status = iree_vm_context_create_with_modules(
             gp_instance, IREE_VM_CONTEXT_FLAG_NONE, IREE_ARRAYSIZE(modules), &modules[0], host_allocator, &gp_context);
+
     } while (0);
 
     // cleanup
@@ -264,12 +266,12 @@ static iree_status_t prepare_input_hal_buffer_views(const uint8_t *model_input,
 
     iree_hal_buffer_params_t buffer_params = {.type =
                                                   IREE_HAL_MEMORY_TYPE_HOST_LOCAL | IREE_HAL_MEMORY_TYPE_DEVICE_VISIBLE,
-                                              .access = IREE_HAL_MEMORY_ACCESS_READ,
+                                              .access = IREE_HAL_MEMORY_ACCESS_DISCARD_WRITE,
                                               .usage = IREE_HAL_BUFFER_USAGE_DEFAULT};
     for (int i = 0; i < g_model_spec.num_input; ++i)
     {
-        iree_status = iree_hal_buffer_view_allocate_buffer(
-            iree_hal_device_allocator(gp_device), g_model_spec.num_input_dim[i], g_model_spec.input_shape[i],
+        iree_status = iree_hal_buffer_view_allocate_buffer_copy(
+            gp_device, iree_hal_device_allocator(gp_device), g_model_spec.num_input_dim[i], g_model_spec.input_shape[i],
             kenning_elem_dtype_to_iree_hal_elem_type(&g_model_spec.input_data_type),
             IREE_HAL_ENCODING_TYPE_DENSE_ROW_MAJOR, buffer_params, *byte_span[i], &(arg_buffer_views[i]));
         BREAK_ON_IREE_ERROR(iree_status);
@@ -292,7 +294,8 @@ status_t prepare_input_buffer(const uint8_t *model_input)
     iree_status_t iree_status = iree_ok_status();
 
     iree_status = iree_vm_list_create(
-        /*element_type=*/NULL, /*initial_capacity=*/g_model_spec.num_input, iree_allocator_system(), &gp_model_inputs);
+        /*element_type=*/iree_vm_make_undefined_type_def(), /*initial_capacity=*/g_model_spec.num_input,
+        iree_allocator_system(), &gp_model_inputs);
     CHECK_IREE_STATUS(iree_status);
 
     iree_hal_buffer_view_t *arg_buffer_views[MAX_MODEL_INPUT_NUM] = {NULL};
@@ -315,7 +318,8 @@ status_t prepare_output_buffer()
     iree_status_t iree_status = iree_ok_status();
 
     iree_status = iree_vm_list_create(
-        /*element_type=*/NULL, /*initial_capacity=*/1, iree_allocator_system(), &gp_model_outputs);
+        /*element_type=*/iree_vm_make_undefined_type_def(), /*initial_capacity=*/1, iree_allocator_system(),
+        &gp_model_outputs);
     CHECK_IREE_STATUS(iree_status);
 
     return STATUS_OK;
@@ -376,7 +380,7 @@ status_t runtime_init()
     do
     {
         // create vm instance
-        iree_status = iree_vm_instance_create(host_allocator, &gp_instance);
+        iree_status = iree_vm_instance_create(IREE_VM_TYPE_CAPACITY_DEFAULT, host_allocator, &gp_instance);
         BREAK_ON_IREE_ERROR(iree_status);
 
         iree_status = iree_hal_module_register_all_types(gp_instance);
@@ -385,7 +389,6 @@ status_t runtime_init()
         // create device
         iree_status = create_device(gp_instance, host_allocator, &gp_device);
         BREAK_ON_IREE_ERROR(iree_status);
-
         runtime_initialized = true;
     } while (0);
     CHECK_IREE_STATUS(iree_status);
@@ -404,6 +407,7 @@ status_t runtime_init_weights()
     release_input_buffer();
 
     status = create_context(gp_ireeModelBuffer, msg_loader_model->written);
+
     RETURN_ON_ERROR(status, status);
 
     return STATUS_OK;
@@ -467,15 +471,14 @@ status_t runtime_get_model_output(uint8_t *model_output)
         iree_hal_buffer_mapping_t mapped_memory = {0};
         iree_hal_buffer_view_t *ret_buffer_view = NULL;
         // get the result buffers from the invocation.
-        ret_buffer_view = (iree_hal_buffer_view_t *)iree_vm_list_get_ref_deref(gp_model_outputs, output_idx,
-                                                                               iree_hal_buffer_view_get_descriptor());
+        ret_buffer_view = iree_vm_list_get_buffer_view_assign(gp_model_outputs, output_idx);
         if (NULL == ret_buffer_view)
         {
             return RUNTIME_WRAPPER_STATUS_INV_PTR;
         }
         iree_status =
             iree_hal_buffer_map_range(iree_hal_buffer_view_buffer(ret_buffer_view), IREE_HAL_MAPPING_MODE_SCOPED,
-                                      IREE_HAL_MEMORY_ACCESS_READ, 0, IREE_WHOLE_BUFFER, &mapped_memory);
+                                      IREE_HAL_MEMORY_ACCESS_READ, 0, IREE_HAL_WHOLE_BUFFER, &mapped_memory);
         CHECK_IREE_STATUS(iree_status);
 
         if ((output_idx > g_model_spec.num_output ||
