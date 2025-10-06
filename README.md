@@ -30,8 +30,8 @@ Now clone this repository and install the latest Zephyr SDK
 git clone https://github.com/antmicro/kenning-zephyr-runtime
 cd kenning-zephyr-runtime/
 ./scripts/prepare_zephyr_env.sh
-./scripts/prepare_modules.sh
 source .venv/bin/activate
+./scripts/prepare_modules.sh
 ```
 
 ### Building and running demo app
@@ -122,18 +122,34 @@ cd kenning-zephyr-runtime
 
 After entering the project's directory, initialize a Zephyr workspace with:
 
-```bash
+```bash skip
 ./scripts/prepare_zephyr_env.sh
 source .venv/bin/activate
 ```
 
 This will:
 
-* Download (if necessary) and set up the Zephyr SDK
-* Download necessary toolchains
-* Set up a Python virtual environment with necessary dependencies.
+* Create a Python virtual environment and install dependencies.
+* Initialize a west workspace and download modules.
+* Download and install Zephyr SDK in the home directory.
+* Download necessary Zephyr toolchains (x86_64-zephyr-elf, arm-zephyr-eabi, riscv64-zephyr-elf) and host tools.
 
 This can be reused to load the necessary environment before launching commands mentioned later in this README.
+
+Alternatively, for example if you need to install another set of toolchains, you can set up the environment manually:
+
+```bash
+python3 -m venv .venv --system-site-packages
+source .venv/bin/activate
+pip install pip setuptools west --upgrade
+west init -l .
+west update
+pip install -r requirements.txt -r ../zephyr/scripts/requirements-base.txt
+west zephyr-export
+west sdk install --toolchains x86_64-zephyr-elf arm-zephyr-eabi riscv64-zephyr-elf
+```
+
+
 
 Now, prepare additional modules:
 
