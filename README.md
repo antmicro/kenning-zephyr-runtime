@@ -34,6 +34,14 @@ source .venv/bin/activate
 ./scripts/prepare_modules.sh
 ```
 
+To simulate with Renode, install the latest Renode release, with the script:
+
+```
+source ./scripts/prepare_renode.sh
+```
+
+**NOTE** The script creates environmental variables, that allow Kenning to find Renode. It has to be ran every time a new shell is used.
+
 ### Building and running demo app
 
 At this point you should be able to build the demo app and run it
