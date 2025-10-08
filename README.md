@@ -40,6 +40,7 @@ At this point you should be able to build the demo app and run it
 
 ```
 west build -p always -b stm32f746g_disco demo_app -- -DEXTRA_CONF_FILE=tvm.conf
+west build -t board-repl
 python ./scripts/run_renode.py
 ```
 
@@ -51,6 +52,7 @@ To build Kenning inference server app run
 
 ```
 west build -p always -b stm32f746g_disco app -- -DEXTRA_CONF_FILE=tvm.conf
+west build -t board-repl
 ```
 
 And then execute Kenning to compile the model, run benchmark and generate report
@@ -145,6 +147,7 @@ To build the Kenning Zephyr runtime, select a supported machine learning runtime
 
 ```bash skip
 west build --board <board> app -- -DEXTRA_CONF_FILE=<runtime>.conf
+west build -t board-repl
 ```
 
 You can provide one of the following runtimes in `<runtime>`:
@@ -218,6 +221,7 @@ First off, build the `kenning-zephyr-runtime` app for `stm32f746g_disco` and the
 
 ```bash
 west build -p always -b stm32f746g_disco app -- -DEXTRA_CONF_FILE=tflite.conf
+west build -t board-repl
 ```
 
 Then, evaluate the model in Renode using a sample scenario located in `kenning-scenarios/renode-zephyr-tflite-magic-wand-inference.yml` and generate a report with performance and quality metrics:
@@ -256,12 +260,14 @@ There are two possible ways to change this list of enabled ops in the global `tf
   west build -p always -b stm32f746g_disco app -- \
       -DEXTRA_CONF_FILE=tflite.conf \
       -DCONFIG_KENNING_MODEL_PATH=\"https://dl.antmicro.com/kenning/models/classification/magic_wand.h5\"
+  west build -t board-repl
   ```
 * Providing list of ops manually in a comma-separated format in `CONFIG_TFLITE_MICRO_OPS`:
   ```bash
   west build -p always -b stm32f746g_disco app -- \
       -DEXTRA_CONF_FILE=tflite.conf \
       -DCONFIG_KENNING_TFLITE_OPS=\"Conv2D,FullyConnected,MaxPool2D,Reshape,Softmax\"
+  west build -t board-repl
   ```
 
 #### Using microTVM
@@ -270,6 +276,7 @@ To build the `kenning-zephyr-runtime` app to work with microTVM runtime, set `-D
 
 ```bash
 west build -p always -b stm32f746g_disco app -- -DEXTRA_CONF_FILE=tvm.conf
+west build -t board-repl
 ```
 
 Evaluate the model using the sample scenario located in `kenning-scenarios/renode-zephyr-tvm-magic-wand-inference.yml`:
@@ -314,6 +321,7 @@ You can set this variable in `prj.conf` or add it to `west build` as follows (re
 west build -p always -b stm32f746g_disco app -- \
     -DEXTRA_CONF_FILE=tvm.conf \
     -DCONFIG_KENNING_MODEL_PATH=\"https://dl.antmicro.com/kenning/models/classification/magic_wand.h5\"
+west build -t board-repl
 ```
 
 ### Building the project with LLEXT runtime and evaluating models in Renode
@@ -325,10 +333,12 @@ The runtime can be built separately from the project and loaded into an already 
 Build `kenning-zephyr-runtime` with LLEXT support using:
 ```bash
 west build -p always -b stm32f746g_disco app -- -DEXTRA_CONF_FILE=llext.conf
+west build -t board-repl
 ```
 then build the TVM extension:
 ```bash
 west build app -t llext-tvm -- -DEXTRA_CONF_FILE="llext.conf;llext_tvm.conf"
+west build -t board-repl
 ```
 
 Evaluate the model using scenario located in `kenning-scenarios/renode-zephyr-tvm-llext-magic-wand-inference.yml`:
@@ -378,6 +388,7 @@ Example overlay looks like this:
 Then run build again with `CONFIG_KENNING_INCREASE_MEMORY=y` as follows:
 ```bash skip
 west build -p always -b 96b_nitrogen demo_app -- -DEXTRA_CONF_FILE=tvm.conf -DCONFIG_KENNING_INCREASE_MEMORY=y
+west build -t board-repl
 ```
 This time, the build should succeed and you should be able to run the simulation.
 ```bash skip
@@ -399,6 +410,7 @@ Build the runtime for `nrf52840dongle` (let's use TFLite Micro in this example):
 
 ```bash skip
 west build -p always -b nrf52840dongle app -- -DEXTRA_CONF_FILE=tflite.conf
+west build -t board-repl
 ```
 
 Flash Kenning runtime on the device by following [instructions](https://docs.zephyrproject.org/latest/boards/nordic/nrf52840dongle/doc/index.html#option-1-using-the-built-in-bootloader-only) in the Zephyr documenation.
@@ -453,10 +465,12 @@ With the build environment configured as described in the [Cloning the project a
 * using the microTVM runtime:
   ```bash
   west build -p always -b hifive_unleashed demo_app -- -DEXTRA_CONF_FILE=tvm.conf
+  west build -t board-repl
   ```
 * using the TFLite Micro runtime:
   ```bash
   west build -p always -b hifive_unleashed demo_app -- -DEXTRA_CONF_FILE=tflite.conf
+  west build -t board-repl
   ```
 
 After building the application with a board specified, we can either flash the hardware with it, or simulate it in Renode.
