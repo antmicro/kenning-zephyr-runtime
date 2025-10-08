@@ -14,6 +14,4 @@ project(app LANGUAGES C)
 
 kenning_add_board_repl_target()
 
-add_dependencies(app board-repl)
-
 target_sources(app PRIVATE src/main.c)
