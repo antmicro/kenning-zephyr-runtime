@@ -33,7 +33,7 @@ def get_zephyr_console_uart(board: str) -> str:
     """
     Retrieves Zephyr console UART from device tree.
     """
-    with open(f"./build/{board}_flat.dts", "r") as dts_file:
+    with open("./build/zephyr/zephyr.dts", "r") as dts_file:
         board_dts = dts_file.read()
 
     match = re.findall(r"zephyr,console = &([a-zA-Z0-9]*);", board_dts, re.MULTILINE)
@@ -47,7 +47,7 @@ def get_kenning_communication_uart(boards: str) -> str:
     """
     Retrieves UART used for Kenning communication from device tree.
     """
-    with open(f"./build/{board}_flat.dts", "r") as dts_file:
+    with open("./build/zephyr/zephyr.dts", "r") as dts_file:
         board_dts = dts_file.read()
 
     match = re.findall(r"kcomms = &([a-zA-Z0-9]*);", board_dts, re.MULTILINE)
