@@ -9,22 +9,9 @@ function(kenning_add_board_repl_target)
     OUTPUT
       ${BOARD}.repl
     COMMAND
-      gcc
-        -H -E -P -x assembler-with-cpp
-        -I ${WEST_TOPDIR}/modules/hal/stm32/dts/
-        -I ${ZEPHYR_BASE}/dts/
-        -I ${ZEPHYR_BASE}/dts/arm/
-        -I ${ZEPHYR_BASE}/dts/common/
-        -I ${ZEPHYR_BASE}/dts/riscv/
-        -I ${ZEPHYR_BASE}/dts/vendor/
-        -I ${ZEPHYR_BASE}/include/
-        ${dts_files}
-        1>${BOARD}_flat.dts
-        2>includes.txt
-    COMMAND
       dts2repl
         --output ${BOARD}.repl
-        ${BOARD}_flat.dts
+        zephyr/zephyr.dts
   )
 
   add_custom_target(
