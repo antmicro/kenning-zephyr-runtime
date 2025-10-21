@@ -1,36 +1,36 @@
 /*
- * Copyright (c) 2023-2024 Antmicro <www.antmicro.com>
+ * Copyright (c) 2023-2025 Antmicro <www.antmicro.com>
  *
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef KENNING_INFERENCE_LIB_RUNTIMES_TVM_GENERATED_MODEL_IMPL_H_
-#define KENNING_INFERENCE_LIB_RUNTIMES_TVM_GENERATED_MODEL_IMPL_H_
+#ifndef KENNING_INFERENCE_LIB_RUNTIMES_TVM_GENERATED_MODEL{{MOD_NAME_MACRO}}_IMPL_H_
+#define KENNING_INFERENCE_LIB_RUNTIMES_TVM_GENERATED_MODEL{{MOD_NAME_MACRO}}_IMPL_H_
 
 #include <tvm/runtime/crt/module.h>
 #include <tvm/runtime/crt/packed_func.h>
 
-#define TVMGEN_FUNCTIONS(FUNC) {{TVMGEN_FUNCTIONS}}
+#define TVMGEN{{MOD_NAME_MACRO}}_FUNCTIONS(FUNC) {{TVMGEN_FUNCTIONS}}
 
-#define TVMGEN_FUNCTIONS_COUNT {{TVMGEN_FUNCTIONS_COUNT}}
+#define TVMGEN{{MOD_NAME_MACRO}}_FUNCTIONS_COUNT {{TVMGEN_FUNCTIONS_COUNT}}
 
-#define TVMGEN_DECLARE(func_name)                                                                      \
+#define TVMGEN{{MOD_NAME_MACRO}}_DECLARE(func_name)                                                    \
     extern int32_t func_name(void *args, int32_t *arg_type_ids, int32_t num_args, void *out_ret_value, \
                              int32_t *out_ret_tcode, void *resource_handle);
 
-#define TVMGEN_FUNC_ARRAY(func_name) (TVMBackendPackedCFunc) func_name,
+#define TVMGEN{{MOD_NAME_MACRO}}_FUNC_ARRAY(func_name) (TVMBackendPackedCFunc) func_name,
 
-#define TVMGEN_FUNC_REGISTRY(func_name) "\0" #func_name
+#define TVMGEN{{MOD_NAME_MACRO}}_FUNC_REGISTRY(func_name) "\0" #func_name
 
-TVMGEN_FUNCTIONS(TVMGEN_DECLARE)
+TVMGEN{{MOD_NAME_MACRO}}_FUNCTIONS(TVMGEN{{MOD_NAME_MACRO}}_DECLARE)
 
-const TVMBackendPackedCFunc tvm_func_array[] = {TVMGEN_FUNCTIONS(TVMGEN_FUNC_ARRAY)};
+const TVMBackendPackedCFunc tvm{{MOD_NAME}}_func_array[] = {TVMGEN{{MOD_NAME_MACRO}}_FUNCTIONS(TVMGEN{{MOD_NAME_MACRO}}_FUNC_ARRAY)};
 
-const TVMFuncRegistry tvm_func_reg = {.names = TVMGEN_FUNCTIONS_COUNT TVMGEN_FUNCTIONS(TVMGEN_FUNC_REGISTRY) "\0",
-                                      .funcs = tvm_func_array};
+const TVMFuncRegistry tvm{{MOD_NAME}}_func_reg = {.names = TVMGEN{{MOD_NAME_MACRO}}_FUNCTIONS_COUNT TVMGEN{{MOD_NAME_MACRO}}_FUNCTIONS(TVMGEN{{MOD_NAME_MACRO}}_FUNC_REGISTRY) "\0",
+                                      .funcs = tvm{{MOD_NAME}}_func_array};
 
-const TVMModule g_tvm_module = {&tvm_func_reg};
+const TVMModule g_tvm{{MOD_NAME}}_module = {&tvm{{MOD_NAME}}_func_reg};
 
-const TVMModule *TVMSystemLibEntryPoint(void) { return &g_tvm_module; }
+const TVMModule *TVM{{MOD_NAME_FUNC}}SystemLibEntryPoint(void) { return &g_tvm{{MOD_NAME}}_module; }
 
-#endif // KENNING_INFERENCE_LIB_RUNTIMES_TVM_GENERATED_MODEL_IMPL_H_
+#endif // KENNING_INFERENCE_LIB_RUNTIMES_TVM_GENERATED_MODEL{{MOD_NAME_MACRO}}_IMPL_H_
