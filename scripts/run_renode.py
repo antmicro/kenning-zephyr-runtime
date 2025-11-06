@@ -60,7 +60,19 @@ def get_kenning_communication_uart(boards: str) -> str:
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(__doc__)
     parser.add_argument("--debug", action="store_true", help="Enable GDB server")
-    parser.add_argument("--no-kcomms", action="store_true", help="Disable Kenning communication")
+    parser.add_argument(
+        "--no-kcomms", action="store_true", help="Disable Kenning communication"
+    )
+    parser.add_argument(
+        "--no-log-uart",
+        action="store_true",
+        help="Disable printing traces gathered by UART to the screen",
+    )
+    parser.add_argument(
+        "--no-immediate-start",
+        action="store_true",
+        help="Wait for ENTER key being pressed to start the simulation.",
+    )
     args = parser.parse_args()
 
     board = get_cmake_var("BOARD:STRING").split("/")[0]
@@ -76,9 +88,6 @@ if __name__ == "__main__":
     if args.debug:
         platform.StartGdbServer(3333)
         print("gdb server started at :3333")
-        print("Press ENTER to start simulation")
-
-        input()
 
     # create pty terminal for UART with logs
     console_uart = get_zephyr_console_uart(board)
@@ -88,7 +97,11 @@ if __name__ == "__main__":
         emulation.externals.console_uart_term,
     )
 
-    console = serial.Serial("/tmp/uart-log", baudrate=115200)
+    console = (
+        serial.Serial("/tmp/uart-log", baudrate=115200)
+        if not args.no_log_uart
+        else None
+    )
 
     if "app" == project_name and not args.no_kcomms:
         # create pty terminal for Kenning communication UART
@@ -100,12 +113,20 @@ if __name__ == "__main__":
             emulation.externals.kcomms_uart_term,
         )
 
-    print("Starting Renode simulation. Press CTRL+C to exit.")
+    print("Starting Renode simulation.")
+    if args.no_immediate_start:
+        print("Press Enter to start simulation.")
+        input()
+    print("Press CTRL+C to exit.")
+
     emulation.StartAll()
 
     logs_tail = ""
     while True:
         try:
+            if console is None:
+                continue
+
             logs = console.read_all().decode(errors="ignore")
 
             print(logs, end="", flush=True)
