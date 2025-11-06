@@ -1,0 +1,6 @@
+/ {
+    chosen {
+        zephyr,console = &usart1;
+        zephyr,tracing-uart = &usart6;
+    };
+};
