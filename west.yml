@@ -19,6 +19,9 @@ manifest:
     - name: pytorch
       url-base: https://github.com/pytorch
 
+    - name: antmicro
+      url-base: https://github.com/antmicro
+
   projects:
     - name: zephyr
       remote: zephyrproject-rtos
@@ -57,3 +60,8 @@ manifest:
         - path: third-party/gflags
         - path: third-party/flatbuffers
         - path: backends/xnnpack/third-party/FXdiv
+
+    - name: zephelin
+      remote: antmicro
+      revision: main
+      import: true
