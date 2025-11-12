@@ -64,4 +64,4 @@ manifest:
     - name: zephelin
       remote: antmicro
       revision: main
-      import: true
+      west-commands: west/west-commands.yml
