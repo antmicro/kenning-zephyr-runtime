@@ -19,3 +19,6 @@ done
 
 cp "./modules/tvm/crt_config.h" "../tvm/include/"
 cp "./modules/iree/zephyr_config.h" "../iree/zephyr/"
+
+# Temporary until we transfer all module changes to patches.
+west patch apply
