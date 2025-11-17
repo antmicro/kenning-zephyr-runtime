@@ -1,0 +1,11 @@
+# Copyright (c) 2025 Antmicro <www.antmicro.com>
+#
+# SPDX-License-Identifier: Apache-2.0
+
+patches:
+  - path: executorch/0001-Fixed-allocation-in-method-initialization.patch
+    sha256sum: 9240274fe0dd5f1fa0af2d5ec95e4bdc5371ca01e6cdf58658f7862f334ba890
+    module: executorch
+    author: Mateusz Nurczynski
+    email: mnurczynski@internships.antmicro.com
+    date: 2025-11-28

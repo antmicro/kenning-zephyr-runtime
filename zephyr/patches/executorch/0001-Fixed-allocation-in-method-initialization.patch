@@ -1,0 +1,27 @@
+From 258693348f5af99bfffd1021385dfa524e8f7bb9 Mon Sep 17 00:00:00 2001
+From: Mateusz Nurczynski <mnurczynski@internships.antmicro.com>
+Date: Fri, 28 Nov 2025 11:01:23 +0100
+Subject: [PATCH] Fixed allocation in  method initialization with no backend
+ delegates
+
+Signed-off-by: Mateusz Nurczynski <mnurczynski@internships.antmicro.com>
+---
+ runtime/executor/method.cpp | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/runtime/executor/method.cpp b/runtime/executor/method.cpp
+index 65a47594c..346231905 100644
+--- a/runtime/executor/method.cpp
++++ b/runtime/executor/method.cpp
+@@ -832,7 +832,7 @@ Error Method::init(
+         delegates != nullptr, InvalidProgram, "Missing delegates field");
+     size_t n_delegate = delegates->size();
+     delegates_ = method_allocator->allocateList<BackendDelegate>(n_delegate);
+-    if (delegates_ == nullptr) {
++    if (n_delegate > 0 && delegates_ == nullptr) {
+       return Error::MemoryAllocationFailed;
+     }
+ 
+-- 
+2.39.5
+
