@@ -40,6 +40,6 @@ python -m west zephyr-export
 $PIP_EXEC install -r requirements.txt -r ../zephyr/scripts/requirements-base.txt -r ../zephyr/scripts/requirements-build-test.txt -r ../zephyr/scripts/requirements-run-test.txt
 
 # setup SDK
-python -m west sdk install --toolchains x86_64-zephyr-elf arm-zephyr-eabi riscv64-zephyr-elf
+python -m west sdk install --toolchains x86_64-zephyr-elf arm-zephyr-eabi riscv64-zephyr-elf aarch64-zephyr-elf
 
 echo "The environment is configured"
