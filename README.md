@@ -591,3 +591,119 @@ Thus Zephyr will allow build requiring more memory, which can be then ran in a s
 Adding it to a Zephyr application will allow to increase memory size of a simulated board, in a way that was described in [this section of the README](#increasing-simulated-board-memory-for-evaluation-of-larger-models).
 
 This function is used both in `demo_app` and [`app` CMake files](https://github.com/antmicro/kenning-zephyr-runtime/blob/main/app/CMakeLists.txt#L8).
+
+## Collecting traces with Zephelin
+
+[Zephelin](https://antmicro.github.io/zephelin) is a library for profiling Zephyr applications.
+It can be used to collect runtime traces containing statistics about model execution.
+
+To use it, first install its Python dependencies.
+
+```bash
+pip install -r ../zephelin/requirements.txt
+```
+
+Next, build the app with additional configuration files enabling tracing with Zephelin.
+Pass the files as a semicolon separated list in a value of `-DEXTRA_CONF_FILE` flag.
+Currently, two ways of collecting traces are supported: via GDB server and with UART port (selected with `zephyr,tracing-uart`).
+
+For capturing traces with a GDB server:
+
+```bash
+west build -p -b stm32f746g_disco app -- -DEXTRA_CONF_FILE="tvm.conf;$(realpath ./zpl.conf);zpl_gdb.conf"
+```
+
+For capturing traces with UART:
+
+```bash skip
+west build -p -b stm32f746g_disco app -- -DEXTRA_CONF_FILE="tvm.conf;$(realpath ./zpl.conf);zpl_uart.conf"
+```
+
+After that, the built platform can be run on an actual hardware, or tested in Renode.
+To run in Renode, prepare a `.repl` file for the simulation:
+
+```bash
+west build -t board-repl
+```
+
+Then, you can use Kenning to run Renode simulation, automatically capturing the traces:
+
+```bash
+kenning optimize test report \
+    --json-cfg  kenning-scenarios/renode-zephyr-zephelin-gdb-tvm-magic-wand.yml  \
+    --measurements ./results.json \
+    --report-path ./report.md \
+    --report-name report \
+    --verbosity INFO \
+    --to-html  report-html
+```
+
+**NOTE** It is also possible to run a standalone Renode simulation and have Kenning connect to it:
+
+```bash skip
+python3 ./scripts/run_renode.py --debug
+```
+
+**NOTE** `--debug` runs a GDB server - it is required for GDB backend.
+
+**NOTE** To be able to wait for pressing ENTER key, append `--no-immediate-start` to the last command above.
+
+or
+
+```bash skip
+python3 ./scripts/run_renode.py --no-log-uart
+```
+
+**NOTE** `--no-log-uart` disables logging traces to standard output.
+
+Then, run a sample scenario that automatically captures the trace using GDB, then converts it and generates a report:
+
+```bash skip
+kenning optimize test report \
+    --json-cfg  kenning-scenarios/zephyr-zephelin-gdb-tvm-magic-wand.yml  \
+    --measurements ./results.json \
+    --report-path ./report.md \
+    --report-name report \
+    --verbosity INFO \
+    --to-html  report-html
+```
+
+The command above would produce multiple files - the file named `results.trace.json` contains traces prepared to be loaded into [Zephelin Trace Viewer](https://antmicro.github.io/zephelin-trace-viewer/).
+
+**NOTE** Kenning's automatic mode for traces gathering requires that a scenario being run has `enable_zephelin` parameter set to `true`.
+
+## Manual capture of traces
+
+Traces can be also collected manually - after running a scenario with `enable_zephelin` set to `false`, invoke the following commands:
+
+```bash skip
+west zpl-gdb-capture traces.txt \
+    --no-debug-server \
+    --gdb=gdb-multiarch \
+    --gdb-port=3333 \
+    --buffer-full
+```
+
+if using a GDB capture, or
+
+```bash skip
+west zpl-uart-capture /tmp/uart-log 115200 traces.txt
+```
+
+for UART capture.
+
+**NOTE** Since UART continuously sends traces, the command needs to be run before running the Kenning scenario in case of debugging with UART.
+
+After capturing the traces, convert them to TEF JSON format with:
+
+```bash skip
+west zpl-prepare-trace -o traces.json traces.txt
+```
+
+**NOTE** Optional flags `--tvm-model-paths` and `--tflm-model-paths`, when provided to `west zpl-prepare-trace`, can supply additional model metadata to traces.
+
+**NOTE** Right now, UART debugging would produce two files, `traces.txt` and `traces_0.txt` - the first one contains traces from before the marker representing the start of the application, and the second contains the appropriate runtime traces - the latter should be used as an input to `west zpl-prepare-trace` command.
+
+**NOTE** For more information about running Zephelin extension commands manually, check official [Zephelin documentation](https://antmicro.github.io/zephelin/library.html)
+
+The `traces.json` file can be loaded into [Zephelin Trace Viewer](https://antmicro.github.io/zephelin-trace-viewer/).
