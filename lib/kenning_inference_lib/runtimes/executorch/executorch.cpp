@@ -48,9 +48,9 @@ extern model_spec_t g_model_spec;
 static runtime_statistics_execution_time_t gp_executorch_time_stats;
 
 static uint8_t
-    __attribute__((aligned(16))) gp_executorchModelBuffer[CONFIG_KENNING_EXECUTORCH_MODEL_BUFFER_SIZE * 1024];
+    __attribute__((aligned(16))) gp_executorch_model_buffer[CONFIG_KENNING_EXECUTORCH_MODEL_BUFFER_SIZE * 1024];
 static uint8_t
-    __attribute__((aligned(16))) gp_executorchInputBuffer[CONFIG_KENNING_EXECUTORCH_INPUT_BUFFER_SIZE * 1024];
+    __attribute__((aligned(16))) gp_executorch_input_buffer[CONFIG_KENNING_EXECUTORCH_INPUT_BUFFER_SIZE * 1024];
 
 struct planned_buffers_descriptor_t
 {
@@ -221,9 +221,9 @@ status_t runtime_deinit()
 status_t runtime_init()
 {
     static struct msg_loader msg_loader_model =
-        MSG_LOADER_BUF(gp_executorchModelBuffer, CONFIG_KENNING_EXECUTORCH_MODEL_BUFFER_SIZE * 1024);
+        MSG_LOADER_BUF(gp_executorch_model_buffer, CONFIG_KENNING_EXECUTORCH_MODEL_BUFFER_SIZE * 1024);
     static struct msg_loader msg_loader_input =
-        MSG_LOADER_BUF(gp_executorchInputBuffer, CONFIG_KENNING_EXECUTORCH_INPUT_BUFFER_SIZE * 1024);
+        MSG_LOADER_BUF(gp_executorch_input_buffer, CONFIG_KENNING_EXECUTORCH_INPUT_BUFFER_SIZE * 1024);
     memset(&g_ldr_tables[1], 0, NUM_LOADER_TYPES * sizeof(struct msg_loader *));
     g_ldr_tables[1][LOADER_TYPE_MODEL] = &msg_loader_model;
     g_ldr_tables[1][LOADER_TYPE_DATA] = &msg_loader_input;
@@ -239,7 +239,7 @@ status_t runtime_init_weights()
     deallocate_planned_buffers();
 
     static struct msg_loader *msg_loader_model = g_ldr_tables[1][LOADER_TYPE_MODEL];
-    gp_model = std::make_unique<BufferDataLoader>(gp_executorchModelBuffer, msg_loader_model->written);
+    gp_model = std::make_unique<BufferDataLoader>(gp_executorch_model_buffer, msg_loader_model->written);
     Result<Program> program_result = Program::load(gp_model.get());
     RETURN_IF_FALSE_LOG(program_result.ok(), RUNTIME_WRAPPER_STATUS_ERROR, "Error loading model weights.");
     gp_program = std::make_unique<Program>(std::move(program_result.get()));
@@ -297,7 +297,7 @@ status_t runtime_init_input()
             dimension_order[j] = j;
         }
         TensorImpl impl(kenning_elem_dtype_to_executorch_scalar_type(&g_model_spec.input_data_type[i]),
-                        g_model_spec.num_input_dim[i], shape, gp_executorchInputBuffer, dimension_order);
+                        g_model_spec.num_input_dim[i], shape, gp_executorch_input_buffer, dimension_order);
 
         Tensor input_tensor(&impl);
 

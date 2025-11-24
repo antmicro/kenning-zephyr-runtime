@@ -43,8 +43,8 @@ GENERATE_MODULE_STATUSES_STR(RUNTIME_WRAPPER);
 
 static runtime_statistics_execution_time_t gp_tvm_time_stats;
 
-static uint8_t __attribute__((aligned(8))) gp_tvmGraphBuffer[CONFIG_KENNING_TVM_GRAPH_BUFFER_SIZE * 1024];
-static uint8_t __attribute__((aligned(8))) gp_tvmInputBuffer[CONFIG_KENNING_TVM_INPUT_BUFFER_SIZE * 1024];
+static uint8_t __attribute__((aligned(8))) gp_tvm_graph_buffer[CONFIG_KENNING_TVM_GRAPH_BUFFER_SIZE * 1024];
+static uint8_t __attribute__((aligned(8))) gp_tvm_input_buffer[CONFIG_KENNING_TVM_INPUT_BUFFER_SIZE * 1024];
 
 extern model_spec_t g_model_spec;
 
@@ -64,9 +64,9 @@ void TVMLogf(const char *msg, ...)
 status_t prepare_tvm_ldr_table()
 {
     static struct msg_loader msg_loader_model =
-        MSG_LOADER_BUF(gp_tvmGraphBuffer, CONFIG_KENNING_TVM_GRAPH_BUFFER_SIZE * 1024);
+        MSG_LOADER_BUF(gp_tvm_graph_buffer, CONFIG_KENNING_TVM_GRAPH_BUFFER_SIZE * 1024);
     static struct msg_loader msg_loader_input =
-        MSG_LOADER_BUF(gp_tvmInputBuffer, CONFIG_KENNING_TVM_INPUT_BUFFER_SIZE * 1024);
+        MSG_LOADER_BUF(gp_tvm_input_buffer, CONFIG_KENNING_TVM_INPUT_BUFFER_SIZE * 1024);
     memset(&g_ldr_tables[1], 0, NUM_LOADER_TYPES * sizeof(struct msg_loader *));
     g_ldr_tables[1][LOADER_TYPE_MODEL] = &msg_loader_model;
     g_ldr_tables[1][LOADER_TYPE_DATA] = &msg_loader_input;
@@ -103,7 +103,7 @@ status_t runtime_init_weights()
 
     do
     {
-        const tvm_graph_t *tvm_graph = (tvm_graph_t *)gp_tvmGraphBuffer;
+        const tvm_graph_t *tvm_graph = (tvm_graph_t *)gp_tvm_graph_buffer;
 
         if (IS_VALID_POINTER(gp_tvm_graph_executor))
         {
@@ -170,7 +170,7 @@ status_t runtime_init_input()
     tensor_in.strides = NULL;
     tensor_in.byte_offset = 0;
 
-    tensor_in.data = (void *)gp_tvmInputBuffer;
+    tensor_in.data = (void *)gp_tvm_input_buffer;
 
     // TVM does not allow setting input by index, so we need to retrieve its name
     uint32_t input_node_id = gp_tvm_graph_executor->input_nodes[0];

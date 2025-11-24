@@ -30,7 +30,7 @@ static uint64_t g_peak_allocation;
 extern tflite::MicroMutableOpResolver<TFLITE_RESOLVER_SIZE> g_tflite_resolver;
 static tflite::MicroInterpreter *gp_tflite_interpreter = nullptr;
 
-static uint8_t __attribute__((aligned(8))) g_tfliteBuffer[CONFIG_KENNING_TFLITE_BUFFER_SIZE * 1024];
+static uint8_t __attribute__((aligned(8))) g_tflite_buffer[CONFIG_KENNING_TFLITE_BUFFER_SIZE * 1024];
 
 status_t tflite_reset_buf(struct msg_loader *ldr)
 {
@@ -48,7 +48,7 @@ status_t tflite_reset_buf(struct msg_loader *ldr)
 status_t prepare_tflite_ldr_table()
 {
     static struct msg_loader msg_loader_model =
-        MSG_LOADER_BUF_RESET(g_tfliteBuffer, CONFIG_KENNING_TFLITE_BUFFER_SIZE * 1024, tflite_reset_buf);
+        MSG_LOADER_BUF_RESET(g_tflite_buffer, CONFIG_KENNING_TFLITE_BUFFER_SIZE * 1024, tflite_reset_buf);
 
     static struct msg_loader msg_loader_input = MSG_LOADER_BUF(NULL, 0);
     memset(&g_ldr_tables[1], 0, NUM_LOADER_TYPES * sizeof(struct msg_loader *));
@@ -73,8 +73,8 @@ status_t runtime_init_weights()
     struct msg_loader *msg_loader_input = g_ldr_tables[1][LOADER_TYPE_DATA];
 
     size_t model_size = msg_loader_model->written;
-    uint8_t *modelWeights = g_tfliteBuffer;
-    uint8_t *tensorArena = g_tfliteBuffer + model_size;
+    uint8_t *modelWeights = g_tflite_buffer;
+    uint8_t *tensorArena = g_tflite_buffer + model_size;
     size_t tensorArenaSize = CONFIG_KENNING_TFLITE_BUFFER_SIZE * 1024 - model_size;
 
     const tflite::Model *model = tflite::GetModel(modelWeights);

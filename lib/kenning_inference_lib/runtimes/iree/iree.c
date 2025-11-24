@@ -24,8 +24,8 @@ static runtime_statistics_execution_time_t gp_iree_time_stats;
 
 GENERATE_MODULE_STATUSES_STR(RUNTIME_WRAPPER);
 
-static uint8_t __attribute__((aligned(8))) gp_ireeModelBuffer[CONFIG_KENNING_IREE_MODEL_BUFFER_SIZE * 1024];
-static uint8_t __attribute__((aligned(8))) gp_ireeInputBuffer[CONFIG_KENNING_IREE_INPUT_BUFFER_SIZE * 1024];
+static uint8_t __attribute__((aligned(8))) gp_iree_model_buffer[CONFIG_KENNING_IREE_MODEL_BUFFER_SIZE * 1024];
+static uint8_t __attribute__((aligned(8))) gp_iree_input_buffer[CONFIG_KENNING_IREE_INPUT_BUFFER_SIZE * 1024];
 
 /**
  * Function converts Kenning Zephyr Runtime data type format, to IREE data type format.
@@ -335,9 +335,9 @@ static void release_output_buffer()
 status_t prepare_iree_ldr_table()
 {
     static struct msg_loader msg_loader_model =
-        MSG_LOADER_BUF(gp_ireeModelBuffer, CONFIG_KENNING_IREE_MODEL_BUFFER_SIZE * 1024);
+        MSG_LOADER_BUF(gp_iree_model_buffer, CONFIG_KENNING_IREE_MODEL_BUFFER_SIZE * 1024);
     static struct msg_loader msg_loader_input =
-        MSG_LOADER_BUF(gp_ireeInputBuffer, CONFIG_KENNING_IREE_INPUT_BUFFER_SIZE * 1024);
+        MSG_LOADER_BUF(gp_iree_input_buffer, CONFIG_KENNING_IREE_INPUT_BUFFER_SIZE * 1024);
     memset(&g_ldr_tables[1], 0, NUM_LOADER_TYPES * sizeof(struct msg_loader *));
     g_ldr_tables[1][LOADER_TYPE_MODEL] = &msg_loader_model;
     g_ldr_tables[1][LOADER_TYPE_DATA] = &msg_loader_input;
@@ -398,7 +398,7 @@ status_t runtime_init_weights()
     release_output_buffer();
     release_input_buffer();
 
-    status = create_context(gp_ireeModelBuffer, msg_loader_model->written);
+    status = create_context(gp_iree_model_buffer, msg_loader_model->written);
     RETURN_ON_ERROR(status, status);
 
     return STATUS_OK;
@@ -412,7 +412,7 @@ status_t runtime_init_input()
     release_input_buffer();
 
     // setup buffers for inputs
-    status = prepare_input_buffer(gp_ireeInputBuffer);
+    status = prepare_input_buffer(gp_iree_input_buffer);
     RETURN_ON_ERROR(status, status);
 
     return STATUS_OK;
