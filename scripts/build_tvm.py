@@ -54,6 +54,7 @@ if __name__ == "__main__":
         target_microtvm_board=args.board,
         zephyr_header_template=args.header_template_path,
         conv2d_data_layout="NCHW",
+        module_name=None, # Only empty string as module name is supported by Kenning Zephyr Runtime
     )
 
     compiler.init()
