@@ -256,6 +256,25 @@ macro(kenning_gen_iree_model_sources runtime_src)
   unset(import_path)
 endmacro(kenning_gen_iree_model_sources)
 
+
+macro(kenning_gen_executorch_model_sources runtime_src)
+  set(model_path "runtimes/executorch/generated/model.pte")
+
+  add_custom_command(
+    OUTPUT
+      runtimes/executorch/generated/model.pte
+      runtimes/executorch/generated/model.pte.json
+    DEPENDS
+      ${CONFIG_KENNING_MODEL_PATH}
+    COMMAND
+      cp ${CONFIG_KENNING_MODEL_PATH} ${model_path}
+    COMMAND
+      cp ${CONFIG_KENNING_MODEL_PATH}.json ${model_path}.json
+  )
+
+  unset(model_path)
+endmacro(kenning_gen_executorch_model_sources)
+
 # Adds AI8X sources to provided list.
 #
 # @param runtime_src List with runtime sources to which model sources will be
@@ -298,6 +317,9 @@ macro(kenning_gen_model_data)
   elseif(${CONFIG_KENNING_ML_RUNTIME_AI8X})
     set(model_data_path runtimes/ai8x/generated/model.bin)
     set(model_json_path runtimes/ai8x/generated/model.bin.json)
+  elseif(${CONFIG_KENNING_ML_RUNTIME_EXECUTORCH})
+    set(model_data_path runtimes/executorch/generated/model.pte)
+    set(model_json_path runtimes/executorch/generated/model.pte.json)
   endif()
 
   add_custom_command(
