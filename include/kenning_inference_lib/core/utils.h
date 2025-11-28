@@ -56,6 +56,14 @@
     LOG_ERR(__VA_ARGS__);               \
     return err_code;
 
+/* returns given value end logs the given error message, if the given condition is false */
+#define RETURN_IF_FALSE_LOG(condition, return_val, ...) \
+    if (!(condition))                                   \
+    {                                                   \
+        LOG_ERR(__VA_ARGS__);                           \
+        return return_val;                              \
+    }
+
 /* breaks loop on error */
 #define BREAK_ON_ERROR(status) \
     if (STATUS_OK != (status)) \
