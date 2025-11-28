@@ -1,0 +1,27 @@
+platform:
+  type: ZephyrPlatform
+  parameters:
+    name: khadas_edgev/rk3399
+    simulated: true
+    zephyr_build_path: ./build
+dataset:
+  type: MagicWandDataset
+  parameters:
+    dataset_root: ./output/MagicWandDataset
+model_wrapper:
+  type: PyTorchMagicWandModelWrapper
+  parameters:
+    model_path: kenning:///models/classification/magic_wand.pth
+    model_name: torch-native
+runtime_builder:
+  type: ZephyrRuntimeBuilder
+  parameters:
+    workspace: .
+    run_west_update: false
+    output_path: ./output
+    extra_targets: [board-repl]
+optimizers:
+  - type: ExecuTorchOptimizer
+    parameters:
+      compiled_model_path: ./output/magic-wand.pte
+      quantize: false
