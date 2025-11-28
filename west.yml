@@ -16,6 +16,9 @@ manifest:
     - name: iree-org
       url-base: https://github.com/iree-org
 
+    - name: pytorch
+      url-base: https://github.com/pytorch
+
   projects:
     - name: zephyr
       remote: zephyrproject-rtos
@@ -44,3 +47,13 @@ manifest:
       revision: v3.6.0
       submodules:
         - path: third_party/flatcc
+
+    - name: executorch
+      remote: pytorch
+      revision: v1.0.0
+      submodules:
+        - path: third-party/flatcc
+        - path: third-party/json
+        - path: third-party/gflags
+        - path: third-party/flatbuffers
+        - path: backends/xnnpack/third-party/FXdiv
