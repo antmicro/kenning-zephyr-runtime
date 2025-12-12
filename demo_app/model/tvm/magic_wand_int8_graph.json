@@ -4,12 +4,12 @@
         { "op": "null", "name": "p0", "inputs": [] },
         {
             "op": "tvm_op",
-            "name": "tvmgen_default_fused_layout_transform_cast_subtract",
+            "name": "tvmgen_fused_layout_transform_cast_subtract",
             "attrs": {
                 "num_outputs": "1",
                 "num_inputs": "2",
                 "flatten_data": "0",
-                "func_name": "tvmgen_default_fused_layout_transform_cast_subtract",
+                "func_name": "tvmgen_fused_layout_transform_cast_subtract",
                 "src_layout": "NHWC",
                 "dst_layout": "NCHW",
                 "hash": "c7ca4f374dc3d268"
@@ -27,12 +27,12 @@
         { "op": "null", "name": "p6", "inputs": [] },
         {
             "op": "tvm_op",
-            "name": "tvmgen_default_fused_nn_conv2d_add_fixed_point_multiply_per_axis_add_clip_cast",
+            "name": "tvmgen_fused_nn_conv2d_add_fixed_point_multiply_per_axis_add_clip_cast",
             "attrs": {
                 "num_outputs": "1",
                 "num_inputs": "7",
                 "flatten_data": "0",
-                "func_name": "tvmgen_default_fused_nn_conv2d_add_fixed_point_multiply_per_axis_add_clip_cast",
+                "func_name": "tvmgen_fused_nn_conv2d_add_fixed_point_multiply_per_axis_add_clip_cast",
                 "out_layout": "",
                 "kernel_layout": "OIHW",
                 "data_layout": "NCHW",
@@ -51,12 +51,12 @@
         { "op": "null", "name": "p7", "inputs": [] },
         {
             "op": "tvm_op",
-            "name": "tvmgen_default_fused_nn_max_pool2d_cast_subtract",
+            "name": "tvmgen_fused_nn_max_pool2d_cast_subtract",
             "attrs": {
                 "num_outputs": "1",
                 "num_inputs": "2",
                 "flatten_data": "0",
-                "func_name": "tvmgen_default_fused_nn_max_pool2d_cast_subtract",
+                "func_name": "tvmgen_fused_nn_max_pool2d_cast_subtract",
                 "out_layout": "NCHW",
                 "layout": "NCHW",
                 "hash": "47fe04f32d421cec"
@@ -73,12 +73,12 @@
         { "op": "null", "name": "p12", "inputs": [] },
         {
             "op": "tvm_op",
-            "name": "tvmgen_default_fused_nn_conv2d_add_fixed_point_multiply_per_axis_add_clip_cast_1",
+            "name": "tvmgen_fused_nn_conv2d_add_fixed_point_multiply_per_axis_add_clip_cast_1",
             "attrs": {
                 "num_outputs": "1",
                 "num_inputs": "7",
                 "flatten_data": "0",
-                "func_name": "tvmgen_default_fused_nn_conv2d_add_fixed_point_multiply_per_axis_add_clip_cast_1",
+                "func_name": "tvmgen_fused_nn_conv2d_add_fixed_point_multiply_per_axis_add_clip_cast_1",
                 "out_layout": "",
                 "kernel_layout": "OIHW",
                 "data_layout": "NCHW",
@@ -96,12 +96,12 @@
         },
         {
             "op": "tvm_op",
-            "name": "tvmgen_default_fused_nn_max_pool2d",
+            "name": "tvmgen_fused_nn_max_pool2d",
             "attrs": {
                 "num_outputs": "1",
                 "num_inputs": "1",
                 "flatten_data": "0",
-                "func_name": "tvmgen_default_fused_nn_max_pool2d",
+                "func_name": "tvmgen_fused_nn_max_pool2d",
                 "out_layout": "NCHW",
                 "layout": "NCHW",
                 "hash": "1c2a51c896d6543c"
@@ -110,12 +110,12 @@
         },
         {
             "op": "tvm_op",
-            "name": "tvmgen_default_fused_layout_transform_reshape_cast_subtract",
+            "name": "tvmgen_fused_layout_transform_reshape_cast_subtract",
             "attrs": {
                 "num_outputs": "1",
                 "num_inputs": "2",
                 "flatten_data": "0",
-                "func_name": "tvmgen_default_fused_layout_transform_reshape_cast_subtract",
+                "func_name": "tvmgen_fused_layout_transform_reshape_cast_subtract",
                 "src_layout": "NCHW",
                 "dst_layout": "NHWC",
                 "hash": "36cd47a67af8c7d3"
@@ -129,12 +129,12 @@
         { "op": "null", "name": "p14", "inputs": [] },
         {
             "op": "tvm_op",
-            "name": "tvmgen_default_fused_nn_dense_add_fixed_point_multiply_add_clip_cast",
+            "name": "tvmgen_fused_nn_dense_add_fixed_point_multiply_add_clip_cast",
             "attrs": {
                 "num_outputs": "1",
                 "num_inputs": "4",
                 "flatten_data": "0",
-                "func_name": "tvmgen_default_fused_nn_dense_add_fixed_point_multiply_add_clip_cast",
+                "func_name": "tvmgen_fused_nn_dense_add_fixed_point_multiply_add_clip_cast",
                 "hash": "106725244c94a262"
             },
             "inputs": [
@@ -146,12 +146,12 @@
         },
         {
             "op": "tvm_op",
-            "name": "tvmgen_default_fused_reshape_cast_subtract",
+            "name": "tvmgen_fused_reshape_cast_subtract",
             "attrs": {
                 "num_outputs": "1",
                 "num_inputs": "2",
                 "flatten_data": "0",
-                "func_name": "tvmgen_default_fused_reshape_cast_subtract",
+                "func_name": "tvmgen_fused_reshape_cast_subtract",
                 "hash": "3a49b031a2f7d807"
             },
             "inputs": [
@@ -163,12 +163,12 @@
         { "op": "null", "name": "p16", "inputs": [] },
         {
             "op": "tvm_op",
-            "name": "tvmgen_default_fused_nn_dense_add_fixed_point_multiply_add_clip_subtract_cast_multiply",
+            "name": "tvmgen_fused_nn_dense_add_fixed_point_multiply_add_clip_subtract_cast_multiply",
             "attrs": {
                 "num_outputs": "1",
                 "num_inputs": "3",
                 "flatten_data": "0",
-                "func_name": "tvmgen_default_fused_nn_dense_add_fixed_point_multiply_add_clip_subtract_cast_multiply",
+                "func_name": "tvmgen_fused_nn_dense_add_fixed_point_multiply_add_clip_subtract_cast_multiply",
                 "hash": "093021f299b2418d"
             },
             "inputs": [
@@ -179,12 +179,12 @@
         },
         {
             "op": "tvm_op",
-            "name": "tvmgen_default_fused_nn_softmax_divide_round_add_clip_cast",
+            "name": "tvmgen_fused_nn_softmax_divide_round_add_clip_cast",
             "attrs": {
                 "num_outputs": "1",
                 "num_inputs": "1",
                 "flatten_data": "0",
-                "func_name": "tvmgen_default_fused_nn_softmax_divide_round_add_clip_cast",
+                "func_name": "tvmgen_fused_nn_softmax_divide_round_add_clip_cast",
                 "hash": "d30362d6696935f9"
             },
             "inputs": [[26, 0, 0]]

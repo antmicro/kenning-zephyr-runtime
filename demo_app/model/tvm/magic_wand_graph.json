@@ -17,12 +17,12 @@
         },
         {
             "op": "tvm_op",
-            "name": "tvmgen_default_fused_nn_conv2d_add_nn_relu",
+            "name": "tvmgen_fused_nn_conv2d_add_nn_relu",
             "attrs": {
                 "num_outputs": "1",
                 "num_inputs": "3",
                 "flatten_data": "0",
-                "func_name": "tvmgen_default_fused_nn_conv2d_add_nn_relu",
+                "func_name": "tvmgen_fused_nn_conv2d_add_nn_relu",
                 "out_layout": "",
                 "data_layout": "NHWC",
                 "kernel_layout": "HWIO",
@@ -36,12 +36,12 @@
         },
         {
             "op": "tvm_op",
-            "name": "tvmgen_default_fused_nn_max_pool2d",
+            "name": "tvmgen_fused_nn_max_pool2d",
             "attrs": {
                 "num_outputs": "1",
                 "num_inputs": "1",
                 "flatten_data": "0",
-                "func_name": "tvmgen_default_fused_nn_max_pool2d",
+                "func_name": "tvmgen_fused_nn_max_pool2d",
                 "out_layout": "",
                 "layout": "NHWC",
                 "hash": "322c811d5cd53625"
@@ -60,12 +60,12 @@
         },
         {
             "op": "tvm_op",
-            "name": "tvmgen_default_fused_nn_conv2d_add_nn_relu_1",
+            "name": "tvmgen_fused_nn_conv2d_add_nn_relu_1",
             "attrs": {
                 "num_outputs": "1",
                 "num_inputs": "3",
                 "flatten_data": "0",
-                "func_name": "tvmgen_default_fused_nn_conv2d_add_nn_relu_1",
+                "func_name": "tvmgen_fused_nn_conv2d_add_nn_relu_1",
                 "out_layout": "",
                 "data_layout": "NHWC",
                 "kernel_layout": "HWIO",
@@ -79,12 +79,12 @@
         },
         {
             "op": "tvm_op",
-            "name": "tvmgen_default_fused_nn_max_pool2d_1",
+            "name": "tvmgen_fused_nn_max_pool2d_1",
             "attrs": {
                 "num_outputs": "1",
                 "num_inputs": "1",
                 "flatten_data": "0",
-                "func_name": "tvmgen_default_fused_nn_max_pool2d_1",
+                "func_name": "tvmgen_fused_nn_max_pool2d_1",
                 "out_layout": "",
                 "layout": "NHWC",
                 "hash": "b47772d4384db931"
@@ -115,12 +115,12 @@
         },
         {
             "op": "tvm_op",
-            "name": "tvmgen_default_fused_nn_dense_add_nn_relu",
+            "name": "tvmgen_fused_nn_dense_add_nn_relu",
             "attrs": {
                 "num_outputs": "1",
                 "num_inputs": "3",
                 "flatten_data": "0",
-                "func_name": "tvmgen_default_fused_nn_dense_add_nn_relu",
+                "func_name": "tvmgen_fused_nn_dense_add_nn_relu",
                 "hash": "13d0cadcf0c5baab"
             },
             "inputs": [
@@ -141,12 +141,12 @@
         },
         {
             "op": "tvm_op",
-            "name": "tvmgen_default_fused_nn_dense_add",
+            "name": "tvmgen_fused_nn_dense_add",
             "attrs": {
                 "num_outputs": "1",
                 "num_inputs": "3",
                 "flatten_data": "0",
-                "func_name": "tvmgen_default_fused_nn_dense_add",
+                "func_name": "tvmgen_fused_nn_dense_add",
                 "hash": "047d3ea7f0293576"
             },
             "inputs": [
@@ -157,12 +157,12 @@
         },
         {
             "op": "tvm_op",
-            "name": "tvmgen_default_fused_nn_softmax",
+            "name": "tvmgen_fused_nn_softmax",
             "attrs": {
                 "num_outputs": "1",
                 "num_inputs": "1",
                 "flatten_data": "0",
-                "func_name": "tvmgen_default_fused_nn_softmax",
+                "func_name": "tvmgen_fused_nn_softmax",
                 "hash": "97bc18bc5e619ec3"
             },
             "inputs": [[15, 0, 0]]

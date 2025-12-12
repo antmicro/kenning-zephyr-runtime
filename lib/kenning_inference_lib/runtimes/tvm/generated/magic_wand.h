@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2024 Antmicro <www.antmicro.com>
+ * Copyright (c) 2023-2025 Antmicro <www.antmicro.com>
  *
  * SPDX-License-Identifier: Apache-2.0
  */
@@ -10,15 +10,15 @@
 #include <tvm/runtime/crt/module.h>
 #include <tvm/runtime/crt/packed_func.h>
 
-#define TVMGEN_FUNCTIONS(FUNC)                         \
-    FUNC(tvmgen_default_fused_nn_batch_flatten)        \
-    FUNC(tvmgen_default_fused_nn_conv2d_add_nn_relu)   \
-    FUNC(tvmgen_default_fused_nn_conv2d_add_nn_relu_1) \
-    FUNC(tvmgen_default_fused_nn_dense_add)            \
-    FUNC(tvmgen_default_fused_nn_dense_add_nn_relu)    \
-    FUNC(tvmgen_default_fused_nn_max_pool2d)           \
-    FUNC(tvmgen_default_fused_nn_max_pool2d_1)         \
-    FUNC(tvmgen_default_fused_nn_softmax)
+#define TVMGEN_FUNCTIONS(FUNC)                 \
+    FUNC(tvmgen_fused_nn_batch_flatten)        \
+    FUNC(tvmgen_fused_nn_conv2d_add_nn_relu)   \
+    FUNC(tvmgen_fused_nn_conv2d_add_nn_relu_1) \
+    FUNC(tvmgen_fused_nn_dense_add)            \
+    FUNC(tvmgen_fused_nn_dense_add_nn_relu)    \
+    FUNC(tvmgen_fused_nn_max_pool2d)           \
+    FUNC(tvmgen_fused_nn_max_pool2d_1)         \
+    FUNC(tvmgen_fused_nn_softmax)
 
 #define TVMGEN_FUNCTIONS_COUNT "\x08"
 
