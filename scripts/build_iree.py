@@ -13,7 +13,8 @@ from typing import List
 from pathlib import Path
 import os
 from kenning.utils.resource_manager import ResourceURI
-from kenning.optimizers.onnx import tfliteconversion, onnx
+import onnx
+from kenning.converters.tflite_converter import TFLiteConverter
 
 def main():
     parser = argparse.ArgumentParser(__doc__)
@@ -65,8 +66,9 @@ def main():
             output_names = [spec["name"] for spec in io_spec["output"]]
         except KeyError:
             output_names = None
-        model = tfliteconversion(
-            args.input_model_path, io_spec["input"], output_names
+        model = TFLiteConverter(args.input_model_path).to_onnx(
+            io_spec["input"],
+            output_names
         )
 
         # Conversion from tflite to onnx changes name of the entry function.
