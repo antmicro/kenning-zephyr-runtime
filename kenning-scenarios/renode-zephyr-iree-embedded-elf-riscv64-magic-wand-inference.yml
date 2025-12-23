@@ -11,7 +11,7 @@ dataset:
 model_wrapper:
   type: MagicWandModelWrapper
   parameters:
-    model_path: kenning:///models/classification/magic_wand.h5
+    model_path: kenning:///models/classification/magic_wand_no_softmax.h5
 optimizers:
 - type: IREECompiler
   parameters:
