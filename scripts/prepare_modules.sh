@@ -7,7 +7,10 @@
 set -e
 set -x
 
-declare -a modules=("tvm" "dlpack" "iree" "executorch")
+west patch clean
+west patch -sm zephelin clean
+
+declare -a modules=("iree" "executorch")
 
 for module in "${modules[@]}"
 do
@@ -17,8 +20,8 @@ do
     cp -r ./modules/${module}/* "../zephyr/modules/${module}/"
 done
 
-cp "./modules/tvm/crt_config.h" "../tvm/include/"
 cp "./modules/iree/zephyr_config.h" "../iree/zephyr/"
 
 # Temporary until we transfer all module changes to patches.
 west patch apply
+west patch -sm zephelin apply
