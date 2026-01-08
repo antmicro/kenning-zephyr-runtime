@@ -28,6 +28,11 @@
 #include "kenning_inference_lib/core/logger.h"
 #endif
 
+// Zephelin includes
+#ifdef CONFIG_ZPL
+#include <tracing_backend.h>
+#endif
+
 LOG_MODULE_REGISTER(callbacks, CONFIG_CALLBACKS_LOG_LEVEL);
 
 GENERATE_MODULE_STATUSES_STR(CALLBACKS);
@@ -90,11 +95,19 @@ status_t ping_callback(protocol_event_t *request, protocol_payload_t *resp_paylo
         }
         else
         {
+            LOG_INF("Client connected");
             client_connected = true;
 #ifdef CONFIG_KENNING_SEND_LOGS
             logger_start();
 #endif
-            LOG_INF("Client connected");
+// If we are using Zephelin to collect traces and it's collecting traces through debugger (GDB)
+// we reset the GDB buffer used for collecting the traces.
+// We also allow for the resetting to be turned off in the config.
+#if defined(CONFIG_ZPL_TRACE_BACKEND_DEBUGGER) && defined(KENNING_ZEPHELIN_DEBUGGER_TRACING_BUFFER_RESET)
+            LOG_INF("Resetting Zephelin trace buffer...");
+            struct tracing_backend *working_backend = tracing_backend_get(CONFIG_TRACING_BACKEND_NAME);
+            tracing_backend_init(working_backend);
+#endif
             return STATUS_OK;
         }
     }

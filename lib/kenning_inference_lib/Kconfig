@@ -267,6 +267,14 @@ config KENNING_AI8X_CNN_TIMEOUT_MS
         depends on KENNING_ML_RUNTIME_AI8X
         default 1000
 
+config KENNING_ZEPHELIN_DEBUGGER_TRACING_BUFFER_RESET
+        bool
+        prompt "Resetting trace buffer at the beginning of inference session"
+        default true
+        help
+        This option enables resetting the trace buffer every time Kenning client
+        connects, when using Zephelin in debugger tracing mode.
+
 module = CALLBACKS
 module-str = callbacks
 source "subsys/logging/Kconfig.template.log_config"
