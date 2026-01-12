@@ -111,6 +111,7 @@ config KENNING_ML_RUNTIME_TVM
         select ZEPHYR_DLPACK_MODULE
         select CMSIS_NN if CPU_CORTEX_M
         select CMSIS_DSP if CPU_CORTEX_M
+        select ZPL_TVM_PROFILER if ZPL
 
 config KENNING_ML_RUNTIME_TFLITE
         bool
@@ -119,6 +120,7 @@ config KENNING_ML_RUNTIME_TFLITE
         select TENSORFLOW_LITE_MICRO_CMSIS_NN_KERNELS if CPU_CORTEX_M
         select CMSIS_NN if CPU_CORTEX_M
         select CMSIS_DSP if CPU_CORTEX_M
+        select ZPL_TFLM_PROFILER if ZPL
 
 config KENNING_ML_RUNTIME_IREE
         bool
