@@ -67,7 +67,7 @@ And then execute Kenning to compile the model, run benchmark and generate report
 
 ```
 kenning optimize test report \
-    --cfg ./kenning-scenarios/renode-zephyr-tvm-magic-wand-inference.yml \
+    --cfg ./kenning-scenarios/magic-wand-inference/tvm/renode-stm32f746g.yml \
     --measurements ./results-tvm.json \
     --report-path ./report-tvm.md \
     --report-types performance classification renode_stats \
@@ -248,11 +248,11 @@ west build -p always -b stm32f746g_disco app -- -DEXTRA_CONF_FILE=tflite.conf
 west build -t board-repl
 ```
 
-Then, evaluate the model in Renode using a sample scenario located in `kenning-scenarios/renode-zephyr-tflite-magic-wand-inference.yml` and generate a report with performance and quality metrics:
+Then, evaluate the model in Renode using a sample scenario located in `kenning-scenarios/magic-wand-inference/tflite/renode-stm32f746g.yml` and generate a report with performance and quality metrics:
 
 ```bash
 kenning optimize test report \
-    --cfg kenning-scenarios/renode-zephyr-tflite-magic-wand-inference.yml \
+    --cfg kenning-scenarios/magic-wand-inference/tflite/renode-stm32f746g.yml \
     --measurements results.json --verbosity INFO \
     --report-path reports/stm32-renode-tflite-magic-wand/report.md \
     --to-html \
@@ -266,7 +266,7 @@ The above two steps (`west build` and `kenning ...`) can be also performed by Ke
 
 ```bash
 kenning optimize test report \
-    --cfg kenning-scenarios/renode-zephyr-auto-tflite-magic-wand-inference.yml \
+    --cfg kenning-scenarios/magic-wand-inference/tflite/renode-auto-stm32f746g.yml \
     --measurements results.json --verbosity INFO \
     --report-path reports/stm32-renode-auto-tflite-magic-wand/report.md \
     --to-html \
@@ -303,11 +303,11 @@ west build -p always -b stm32f746g_disco app -- -DEXTRA_CONF_FILE=tvm.conf
 west build -t board-repl
 ```
 
-Evaluate the model using the sample scenario located in `kenning-scenarios/renode-zephyr-tvm-magic-wand-inference.yml`:
+Evaluate the model using the sample scenario located in `kenning-scenarios/magic-wand-inference/tvm/renode-stm32f746g.yml`:
 
 ```bash
 kenning optimize test report \
-    --cfg kenning-scenarios/renode-zephyr-tvm-magic-wand-inference.yml \
+    --cfg kenning-scenarios/magic-wand-inference/tvm/renode-stm32f746g.yml \
     --measurements results.json --verbosity INFO \
     --report-path reports/stm32-renode-tvm-magic-wand/report.md \
     --to-html \
@@ -318,7 +318,7 @@ The above two steps (`west build` and `kenning ...`) can be also performed by Ke
 
 ```bash
 kenning optimize test report \
-    --cfg kenning-scenarios/renode-zephyr-auto-tvm-magic-wand-inference.yml \
+    --cfg kenning-scenarios/magic-wand-inference/tvm/renode-auto-stm32f746g.yml \
     --measurements results.json --verbosity INFO \
     --report-path reports/stm32-renode-auto-tvm-magic-wand/report.md \
     --to-html \
@@ -365,10 +365,10 @@ west build app -t llext-tvm -- -DEXTRA_CONF_FILE="llext.conf;llext_tvm.conf"
 west build -t board-repl
 ```
 
-Evaluate the model using scenario located in `kenning-scenarios/renode-zephyr-tvm-llext-magic-wand-inference.yml`:
+Evaluate the model using scenario located in `kenning-scenarios/magic-wand-inference/tvm/renode-llext-stm32f746g.yml`:
 ```bash
 kenning optimize test report \
-    --cfg kenning-scenarios/renode-zephyr-tvm-llext-magic-wand-inference.yml \
+    --cfg kenning-scenarios/magic-wand-inference/tvm/renode-llext-stm32f746g.yml \
     --measurements results.json --verbosity INFO \
     --report-path reports/stm32-renode-tvm-llext-magic-wand/report.md \
     --to-html \
@@ -379,7 +379,7 @@ The above two steps (`west build` and `kenning ...`) can be also performed by Ke
 
 ```bash
 kenning optimize test report \
-    --cfg kenning-scenarios/renode-zephyr-auto-tvm-llext-magic-wand-inference.yml \
+    --cfg kenning-scenarios/magic-wand-inference/tvm/renode-auto-llext-stm32f746g.yml \
     --measurements results.json --verbosity INFO \
     --report-path reports/stm32-renode-auto-tvm-llext-magic-wand/report.md \
     --to-html \
@@ -443,7 +443,7 @@ Finally, evaluate the model and generate a report with performance and quality m
 
 ```bash skip
 kenning optimize test report \
-    --cfg kenning-scenarios/zephyr-tflite-magic-wand-inference.yml \
+    --cfg kenning-scenarios/magic-wand-inference/tflite/stm32f746g.yml \
     --measurements results.json --verbosity INFO \
     --report-types performance classification \
     --report-path reports/nrf-tflite-magic-wand/report.md \
@@ -469,7 +469,7 @@ Evaluate the model and generate a report with performance and quality metrics:
 
 ```bash skip
 kenning optimize test report \
-    --cfg kenning-scenarios/zephyr-tvm-magic-wand-inference.yml \
+    --cfg kenning-scenarios/magic-wand-inference/tvm/stm32f746g.yml \
     --measurements results.json --verbosity INFO \
     --report-types performance classification \
     --report-path reports/stm32-tvm-magic-wand/report.md \
@@ -630,7 +630,7 @@ Then, you can use Kenning to run Renode simulation, automatically capturing the 
 
 ```bash
 kenning optimize test report \
-    --json-cfg  kenning-scenarios/renode-zephyr-zephelin-gdb-tvm-magic-wand.yml  \
+    --json-cfg  kenning-scenarios/magic-wand-inference/tvm/renode-zephelin-gdb-stm32f746g.yml  \
     --measurements ./results.json \
     --report-path ./report.md \
     --report-name report \
@@ -660,7 +660,7 @@ Then, run a sample scenario that automatically captures the trace using GDB, the
 
 ```bash skip
 kenning optimize test report \
-    --json-cfg  kenning-scenarios/zephyr-zephelin-gdb-tvm-magic-wand.yml  \
+    --json-cfg  kenning-scenarios/magic-wand-inference/tvm/zephelin-gdb-stm32f746g.yml  \
     --measurements ./results.json \
     --report-path ./report.md \
     --report-name report \
