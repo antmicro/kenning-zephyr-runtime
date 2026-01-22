@@ -74,6 +74,7 @@ typedef status_t (*callback_ptr_t)(protocol_event_t *, protocol_payload_t *);
     ENTRY(MESSAGE_TYPE_OUTPUT, output_callback)                 \
     ENTRY(MESSAGE_TYPE_STATS, stats_callback)                   \
     ENTRY(MESSAGE_TYPE_IOSPEC, iospec_callback)                 \
+    ENTRY(MESSAGE_TYPE_TRACE_DATA, unsupported_callback)        \
     ENTRY(MESSAGE_TYPE_OPTIMIZERS, unsupported_callback)        \
     ENTRY(MESSAGE_TYPE_OPTIMIZE_MODEL, unsupported_callback)    \
     ENTRY(MESSAGE_TYPE_RUNTIME, runtime_callback)               \

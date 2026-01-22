@@ -21,6 +21,7 @@
         LOADER_TYPE_NONE,    /*MESSAGE_TYPE_OUTPUT*/            \
         LOADER_TYPE_NONE,    /*MESSAGE_TYPE_STATS*/             \
         LOADER_TYPE_IOSPEC,  /*MESSAGE_TYPE_IOSPEC*/            \
+        LOADER_TYPE_NONE,    /*MESSAGE_TYPE_TRACE_DATA*/        \
         LOADER_TYPE_NONE,    /*MESSAGE_TYPE_OPTIMIZERS*/        \
         LOADER_TYPE_NONE,    /*MESSAGE_TYPE_OPTIMIZE_MODEL*/    \
         LOADER_TYPE_RUNTIME, /*MESSAGE_TYPE_RUNTIME*/           \
