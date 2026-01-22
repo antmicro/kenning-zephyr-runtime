@@ -36,11 +36,15 @@
 LOG_MODULE_REGISTER(callbacks, CONFIG_CALLBACKS_LOG_LEVEL);
 
 GENERATE_MODULE_STATUSES_STR(CALLBACKS);
-const callback_ptr_t g_msg_callback[NUM_MESSAGE_TYPES] = {
+const callback_ptr_t g_msg_callback[] = {
 #define ENTRY(msg_type, callback_func) callback_func,
     CALLBACKS_TABLE(ENTRY)
 #undef ENTRY
 };
+
+_Static_assert(ARRAY_SIZE(g_msg_callback) == NUM_MESSAGE_TYPES,
+               "Message type has been declared without a callback assigned. All entries in MESSAGE_TYPES macro "
+               "(kenning_protocol.h) should also be present in CALLBACKS_TABLE macro (callbacks.h)");
 
 extern const char *const MESSAGE_TYPE_STR[];
 
