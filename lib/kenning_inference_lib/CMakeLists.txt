@@ -111,6 +111,8 @@ kenning_gen_model_data()
 
 zephyr_library_sources(${core_src} ${protocol_src} ${runtime_src})
 
+zephyr_library_sources_ifdef(CONFIG_ZPL_TRACE_BACKEND_KENNING_PROTOCOL zephelin/tracing_backend.c)
+
 if(CONFIG_LLEXT)
   if(CONFIG_ZEPHYR_TVM_MODULE)
     set(tvm_runtime_src "")

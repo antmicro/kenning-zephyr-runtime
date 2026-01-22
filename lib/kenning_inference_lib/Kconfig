@@ -275,6 +275,26 @@ config KENNING_ZEPHELIN_DEBUGGER_TRACING_BUFFER_RESET
         This option enables resetting the trace buffer every time Kenning client
         connects, when using Zephelin in debugger tracing mode.
 
+config ZPL_TRACE_BACKEND_KENNING_PROTOCOL
+        bool
+        prompt "Sending traces through Kenning Protocol"
+        default false
+        depends on ZPL_TRACE
+        depends on KENNING_COMMUNICATION_PROTOCOL_UART
+        help
+        This option enables Kenning Protocol tracing backend, all other backends
+        have to be disabled.
+
+config TRACING_BACKEND_NAME
+        string
+      	default "tracing_backend_kenning_protocol" if ZPL_TRACE_BACKEND_KENNING_PROTOCOL
+
+config ZPL_TRACE_BACKEND_KENNING_PROTOCOL_BUFFER_SIZE
+        int
+        prompt "Size of the temporary buffer used to store traces"
+        default 1024
+        depends on ZPL_TRACE_BACKEND_KENNING_PROTOCOL
+
 module = CALLBACKS
 module-str = callbacks
 source "subsys/logging/Kconfig.template.log_config"
@@ -301,4 +321,8 @@ source "subsys/logging/Kconfig.template.log_config"
 
 module = LOGGER
 module-str = logger
+source "subsys/logging/Kconfig.template.log_config"
+
+module = ZEPHELIN_TRACING_BACKEND
+module-str = zephelin_tracing_backend
 source "subsys/logging/Kconfig.template.log_config"
