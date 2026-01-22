@@ -10,6 +10,8 @@
 #include "kenning_inference_lib/core/model.h"
 #include "kenning_inference_lib/core/protocol.h"
 
+#include <zephyr/sys/util.h>
+
 #ifndef __UNIT_TEST__
 #include <zephyr/kernel.h>
 #include <zephyr/logging/log.h>
@@ -30,7 +32,12 @@ extern const char *const FLOW_CONTROL_STR[];
 extern const callback_ptr_t g_msg_callback[];
 extern struct k_heap llext_heap;
 
-LOADER_TYPE g_msg_ldr_map[NUM_MESSAGE_TYPES] = PREPARE_MSG_LDR_MAP;
+LOADER_TYPE g_msg_ldr_map[] = PREPARE_MSG_LDR_MAP;
+
+_Static_assert(
+    ARRAY_SIZE(g_msg_ldr_map) == NUM_MESSAGE_TYPES,
+    "Message type has been declared without a loader assigned. All entries in MESSAGE_TYPES macro (kenning_protocol.h) "
+    "should have a corresponding LOADER_TYPE entry in PREPARE_MSG_LDR_MAP macro (inference_server.h)");
 
 #if defined(CONFIG_LLEXT)
 

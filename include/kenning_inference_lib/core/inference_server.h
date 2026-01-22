@@ -29,7 +29,7 @@
         LOADER_TYPE_NONE,    /*MESSAGE_TYPE_LOGS*/              \
     }
 
-extern LOADER_TYPE g_msg_ldr_map[NUM_MESSAGE_TYPES];
+extern LOADER_TYPE g_msg_ldr_map[];
 
 #define MSGT_TO_LDRT(msg) g_msg_ldr_map[(msg)]
 

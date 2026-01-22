@@ -12,6 +12,8 @@
 #include <kenning_inference_lib/core/runtime_wrapper.h>
 #include <kenning_inference_lib/core/utils.h>
 
+#include <zephyr/sys/util.h>
+
 #ifdef CONFIG_LLEXT
 #include <zephyr/llext/buf_loader.h>
 #include <zephyr/llext/llext.h>
