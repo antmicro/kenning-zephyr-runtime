@@ -44,7 +44,7 @@ const callback_ptr_t g_msg_callback[NUM_MESSAGE_TYPES] = {
 
 extern const char *const MESSAGE_TYPE_STR[];
 
-static bool client_connected = false;
+bool g_client_connected = false;
 
 /**
  * Handles unsupported message
@@ -80,7 +80,7 @@ status_t ping_callback(protocol_event_t *request, protocol_payload_t *resp_paylo
 {
     if (request->flags.general_purpose_flags.fail)
     {
-        client_connected = false;
+        g_client_connected = false;
         LOG_INF("Client disconnected.");
 #ifdef CONFIG_KENNING_SEND_LOGS
         logger_stop();
@@ -88,7 +88,7 @@ status_t ping_callback(protocol_event_t *request, protocol_payload_t *resp_paylo
     }
     if (request->flags.general_purpose_flags.success)
     {
-        if (client_connected)
+        if (g_client_connected)
         {
             LOG_ERR("Client already connected.");
             return CALLBACKS_STATUS_ERROR;
@@ -96,7 +96,7 @@ status_t ping_callback(protocol_event_t *request, protocol_payload_t *resp_paylo
         else
         {
             LOG_INF("Client connected");
-            client_connected = true;
+            g_client_connected = true;
 #ifdef CONFIG_KENNING_SEND_LOGS
             logger_start();
 #endif
