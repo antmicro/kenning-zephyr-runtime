@@ -1,4 +1,4 @@
-# Copyright (c) 2025 Antmicro <www.antmicro.com>
+# Copyright (c) 2025-2026 Antmicro <www.antmicro.com>
 #
 # SPDX-License-Identifier: Apache-2.0
 
@@ -66,10 +66,7 @@ def main():
             output_names = [spec["name"] for spec in io_spec["output"]]
         except KeyError:
             output_names = None
-        model = TFLiteConverter(args.input_model_path).to_onnx(
-            io_spec["input"],
-            output_names
-        )
+        model = TFLiteConverter(args.input_model_path).to_onnx()
 
         # Conversion from tflite to onnx changes name of the entry function.
         io_spec["entry_func"] = "module." + model.graph.name
