@@ -487,41 +487,46 @@ It goes through delivered inputs, runs inference and prints the output.
 With the build environment configured as described in the [Cloning the project and preparing the environment](#cloning-the-project-and-preparing-the-environment), you can build the `demo_app` as follows:
 
 * using the microTVM runtime:
-  ```bash
-  west build -p always -b hifive_unleashed demo_app -- -DEXTRA_CONF_FILE=tvm.conf
-  west build -t board-repl
-  ```
+
+```bash
+west build -p always -b hifive_unleashed/fu540/e51 demo_app -- -DEXTRA_CONF_FILE=tvm.conf
+west build -t board-repl
+```
+
 * using the TFLite Micro runtime:
-  ```bash
-  west build -p always -b hifive_unleashed demo_app -- -DEXTRA_CONF_FILE=tflite.conf
-  west build -t board-repl
-  ```
+
+```bash
+west build -p always -b hifive_unleashed/fu540/e51 demo_app -- -DEXTRA_CONF_FILE=tflite.conf
+west build -t board-repl
+```
 
 After building the application with a board specified, we can either flash the hardware with it, or simulate it in Renode.
 
 To simulate it in Renode, run the demo with:
 
-```bash skip
+```bash
 python ./scripts/run_renode.py
 ```
 
 The output should look like this:
 
 ```skip
-Starting Renode simulation. Press CTRL+C to exit.
-*** Booting Zephyr OS build zephyr-v3.5.0-5385-g415cb65e3f48 ***
-__nop function is not yet supported.I: model output: [wing: 1.000000, ring: 0.000000, slope: 0.000000, negative: 0.000000]
+*** Booting Zephyr OS build v4.3.0 ***
+I: model output: [wing: 1.000000, ring: 0.000000, slope: 0.000000, negative: 0.000000]
 I: model output: [wing: 0.000000, ring: 0.000000, slope: 0.000000, negative: 1.000000]
 I: model output: [wing: 0.000000, ring: 0.000000, slope: 1.000000, negative: 0.000000]
 I: model output: [wing: 1.000000, ring: 0.000000, slope: 0.000000, negative: 0.000000]
-I: model output: [wing: 0.000000, ring: 0.997457, slope: 0.000000, negative: 0.002543]
+I: model output: [wing: 0.000000, ring: 0.997465, slope: 0.000000, negative: 0.002535]
 I: model output: [wing: 0.000000, ring: 0.000000, slope: 1.000000, negative: 0.000000]
 I: model output: [wing: 1.000000, ring: 0.000000, slope: 0.000000, negative: 0.000000]
 I: model output: [wing: 1.000000, ring: 0.000000, slope: 0.000000, negative: 0.000000]
 I: model output: [wing: 1.000000, ring: 0.000000, slope: 0.000000, negative: 0.000000]
 I: model output: [wing: 0.000000, ring: 0.000000, slope: 1.000000, negative: 0.000000]
-I: model output: [wing: 0.000000, ring: 0.000000, slope: 0.000000, negative: 1.000000]
-I: inference done
+I: inference session statistics:
+I:      total inference time: 1478 ms
+I:      inference time per batch: 147 ms
+I:      peak_allocated: 16288
+I: inference finished successfully
 ```
 
 ### Building demo using different model
@@ -554,3 +559,35 @@ It is crucial that the selected UART isn't used anywhere else (e.g. as `zephyr,c
 
 Some boards may also require additional configuration.
 Those should be placed at `app/boards/<board_name>.conf`.
+
+## Useful cmake functions provided by Kenning Zephyr Runtime
+
+There are several CMake functions, defined in the `cmake` directory.
+These functions are used by `demo_app` and can be used by any application using `kenning_inference_lib`.
+
+### Automatically generating .repl files for Renode
+
+CMake function `kenning_add_board_repl_target` will add a target `board-repl`.
+This target will use [`dts2repl`](https://github.com/antmicro/dts2repl) tool, to generate a [.repl file](https://renode.readthedocs.io/en/latest/basic/describing_platforms.html#describing-platforms) (this file format is used by [Renode emulator](https://renode.io/) to describe simulated devices).
+
+This function is used in the [`demo_app` CMake file](https://github.com/antmicro/kenning-zephyr-runtime/blob/main/demo_app/CMakeLists.txt#L21C1-L21C32).
+
+After adding the target to a Zephyr application, you will be able to build a `.repl` file for the board, for which the last build was ran:
+
+```bash
+west build -t board-repl
+```
+
+The `.repl` file will be saved to `build/<board name>.repl`.
+For example `build/stm32f746g_disco.repl` for the `stm32f746g_disco` board.
+
+### Increasing memory size for a simulated board
+
+Function `kenning_increase_board_memory` will add a target `increase-memory`.
+
+This target creates an `.overlay` file for the board, with increased memory size.
+Thus Zephyr will allow build requiring more memory, which can be then ran in a simulation (this will not work on hardware).
+
+Adding it to a Zephyr application will allow to increase memory size of a simulated board, in a way that was described in [this section of the README](#increasing-simulated-board-memory-for-evaluation-of-larger-models).
+
+This function is used both in `demo_app` and [`app` CMake files](https://github.com/antmicro/kenning-zephyr-runtime/blob/main/app/CMakeLists.txt#L8).
