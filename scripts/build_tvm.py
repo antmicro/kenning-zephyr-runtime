@@ -1,4 +1,4 @@
-# Copyright (c) 2023-2025 Antmicro <www.antmicro.com>
+# Copyright (c) 2023-2026 Antmicro <www.antmicro.com>
 #
 # SPDX-License-Identifier: Apache-2.0
 
@@ -7,13 +7,14 @@ Python script for generating TVM implementation for a given model.
 """
 
 import argparse
+import shutil
 from pathlib import Path
 
 from kenning.optimizers.tvm import TVMCompiler
 from kenning.utils.resource_manager import ResourceURI
 from kenning.utils.logger import KLogger
 
-if __name__ == "__main__":
+def prepare_tvm_model():
     parser = argparse.ArgumentParser(__doc__)
 
     parser.add_argument(
@@ -45,6 +46,18 @@ if __name__ == "__main__":
     if not args.input_path.exists():
         raise FileNotFoundError(f"{args.input_path} does not exist")
 
+    c_input_path = args.input_path.with_suffix(".c")
+    h_input_path = args.input_path.with_suffix(".h")
+    json_input_path = args.input_path.with_suffix(args.input_path.suffix + ".json")
+    if c_input_path.exists() and h_input_path.exists() and json_input_path.exists():
+        KLogger.info(f"TVM ops already exist, copying to {args.output_path}")
+        args.output_path.parent.mkdir(exist_ok=True)
+        shutil.copy2(args.input_path, args.output_path)
+        shutil.copy2(json_input_path, args.output_path.with_suffix(args.output_path.suffix + ".json"))
+        shutil.copy2(c_input_path, args.output_path.with_suffix(".c"))
+        shutil.copy2(h_input_path, args.output_path.with_suffix(".h"))
+        return
+
     compiler = TVMCompiler(
         dataset=None,
         compiled_model_path=args.output_path,
@@ -61,3 +74,6 @@ if __name__ == "__main__":
     compiler.compile(args.input_path)
 
     KLogger.info(f"TVM ops saved to {args.output_path}")
+
+if __name__ == "__main__":
+    prepare_tvm_model()
