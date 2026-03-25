@@ -1,0 +1,39 @@
+platform:
+  type: ZephyrPlatform
+  parameters:
+    name: stm32f746g_disco
+    simulated: True
+    zephyr_build_path: ./build/
+
+model_wrapper:
+  type: SKLearnGenericDecisionTreeClassifier
+  parameters:
+    model_path: ./output/minispot.gz
+    # Only int16 decision trees are supported by emlearn.
+    dtype: int16
+    # We have small-range floats in this dataset, so converting to int16 outright would cause data loss. Multipying by 1000 solves this.
+    input_values_multiplier: 1000
+
+dataset:
+  type: TabularDataset
+  parameters:
+    dataset_root: ./output/MinispotDataset
+    dataset_path: https://dl.antmicro.com/kenning/datasets/anomaly_detection/minispot.csv
+    cols_x: [roll, pitch, gz, ax, ay, az]
+    col_y: anomaly
+    shuffle_data: False
+    download_dataset: True
+    # Decision tree does not need classes split into "neurons" - one column for classes is fine.
+    expand_classes: False
+
+optimizers:
+- type: EmlearnCompiler
+  parameters:
+    compiled_model_path: ./output/minispot.c
+
+inference_loop:
+  type: RemoteSequentialInferenceLoop
+  parameters:
+    inference_limit: 1000
+    # In emlearn, the entire model is build with the app, so there is no need to send anything.
+    skip_model_sending: True
