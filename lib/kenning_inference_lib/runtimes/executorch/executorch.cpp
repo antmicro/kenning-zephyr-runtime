@@ -358,6 +358,10 @@ status_t runtime_get_statistics(const size_t statistics_buffer_size, uint8_t *st
 
     LOAD_RUNTIME_STAT_FROM_VALUE(runtime_stats_ptr, 0, g_planned_buffers.total_size, planned_memory_size,
                                  RUNTIME_STATISTICS_ALLOCATION);
+    LOAD_RUNTIME_STAT(runtime_stats_ptr, 1, gp_executorch_time_stats, target_inference_step,
+                      RUNTIME_STATISTICS_INFERENCE_TIME);
+    LOAD_RUNTIME_STAT(runtime_stats_ptr, 2, gp_executorch_time_stats, target_inference_step_timestamp,
+                      RUNTIME_STATISTICS_INFERENCE_TIME);
 
     *statistics_size = stats_size;
     return STATUS_OK;
