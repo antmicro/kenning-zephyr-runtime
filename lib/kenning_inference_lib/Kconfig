@@ -132,6 +132,12 @@ config KENNING_ML_RUNTIME_EXECUTORCH
         prompt "ExecuTorch runtime"
         select ZEPHYR_EXECUTORCH_MODULE
 
+config KENNING_ML_RUNTIME_EMLEARN
+        bool
+        prompt "emlearn runtime"
+        select ZEPHYR_EMLEARN_MODULE
+        select EMLEARN
+
 config KENNING_ML_RUNTIME_AI8X
         bool
         prompt "AI8X runtime"
@@ -163,6 +169,16 @@ config KENNING_EXECUTORCH_INPUT_BUFFER_SIZE
         int "Size in kilobytes of the IREE input buffer"
         default 4
         depends on KENNING_ML_RUNTIME_EXECUTORCH
+
+config KENNING_EMLEARN_INPUT_BUFFER_SIZE
+        int "Size in kilobytes of the emlearn input buffer"
+        default 4
+        depends on KENNING_ML_RUNTIME_EMLEARN
+
+config KENNING_EMLEARN_OUTPUT_BUFFER_SIZE
+        int "Size in bytes of the emlearn output buffer"
+        default 16
+        depends on KENNING_ML_RUNTIME_EMLEARN
 
 choice KENNING_TVM_MODEL
         prompt "TVM model to be loaded"
