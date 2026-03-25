@@ -22,6 +22,9 @@ manifest:
     - name: antmicro
       url-base: https://github.com/antmicro
 
+    - name: emlearn
+      url-base: https://github.com/emlearn
+
   projects:
     - name: zephyr
       remote: zephyrproject-rtos
@@ -65,3 +68,7 @@ manifest:
       remote: antmicro
       revision: main
       west-commands: west/west-commands.yml
+
+    - name: emlearn
+      remote: emlearn
+      revision: master
