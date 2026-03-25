@@ -217,6 +217,18 @@ macro(kenning_gen_tflite_model_sources runtime_src)
   include_directories(${CMAKE_CURRENT_BINARY_DIR}/runtimes/tflite/)
 endmacro(kenning_gen_tflite_model_sources)
 
+macro(kenning_gen_emlearn_model_sources runtime_src)
+    add_custom_command(
+      OUTPUT
+        runtimes/emlearn/generated/model.c
+      DEPENDS
+        ${CONFIG_KENNING_MODEL_PATH}
+      COMMAND
+        cp ${CONFIG_KENNING_MODEL_PATH} runtimes/emlearn/generated/model.c
+    )
+    list(APPEND ${runtime_src} "runtimes/emlearn/generated/model.c")
+endmacro(kenning_gen_emlearn_model_sources)
+
 # Adds IREE sources to provided list.
 #
 # @param runtime_src List with runtime sources to which model sources will be
@@ -350,6 +362,9 @@ macro(kenning_gen_model_data)
   elseif(${CONFIG_KENNING_ML_RUNTIME_EXECUTORCH})
     set(model_data_path runtimes/executorch/generated/model.pte)
     set(model_json_path runtimes/executorch/generated/model.pte.json)
+  elseif(${CONFIG_KENNING_ML_RUNTIME_EMLEARN})
+    set(model_data_path runtimes/executorch/generated/model.c)
+    set(model_json_path runtimes/executorch/generated/model.c.json)
   endif()
 
   add_custom_command(
