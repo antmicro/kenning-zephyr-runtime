@@ -343,7 +343,7 @@ status_t runtime_get_model_output(uint8_t *model_output)
 status_t runtime_get_statistics(const size_t statistics_buffer_size, uint8_t *statistics_buffer,
                                 size_t *statistics_size)
 {
-    size_t stats_size = sizeof(runtime_statistic_t);
+    const size_t stats_size = sizeof(runtime_statistic_t);
 
     RETURN_ERROR_IF_POINTER_INVALID(statistics_buffer, RUNTIME_WRAPPER_STATUS_INV_PTR);
     RETURN_ERROR_IF_POINTER_INVALID(statistics_size, RUNTIME_WRAPPER_STATUS_INV_PTR);

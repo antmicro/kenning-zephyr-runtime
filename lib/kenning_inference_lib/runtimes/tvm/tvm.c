@@ -239,9 +239,9 @@ status_t runtime_get_statistics(const size_t statistics_buffer_size, uint8_t *st
 {
     runtime_statistics_allocation_t tvm_alloc_stats;
     runtime_statistic_t *runtime_stats_ptr;
-    size_t stats_size = sizeof(runtime_statistic_t) *
-                        (sizeof(runtime_statistics_allocation_t) + sizeof(runtime_statistics_execution_time_t)) /
-                        sizeof(uint64_t);
+    const size_t stats_size = sizeof(runtime_statistic_t) *
+                              (sizeof(runtime_statistics_allocation_t) + sizeof(runtime_statistics_execution_time_t)) /
+                              sizeof(uint64_t);
 
     RETURN_ERROR_IF_POINTER_INVALID(statistics_buffer, RUNTIME_WRAPPER_STATUS_INV_PTR);
     RETURN_ERROR_IF_POINTER_INVALID(statistics_size, RUNTIME_WRAPPER_STATUS_INV_PTR);

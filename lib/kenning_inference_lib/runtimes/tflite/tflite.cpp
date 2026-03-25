@@ -144,7 +144,7 @@ status_t runtime_get_statistics(const size_t statistics_buffer_size, uint8_t *st
                                 size_t *statistics_size)
 {
     runtime_statistic_t *runtime_stats_ptr;
-    size_t stats_size = sizeof(runtime_statistic_t) * sizeof(gp_tflite_time_stats) / sizeof(uint64_t);
+    const size_t stats_size = sizeof(runtime_statistic_t) * sizeof(gp_tflite_time_stats) / sizeof(uint64_t);
 
     RETURN_ERROR_IF_POINTER_INVALID(statistics_buffer, RUNTIME_WRAPPER_STATUS_INV_PTR);
     RETURN_ERROR_IF_POINTER_INVALID(statistics_size, RUNTIME_WRAPPER_STATUS_INV_PTR);
