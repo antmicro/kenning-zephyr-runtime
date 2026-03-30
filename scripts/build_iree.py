@@ -79,7 +79,7 @@ def main():
 
     onnx.save(model, onnx_path)
 
-    os.system(f"iree-import-onnx {onnx_path.resolve()} --opset-version 17 -o {mlir_path.resolve()}")
+    os.system(f"iree-import-onnx {onnx_path.resolve()} -o {mlir_path.resolve()}")
 
     if args.iree_backend == "vmvx":
         os.system(f"iree-compile {mlir_path.resolve()} --iree-hal-target-backends=vmvx -o {args.output_model_path.resolve()}")
