@@ -10,7 +10,14 @@ set -x
 west patch clean
 west patch -sm zephelin clean
 
-declare -a modules=("iree" "executorch")
+if [ "$SKIP_ZEPHELIN" = "1" ]; then
+    # only TVM patches will be applied
+    west patch -sm zephelin -dm tvm apply
+    declare -a modules=("tvm" "dlpack" "iree" "executorch")
+else
+    west patch -sm zephelin apply
+    declare -a modules=("iree" "executorch")
+fi
 
 for module in "${modules[@]}"
 do
@@ -24,4 +31,3 @@ cp "./modules/iree/zephyr_config.h" "../iree/zephyr/"
 
 # Temporary until we transfer all module changes to patches.
 west patch apply
-west patch -sm zephelin apply
