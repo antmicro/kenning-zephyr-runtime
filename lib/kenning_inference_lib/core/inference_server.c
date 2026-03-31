@@ -11,6 +11,8 @@
 #include "kenning_inference_lib/core/protocol.h"
 #include "kenning_inference_lib/core/utils.h"
 
+#include <zephyr/sys/util.h>
+
 #ifndef __UNIT_TEST__
 #include <zephyr/kernel.h>
 #include <zephyr/logging/log.h>
