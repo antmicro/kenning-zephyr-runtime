@@ -4,23 +4,25 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef KENNING_INFERENCE_LIB_RUNTIMES_TVM_GENERATED_MAGIC_WAND_H_
-#define KENNING_INFERENCE_LIB_RUNTIMES_TVM_GENERATED_MAGIC_WAND_H_
+#ifndef KENNING_INFERENCE_LIB_RUNTIMES_TVM_GENERATED_MODEL_IMPL_H_
+#define KENNING_INFERENCE_LIB_RUNTIMES_TVM_GENERATED_MODEL_IMPL_H_
 
 #include <tvm/runtime/crt/module.h>
 #include <tvm/runtime/crt/packed_func.h>
 
-#define TVMGEN_FUNCTIONS(FUNC)                 \
-    FUNC(tvmgen_fused_nn_batch_flatten)        \
-    FUNC(tvmgen_fused_nn_conv2d_add_nn_relu)   \
-    FUNC(tvmgen_fused_nn_conv2d_add_nn_relu_1) \
-    FUNC(tvmgen_fused_nn_dense_add)            \
-    FUNC(tvmgen_fused_nn_dense_add_nn_relu)    \
-    FUNC(tvmgen_fused_nn_max_pool2d)           \
-    FUNC(tvmgen_fused_nn_max_pool2d_1)         \
-    FUNC(tvmgen_fused_nn_softmax)
+#define TVMGEN_FUNCTIONS(FUNC)                      \
+    FUNC(tvmgen_fused_nn_batch_flatten)             \
+    FUNC(tvmgen_fused_nn_conv2d_add_nn_relu)        \
+    FUNC(tvmgen_fused_nn_conv2d_add_nn_relu_1)      \
+    FUNC(tvmgen_fused_nn_dense_add)                 \
+    FUNC(tvmgen_fused_nn_dense_add_1)               \
+    FUNC(tvmgen_fused_nn_dense_add_nn_relu_nn_relu) \
+    FUNC(tvmgen_fused_nn_max_pool2d)                \
+    FUNC(tvmgen_fused_nn_max_pool2d_1)              \
+    FUNC(tvmgen_fused_nn_pad)                       \
+    FUNC(tvmgen_fused_nn_pad_1)
 
-#define TVMGEN_FUNCTIONS_COUNT "\x08"
+#define TVMGEN_FUNCTIONS_COUNT "\x0a"
 
 #define TVMGEN_DECLARE(func_name)                                                                      \
     extern int32_t func_name(void *args, int32_t *arg_type_ids, int32_t num_args, void *out_ret_value, \
@@ -41,4 +43,4 @@ const TVMModule g_tvm_module = {&tvm_func_reg};
 
 const TVMModule *TVMSystemLibEntryPoint(void) { return &g_tvm_module; }
 
-#endif // KENNING_INFERENCE_LIB_RUNTIMES_TVM_GENERATED_MAGIC_WAND_H_
+#endif // KENNING_INFERENCE_LIB_RUNTIMES_TVM_GENERATED_MODEL_IMPL_H_
