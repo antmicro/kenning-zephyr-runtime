@@ -8,9 +8,9 @@ dataset:
   parameters:
     dataset_root: ./output/MagicWandDataset
 model_wrapper:
-  type: MagicWandModelWrapper
+  type: PyTorchMagicWandModelWrapper
   parameters:
-    model_path: kenning:///models/classification/magic_wand.h5
+    model_path: kenning:///models/classification/magic_wand.pth
 runtime_builder:
   type: ZephyrRuntimeBuilder
   parameters:
