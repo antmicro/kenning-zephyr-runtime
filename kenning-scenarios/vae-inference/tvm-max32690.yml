@@ -11,7 +11,6 @@ platform:
     # to run inference on actual hardwarem change simulated to false
     simulated: true
     zephyr_build_path: ./build/
-    uart_port: /dev/ttyUSB0
 
 # model wrapper for the VAE anomaly detection model
 model_wrapper:
