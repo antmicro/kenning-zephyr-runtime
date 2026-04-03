@@ -7,12 +7,8 @@
 # @param runtime_src List with runtime sources to which model sources will be
 #                    added.
 macro(kenning_gen_tvm_model_sources runtime_src)
-  if("${CONFIG_KENNING_TVM_MODEL_MAGIC_WAND}" OR "${CONFIG_KENNING_TVM_MODEL_MAGIC_WAND_INT8}")
-    if("${CONFIG_KENNING_TVM_MODEL_MAGIC_WAND}")
-      set(model_src_path "runtimes/tvm/generated/magic_wand")
-    elseif("${CONFIG_KENNING_TVM_MODEL_MAGIC_WAND_INT8}")
-      set(model_src_path "runtimes/tvm/generated/magic_wand_int8")
-    endif()
+  if("${CONFIG_KENNING_TVM_MODEL_MAGIC_WAND_INT8}")
+    set(model_src_path "runtimes/tvm/generated/magic_wand_int8")
 
     add_custom_command(
       OUTPUT
@@ -71,7 +67,41 @@ macro(kenning_gen_tvm_model_sources runtime_src)
       unset(model_graph_path)
       unset(model_params_path)
     endif(NOT "${CONFIG_KENNING_MODEL_PATH}" STREQUAL "")
+    unset(model_src_path)
+  elseif("${CONFIG_KENNING_TVM_MODEL_MAGIC_WAND}")
+    set(model_src_path "runtimes/tvm/generated/magic_wand")
 
+    add_custom_command(
+      OUTPUT
+        runtimes/tvm/generated/model_impl.c
+        runtimes/tvm/generated/model_impl.h
+      DEPENDS
+        "${model_src_path}.c"
+        "${model_src_path}.h"
+      COMMAND
+        cp "${CMAKE_CURRENT_SOURCE_DIR}/${model_src_path}.c" runtimes/tvm/generated/model_impl.c
+      COMMAND
+        cp "${CMAKE_CURRENT_SOURCE_DIR}/${model_src_path}.h" runtimes/tvm/generated/model_impl.h
+    )
+
+    if(NOT "${CONFIG_KENNING_MODEL_PATH}" STREQUAL "")
+      set(model_path ${CONFIG_KENNING_MODEL_PATH})
+
+      add_custom_command(
+        OUTPUT
+          runtimes/tvm/generated/model_impl.graph_data
+          runtimes/tvm/generated/model_impl.graph_data.json
+        DEPENDS
+          "${model_path}.graph_data"
+          "${model_path}.graph_data.json"
+        COMMAND
+          cp "${model_path}.graph_data" runtimes/tvm/generated/model_impl.graph_data
+        COMMAND
+          cp "${model_path}.graph_data.json" runtimes/tvm/generated/model_impl.graph_data.json
+      )
+
+      unset(model_path)
+    endif(NOT "${CONFIG_KENNING_MODEL_PATH}" STREQUAL "")
     unset(model_src_path)
   elseif("${CONFIG_KENNING_TVM_MODEL_PRE_GEN}")
     get_filename_component(model_path_dir "${CONFIG_KENNING_MODEL_PATH}" DIRECTORY)
