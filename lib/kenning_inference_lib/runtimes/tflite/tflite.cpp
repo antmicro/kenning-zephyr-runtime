@@ -67,6 +67,9 @@ status_t runtime_init()
     return STATUS_OK;
 }
 
+ZPL_CODE_SCOPE_DEFINE(tflm_create_model, TRACE_FRAMEWORK);
+ZPL_CODE_SCOPE_DEFINE(tflm_create_interpreter, TRACE_FRAMEWORK);
+ZPL_CODE_SCOPE_DEFINE(tflm_allocate_tensors, TRACE_FRAMEWORK);
 status_t runtime_init_weights()
 {
     struct msg_loader *msg_loader_model = g_ldr_tables[1][LOADER_TYPE_MODEL];
@@ -77,7 +80,9 @@ status_t runtime_init_weights()
     uint8_t *tensorArena = g_tflite_buffer + model_size;
     size_t tensorArenaSize = CONFIG_KENNING_TFLITE_BUFFER_SIZE * 1024 - model_size;
 
-    const tflite::Model *model = tflite::GetModel(modelWeights);
+    const tflite::Model *model = NULL;
+    ZPL_MARK_CODE_SCOPE(tflm_create_model) { model = tflite::GetModel(modelWeights); }
+
     if (model->version() != TFLITE_SCHEMA_VERSION)
     {
         LOG_ERR("Model provided is schema version %d not equal to supported version %d.\n", model->version(),
@@ -95,11 +100,15 @@ status_t runtime_init_weights()
         firstStart = false;
     }
 
-    new (&interpreter) tflite::MicroInterpreter(model, g_tflite_resolver, tensorArena, tensorArenaSize);
-
+    ZPL_MARK_CODE_SCOPE(tflm_create_interpreter)
+    {
+        new (&interpreter) tflite::MicroInterpreter(model, g_tflite_resolver, tensorArena, tensorArenaSize);
+    }
     gp_tflite_interpreter = &interpreter;
 
-    TfLiteStatus allocate_status = interpreter.AllocateTensors();
+    TfLiteStatus allocate_status = kTfLiteOk;
+    ZPL_MARK_CODE_SCOPE(tflm_allocate_tensors) { allocate_status = interpreter.AllocateTensors(); }
+
     if (allocate_status != kTfLiteOk)
     {
         LOG_ERR("AllocateTensors() failed\n");
@@ -121,9 +130,11 @@ status_t runtime_run_model_bench()
     return STATUS_OK;
 }
 
+ZPL_CODE_SCOPE_DEFINE(tflm_run, TRACE_FRAMEWORK);
 status_t runtime_run_model()
 {
-    TfLiteStatus status = gp_tflite_interpreter->Invoke();
+    TfLiteStatus status = kTfLiteOk;
+    ZPL_MARK_CODE_SCOPE(tflm_run) { status = gp_tflite_interpreter->Invoke(); }
     g_peak_allocation = MAX(g_peak_allocation, gp_tflite_interpreter->arena_used_bytes());
     if (status == kTfLiteOk)
     {
@@ -133,9 +144,11 @@ status_t runtime_run_model()
     return RUNTIME_WRAPPER_STATUS_ERROR;
 }
 
+ZPL_CODE_SCOPE_DEFINE(tflm_get_output, TRACE_FRAMEWORK);
 status_t runtime_get_model_output(uint8_t *model_output)
 {
-    TfLiteTensor *output = gp_tflite_interpreter->output(0);
+    TfLiteTensor *output = NULL;
+    ZPL_MARK_CODE_SCOPE(tflm_get_output) { output = gp_tflite_interpreter->output(0); }
     memcpy(model_output, output->data.data, output->bytes);
     return STATUS_OK;
 }

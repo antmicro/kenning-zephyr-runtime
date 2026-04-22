@@ -73,6 +73,7 @@ status_t prepare_tvm_ldr_table()
     return STATUS_OK;
 }
 
+ZPL_CODE_SCOPE_DEFINE(tvm_initialize, TRACE_FRAMEWORK);
 status_t runtime_init()
 {
     prepare_tvm_ldr_table();
@@ -86,7 +87,8 @@ status_t runtime_init()
             break;
         }
 
-        tvm_status = TVMInitializeRuntime();
+        ZPL_MARK_CODE_SCOPE(tvm_initialize) { tvm_status = TVMInitializeRuntime(); }
+
         CHECK_TVM_STATUS_BREAK(status, tvm_status, "TVM runtime init error 0x%x", tvm_status);
 
         g_tvm_runtime_initialized = true;
@@ -95,6 +97,10 @@ status_t runtime_init()
     return status;
 }
 
+ZPL_CODE_SCOPE_DEFINE(tvm_get_entry_point, TRACE_FRAMEWORK);
+ZPL_CODE_SCOPE_DEFINE(tvm_create_mod, TRACE_FRAMEWORK);
+ZPL_CODE_SCOPE_DEFINE(tvm_create_graph_executor, TRACE_FRAMEWORK);
+ZPL_CODE_SCOPE_DEFINE(tvm_load_params, TRACE_FRAMEWORK);
 status_t runtime_init_weights()
 {
     struct msg_loader *msg_loader_model = g_ldr_tables[1][LOADER_TYPE_MODEL];
@@ -127,28 +133,37 @@ status_t runtime_init_weights()
             break;
         }
 
-        const TVMModule *tvm_module = TVMSystemLibEntryPoint();
+        const TVMModule *tvm_module;
+        ZPL_MARK_CODE_SCOPE(tvm_get_entry_point) { tvm_module = TVMSystemLibEntryPoint(); }
         if (!IS_VALID_POINTER(tvm_module))
         {
             LOG_ERR("Invalid TVM lib entry point");
             return RUNTIME_WRAPPER_STATUS_INV_PTR;
         }
 
-        tvm_status = TVMModCreateFromCModule(tvm_module, &g_tvm_module_handle);
+        ZPL_MARK_CODE_SCOPE(tvm_create_mod) { tvm_status = TVMModCreateFromCModule(tvm_module, &g_tvm_module_handle); }
+
         CHECK_TVM_STATUS_BREAK(status, tvm_status, "TVM module create error 0x%x", tvm_status);
 
-        tvm_status = TVMGraphExecutor_Create(tvm_graph_json_ptr(tvm_graph), g_tvm_module_handle, &g_device,
-                                             &gp_tvm_graph_executor);
+        ZPL_MARK_CODE_SCOPE(tvm_create_graph_executor)
+        {
+            tvm_status = TVMGraphExecutor_Create(tvm_graph_json_ptr(tvm_graph), g_tvm_module_handle, &g_device,
+                                                 &gp_tvm_graph_executor);
+        }
         CHECK_TVM_STATUS_BREAK(status, tvm_status, "Create graph executor error 0x%x", tvm_status);
 
-        tvm_status = TVMGraphExecutor_LoadParams(gp_tvm_graph_executor, tvm_graph_params_ptr(tvm_graph),
-                                                 tvm_graph->graph_params_size);
+        ZPL_MARK_CODE_SCOPE(tvm_load_params)
+        {
+            tvm_status = TVMGraphExecutor_LoadParams(gp_tvm_graph_executor, tvm_graph_params_ptr(tvm_graph),
+                                                     tvm_graph->graph_params_size);
+        }
         CHECK_TVM_STATUS_BREAK(status, tvm_status, "Load graph executor params error 0x%x", tvm_status);
     } while (0);
 
     return status;
 }
 
+ZPL_CODE_SCOPE_DEFINE(tvm_set_input, TRACE_FRAMEWORK);
 status_t runtime_init_input()
 {
     status_t status = STATUS_OK;
@@ -176,7 +191,7 @@ status_t runtime_init_input()
     uint32_t input_node_id = gp_tvm_graph_executor->input_nodes[0];
     char *input_name = gp_tvm_graph_executor->nodes[input_node_id].name;
 
-    TVMGraphExecutor_SetInput(gp_tvm_graph_executor, input_name, &tensor_in);
+    ZPL_MARK_CODE_SCOPE(tvm_set_input) { TVMGraphExecutor_SetInput(gp_tvm_graph_executor, input_name, &tensor_in); }
 
     return status;
 }
@@ -188,15 +203,17 @@ status_t runtime_run_model_bench()
     return STATUS_OK;
 }
 
+ZPL_CODE_SCOPE_DEFINE(tvm_run, TRACE_FRAMEWORK);
 status_t runtime_run_model()
 {
     status_t status = STATUS_OK;
 
-    TVMGraphExecutor_Run(gp_tvm_graph_executor);
+    ZPL_MARK_CODE_SCOPE(tvm_run) { TVMGraphExecutor_Run(gp_tvm_graph_executor); }
 
     return status;
 }
 
+ZPL_CODE_SCOPE_DEFINE(tvm_get_output, TRACE_FRAMEWORK);
 status_t runtime_get_model_output(uint8_t *model_output)
 {
     status_t status = STATUS_OK;
@@ -223,7 +240,10 @@ status_t runtime_get_model_output(uint8_t *model_output)
 
     tensor_out.data = (void *)model_output;
 
-    tvm_status = TVMGraphExecutor_GetOutput(gp_tvm_graph_executor, 0, &tensor_out);
+    ZPL_MARK_CODE_SCOPE(tvm_get_output)
+    {
+        tvm_status = TVMGraphExecutor_GetOutput(gp_tvm_graph_executor, 0, &tensor_out);
+    }
 
     if (0 != tvm_status)
     {
@@ -234,6 +254,7 @@ status_t runtime_get_model_output(uint8_t *model_output)
     return status;
 }
 
+ZPL_CODE_SCOPE_DEFINE(tvm_allocation_stats, TRACE_FRAMEWORK);
 status_t runtime_get_statistics(const size_t statistics_buffer_size, uint8_t *statistics_buffer,
                                 size_t *statistics_size)
 {
@@ -250,8 +271,7 @@ status_t runtime_get_statistics(const size_t statistics_buffer_size, uint8_t *st
     {
         return RUNTIME_WRAPPER_STATUS_INV_ARG;
     }
-
-    tvm_get_allocation_stats(&tvm_alloc_stats);
+    ZPL_MARK_CODE_SCOPE(tvm_allocation_stats) { tvm_get_allocation_stats(&tvm_alloc_stats); }
 
     runtime_stats_ptr = (runtime_statistic_t *)statistics_buffer;
 
