@@ -9,8 +9,7 @@
 #include "kenning_inference_lib/core/loaders.h"
 #include "kenning_inference_lib/core/model.h"
 #include "kenning_inference_lib/core/protocol.h"
-
-#include <zephyr/sys/util.h>
+#include "kenning_inference_lib/core/utils.h"
 
 #ifndef __UNIT_TEST__
 #include <zephyr/kernel.h>
@@ -38,6 +37,12 @@ _Static_assert(
     ARRAY_SIZE(g_msg_ldr_map) == NUM_MESSAGE_TYPES,
     "Message type has been declared without a loader assigned. All entries in MESSAGE_TYPES macro (kenning_protocol.h) "
     "should have a corresponding LOADER_TYPE entry in PREPARE_MSG_LDR_MAP macro (inference_server.h)");
+
+#ifdef CONFIG_KENNING_ZEPHELIN_TRACE_SERVER
+#define TRACE_SERVER true
+#else
+#define TRACE_SERVER false
+#endif
 
 #if defined(CONFIG_LLEXT)
 
@@ -158,23 +163,36 @@ struct msg_loader *loader_picker(message_type_t message_type)
     return ldr;
 }
 
+ZPL_CODE_SCOPE_DEFINE(server_wait_for_request, TRACE_SERVER);
 status_t wait_for_protocol_event(protocol_event_t *event)
 {
+#ifdef CONFIG_ZPL_SCOPE_MARKING
+    zpl_code_scope_enter(server_wait_for_request);
+#endif
     status_t status = STATUS_OK;
     if (!IS_VALID_POINTER(event))
     {
         LOG_WRN("Invalid event.");
+#ifdef CONFIG_ZPL_SCOPE_MARKING
+        zpl_code_scope_exit(server_wait_for_request);
+#endif
         return INFERENCE_SERVER_STATUS_INV_PTR;
     }
     status = protocol_listen(event, loader_picker);
     if (KENNING_PROTOCOL_STATUS_TIMEOUT == status)
     {
         LOG_WRN("Listening timeout.");
+#ifdef CONFIG_ZPL_SCOPE_MARKING
+        zpl_code_scope_exit(server_wait_for_request);
+#endif
         return INFERENCE_SERVER_STATUS_TIMEOUT;
     }
     if (STATUS_OK != status)
     {
         LOG_ERR("Error listening: %d (%s)", status, get_status_str(status));
+#ifdef CONFIG_ZPL_SCOPE_MARKING
+        zpl_code_scope_exit(server_wait_for_request);
+#endif
         return INFERENCE_SERVER_STATUS_ERROR;
     }
     const char *message_type_str =
@@ -182,10 +200,14 @@ status_t wait_for_protocol_event(protocol_event_t *event)
 
     LOG_DBG("Received event. Size: %d, type: %d (%s), flags: 0x%04x", event->payload.size, event->message_type,
             message_type_str, event->flags.raw_bytes);
-
+#ifdef CONFIG_ZPL_SCOPE_MARKING
+    zpl_code_scope_exit(server_wait_for_request);
+#endif
     return STATUS_OK;
 }
 
+ZPL_CODE_SCOPE_DEFINE(server_handle_request, TRACE_SERVER);
+ZPL_CODE_SCOPE_DEFINE(server_send_response, TRACE_SERVER);
 status_t handle_protocol_event(protocol_event_t *event)
 {
     static uint8_t __attribute__((aligned(4))) resp_payload[CONFIG_KENNING_RESPONSE_PAYLOAD_SIZE];
@@ -196,34 +218,40 @@ status_t handle_protocol_event(protocol_event_t *event)
         return INFERENCE_SERVER_STATUS_INV_PTR;
     }
     protocol_event_t resp = {.payload.size = 0, .payload.raw_bytes = resp_payload, .message_type = event->message_type};
-    resp.flags.general_purpose_flags.is_zephyr = 1;
-
-    status = g_msg_callback[event->message_type](event, &resp.payload);
-    if (STATUS_OK != status)
+    ZPL_MARK_CODE_SCOPE(server_handle_request)
     {
-        LOG_ERR("Runtime error: 0x%x (%s)", status, get_status_str(status));
-        resp.flags.general_purpose_flags.fail = 1;
+        resp.flags.general_purpose_flags.is_zephyr = 1;
+
+        status = g_msg_callback[event->message_type](event, &resp.payload);
     }
-    else
+    ZPL_MARK_CODE_SCOPE(server_send_response)
     {
-        resp.flags.general_purpose_flags.success = 1;
-    }
-    if (event->is_request)
-    {
-        const char *message_type_str =
-            resp.message_type < NUM_MESSAGE_TYPES ? MESSAGE_TYPE_STR[resp.message_type] : "UNKNOWN";
-        LOG_DBG("Sending response. Size: %d, type: %d (%s), flags: 0x%04x", resp.payload.size, resp.message_type,
-                message_type_str, resp.flags.raw_bytes);
-
-        status = protocol_transmit(&resp);
-
         if (STATUS_OK != status)
         {
-            LOG_ERR("Error sending message: 0x%x (%s)", status, get_status_str(status));
+            LOG_ERR("Runtime error: 0x%x (%s)", status, get_status_str(status));
+            resp.flags.general_purpose_flags.fail = 1;
         }
         else
         {
-            LOG_DBG("Response sent");
+            resp.flags.general_purpose_flags.success = 1;
+        }
+        if (event->is_request)
+        {
+            const char *message_type_str =
+                resp.message_type < NUM_MESSAGE_TYPES ? MESSAGE_TYPE_STR[resp.message_type] : "UNKNOWN";
+            LOG_DBG("Sending response. Size: %d, type: %d (%s), flags: 0x%04x", resp.payload.size, resp.message_type,
+                    message_type_str, resp.flags.raw_bytes);
+
+            status = protocol_transmit(&resp);
+
+            if (STATUS_OK != status)
+            {
+                LOG_ERR("Error sending message: 0x%x (%s)", status, get_status_str(status));
+            }
+            else
+            {
+                LOG_DBG("Response sent");
+            }
         }
     }
     return status;

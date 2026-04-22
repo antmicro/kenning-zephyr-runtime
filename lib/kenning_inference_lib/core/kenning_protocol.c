@@ -14,6 +14,18 @@
 #include "mocks/log.h"
 #endif
 
+#ifdef CONFIG_KENNING_ZEPHELIN_TRACE_PROTOCOL
+#define TRACE_PROTOCOL true
+#else
+#define TRACE_PROTOCOL false
+#endif
+
+#ifdef CONFIG_KENNING_ZEPHELIN_TRACE_MESSAGES
+#define TRACE_MESSAGES true
+#else
+#define TRACE_MESSAGES false
+#endif
+
 LOG_MODULE_REGISTER(kenning_protocol, CONFIG_KENNING_PROTOCOL_LOG_LEVEL);
 
 GENERATE_MODULE_STATUSES_STR(KENNING_PROTOCOL);
@@ -85,6 +97,8 @@ status_t receive_message_payload(struct msg_loader *ldr, size_t n)
  *
  * @returns status of the protocol
  */
+ZPL_CODE_SCOPE_DEFINE(protocol_receive_header, TRACE_MESSAGES);
+ZPL_CODE_SCOPE_DEFINE(protocol_receive_payload, TRACE_MESSAGES);
 status_t receive_messages(struct msg_loader *ldr, message_hdr_t *header)
 {
     status_t status = STATUS_OK;
@@ -95,7 +109,7 @@ status_t receive_messages(struct msg_loader *ldr, message_hdr_t *header)
         // Header of the first message should already be received before this function is called.
         if (i != 0)
         {
-            status = receive_message_header(header);
+            ZPL_MARK_CODE_SCOPE(protocol_receive_header) { status = receive_message_header(header); }
             RETURN_ON_ERROR(status, status);
             if (header->message_type != message_type)
             {
@@ -110,7 +124,10 @@ status_t receive_messages(struct msg_loader *ldr, message_hdr_t *header)
         }
         if (header->flags.general_purpose_flags.has_payload)
         {
-            status = receive_message_payload(ldr, header->payload_size);
+            ZPL_MARK_CODE_SCOPE(protocol_receive_payload)
+            {
+                status = receive_message_payload(ldr, header->payload_size);
+            }
             RETURN_ON_ERROR(status, status);
         }
         if (header->flags.general_purpose_flags.last)
@@ -144,6 +161,8 @@ status_t send_message(const outgoing_message_t *msg)
     return status;
 }
 
+ZPL_CODE_SCOPE_DEFINE(kenning_protocol_transmit, TRACE_PROTOCOL);
+ZPL_CODE_SCOPE_DEFINE(protocol_receive_send_message, TRACE_MESSAGES);
 status_t protocol_transmit(const protocol_event_t *event)
 {
     if (protocol_busy)
@@ -153,42 +172,55 @@ status_t protocol_transmit(const protocol_event_t *event)
     }
     status_t status = STATUS_OK;
     RETURN_ERROR_IF_POINTER_INVALID(event, KENNING_PROTOCOL_STATUS_INV_PTR);
-    bool has_payload = event->payload.size > 0;
-    unsigned int message_count =
-        has_payload ? ((event->payload.size - 1) / CONFIG_KENNING_PROTOCOL_MAX_OUTGOING_MESSAGE_SIZE) + 1
-                    : 1; // Rounding
-                         // up.
-    payload_size_t bytes_sent = 0;
-    for (int i = 0; i < message_count; i++)
+    ZPL_MARK_CODE_SCOPE(kenning_protocol_transmit)
     {
-        payload_size_t message_payload_size =
-            MIN(event->payload.size - bytes_sent, CONFIG_KENNING_PROTOCOL_MAX_OUTGOING_MESSAGE_SIZE);
-        outgoing_message_t message;
-        message.hdr.flags = event->flags;
-        message.hdr.message_type = event->message_type;
-        message.hdr.flow_control_flags = FLOW_CONTROL_TRANSMISSION;
-        message.hdr.payload_size = message_payload_size;
-        message.hdr.flags.general_purpose_flags.first = (i == 0) ? 1 : 0;
-        message.hdr.flags.general_purpose_flags.last = (i == (message_count - 1)) ? 1 : 0;
-        message.hdr.flags.general_purpose_flags.has_payload = has_payload;
-        message.hdr.flags.general_purpose_flags.is_host_message = 0;
-        message.payload = has_payload ? event->payload.raw_bytes + bytes_sent : NULL;
-        protocol_busy = true;
-        status = send_message(&message);
-        protocol_busy = false;
-        RETURN_ON_ERROR(status, status);
-        bytes_sent += message_payload_size;
+        bool has_payload = event->payload.size > 0;
+        unsigned int message_count =
+            has_payload ? ((event->payload.size - 1) / CONFIG_KENNING_PROTOCOL_MAX_OUTGOING_MESSAGE_SIZE) + 1
+                        : 1; // Rounding
+                             // up.
+        payload_size_t bytes_sent = 0;
+        for (int i = 0; i < message_count; i++)
+        {
+            payload_size_t message_payload_size =
+                MIN(event->payload.size - bytes_sent, CONFIG_KENNING_PROTOCOL_MAX_OUTGOING_MESSAGE_SIZE);
+            outgoing_message_t message;
+            message.hdr.flags = event->flags;
+            message.hdr.message_type = event->message_type;
+            message.hdr.flow_control_flags = FLOW_CONTROL_TRANSMISSION;
+            message.hdr.payload_size = message_payload_size;
+            message.hdr.flags.general_purpose_flags.first = (i == 0) ? 1 : 0;
+            message.hdr.flags.general_purpose_flags.last = (i == (message_count - 1)) ? 1 : 0;
+            message.hdr.flags.general_purpose_flags.has_payload = has_payload;
+            message.hdr.flags.general_purpose_flags.is_host_message = 0;
+            message.payload = has_payload ? event->payload.raw_bytes + bytes_sent : NULL;
+            protocol_busy = true;
+            ZPL_MARK_CODE_SCOPE(protocol_receive_send_message) { status = send_message(&message); }
+            protocol_busy = false;
+            BREAK_ON_ERROR(status);
+            bytes_sent += message_payload_size;
+        }
     }
     return status;
 }
 
+ZPL_CODE_SCOPE_DEFINE(kenning_protocol_listen, TRACE_PROTOCOL);
 status_t protocol_listen(protocol_event_t *event, struct msg_loader *(*loader_callback)(message_type_t))
 {
     status_t status = STATUS_OK;
     RETURN_ERROR_IF_POINTER_INVALID(event, KENNING_PROTOCOL_STATUS_INV_PTR);
     RETURN_ERROR_IF_POINTER_INVALID(loader_callback, KENNING_PROTOCOL_STATUS_INV_PTR);
+#ifdef CONFIG_ZPL_SCOPE_MARKING
+    zpl_code_scope_enter(kenning_protocol_listen);
+#endif
     message_hdr_t header;
-    status = receive_message_header(&header);
+    ZPL_MARK_CODE_SCOPE(protocol_receive_header) { status = receive_message_header(&header); }
+    if (status)
+    {
+#ifdef CONFIG_ZPL_SCOPE_MARKING
+        zpl_code_scope_exit(kenning_protocol_listen);
+#endif
+    }
     RETURN_ON_ERROR(status, status);
 
     if (header.flow_control_flags != FLOW_CONTROL_TRANSMISSION && header.flow_control_flags != FLOW_CONTROL_REQUEST)
@@ -198,12 +230,18 @@ status_t protocol_listen(protocol_event_t *event, struct msg_loader *(*loader_ca
                                            : "UNKNOWN";
         LOG_ERR("Invalid message at this time: %d (%s)", header.flow_control_flags, flow_control_str);
         protocol_read_data(NULL, header.payload_size);
+#ifdef CONFIG_ZPL_SCOPE_MARKING
+        zpl_code_scope_exit(kenning_protocol_listen);
+#endif
         return KENNING_PROTOCOL_STATUS_FLOW_CONTROL_ERROR;
     }
     if (header.flags.general_purpose_flags.first == 0)
     {
         LOG_ERR("First message received did not have the 'first' flag set");
         protocol_read_data(NULL, header.payload_size);
+#ifdef CONFIG_ZPL_SCOPE_MARKING
+        zpl_code_scope_exit(kenning_protocol_listen);
+#endif
         return KENNING_PROTOCOL_STATUS_FLOW_CONTROL_ERROR;
     }
 
@@ -215,6 +253,9 @@ status_t protocol_listen(protocol_event_t *event, struct msg_loader *(*loader_ca
     {
         LOG_ERR("Invalid message type: %u", header.message_type);
         protocol_read_data(NULL, header.payload_size);
+#ifdef CONFIG_ZPL_SCOPE_MARKING
+        zpl_code_scope_exit(kenning_protocol_listen);
+#endif
         return KENNING_PROTOCOL_STATUS_INVALID_MESSAGE_TYPE;
     }
 
@@ -228,10 +269,16 @@ status_t protocol_listen(protocol_event_t *event, struct msg_loader *(*loader_ca
         {
             LOG_ERR("Loader reset failure, status: %d", loader_status);
             protocol_read_data(NULL, header.payload_size);
+#ifdef CONFIG_ZPL_SCOPE_MARKING
+            zpl_code_scope_exit(kenning_protocol_listen);
+#endif
             return loader_status;
         }
         status = receive_messages(ldr, &header);
     }
     event->payload.size = ldr->written;
+#ifdef CONFIG_ZPL_SCOPE_MARKING
+    zpl_code_scope_exit(kenning_protocol_listen);
+#endif
     return status;
 }

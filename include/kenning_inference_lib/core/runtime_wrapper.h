@@ -314,3 +314,9 @@ status_t runtime_deinit();
     LL_EXTENSION_SYMBOL(runtime_deinit);
 
 #endif // KENNING_INFERENCE_LIB_CORE_RUNTIME_WRAPPER_H_
+
+#ifdef CONFIG_KENNING_ZEPHELIN_TRACE_FRAMEWORK
+#define TRACE_FRAMEWORK true
+#else
+#define TRACE_FRAMEWORK false
+#endif

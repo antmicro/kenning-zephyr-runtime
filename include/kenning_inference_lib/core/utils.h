@@ -12,6 +12,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#ifdef CONFIG_ZPL
+#include <zpl.h>
+#endif
+
 #ifndef __UNIT_TEST__
 #define ut_static static
 #else // __UNIT_TEST__
@@ -213,3 +217,14 @@ typedef int32_t status_t;
 const char *get_status_str(status_t status);
 
 #endif // KENNING_INFERENCE_LIB_CORE_UTILS_H_
+
+// When Zephelin scopes are all the calls to ZPL_CODE_SCOPE_DEFINE and
+// ZPL_MARK_CODE_SCOPE would cause build failure. This is a workaround, so that
+// we don't have to put an ifdef around every call.
+#ifndef ZPL_CODE_SCOPE_DEFINE
+#define ZPL_CODE_SCOPE_DEFINE(_, __) ;
+#endif
+
+#ifndef ZPL_MARK_CODE_SCOPE
+#define ZPL_MARK_CODE_SCOPE(_) ;
+#endif

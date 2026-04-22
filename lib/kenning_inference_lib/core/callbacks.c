@@ -37,6 +37,12 @@
 
 LOG_MODULE_REGISTER(callbacks, CONFIG_CALLBACKS_LOG_LEVEL);
 
+#ifdef CONFIG_KENNING_ZEPHELIN_TRACE_MODEL
+#define TRACE_MODEL true
+#else
+#define TRACE_MODEL false
+#endif
+
 GENERATE_MODULE_STATUSES_STR(CALLBACKS);
 const callback_ptr_t g_msg_callback[] = {
 #define ENTRY(msg_type, callback_func) callback_func,
@@ -82,11 +88,21 @@ status_t unsupported_callback(protocol_event_t *request, protocol_payload_t *res
  *
  * @returns error status of the callback
  */
+ZPL_CODE_SCOPE_DEFINE(inference_session,
+#ifdef CONFIG_KENNING_ZEPHELIN_TRACE_INFERENCE_SESSION
+                      true
+#else
+                      false
+#endif
+);
 status_t ping_callback(protocol_event_t *request, protocol_payload_t *resp_payload)
 {
     if (request->flags.general_purpose_flags.fail)
     {
         g_client_connected = false;
+#ifdef CONFIG_ZPL_SCOPE_MARKING
+        zpl_code_scope_exit(inference_session);
+#endif
         LOG_INF("Client disconnected.");
 #ifdef CONFIG_KENNING_SEND_LOGS
         logger_stop();
@@ -103,6 +119,9 @@ status_t ping_callback(protocol_event_t *request, protocol_payload_t *resp_paylo
         {
             LOG_INF("Client connected");
             g_client_connected = true;
+#ifdef CONFIG_ZPL_SCOPE_MARKING
+            zpl_code_scope_enter(inference_session);
+#endif
 #ifdef CONFIG_KENNING_SEND_LOGS
             logger_start();
 #endif
@@ -129,13 +148,14 @@ status_t ping_callback(protocol_event_t *request, protocol_payload_t *resp_paylo
  *
  * @returns error status of the callback
  */
+ZPL_CODE_SCOPE_DEFINE(model_input_loading, TRACE_MODEL);
 status_t data_callback(protocol_event_t *request, protocol_payload_t *resp_payload) // TODO
 {
     status_t status = STATUS_OK;
 
     VALIDATE_HEADER(MESSAGE_TYPE_DATA, request);
 
-    status = model_load_input_from_loader(request->payload.size);
+    ZPL_MARK_CODE_SCOPE(model_input_loading) { status = model_load_input_from_loader(request->payload.size); }
 
     CHECK_STATUS_LOG(status, "model_load_input returned 0x%x (%s)", status, get_status_str(status));
 
@@ -151,13 +171,14 @@ status_t data_callback(protocol_event_t *request, protocol_payload_t *resp_paylo
  *
  * @returns error status of the callback
  */
+ZPL_CODE_SCOPE_DEFINE(model_loading, TRACE_MODEL);
 status_t model_callback(protocol_event_t *request, protocol_payload_t *resp_payload)
 {
     status_t status = STATUS_OK;
 
     VALIDATE_HEADER(MESSAGE_TYPE_MODEL, request);
 
-    status = model_load_weights_from_loader();
+    ZPL_MARK_CODE_SCOPE(model_loading) { status = model_load_weights_from_loader(); }
 
     CHECK_STATUS_LOG(status, "model_load_weights returned 0x%x (%s)", status, get_status_str(status));
 
@@ -174,13 +195,14 @@ status_t model_callback(protocol_event_t *request, protocol_payload_t *resp_payl
  *
  * @returns error status of the callback
  */
+ZPL_CODE_SCOPE_DEFINE(model_processing, TRACE_MODEL);
 status_t process_callback(protocol_event_t *request, protocol_payload_t *resp_payload)
 {
     status_t status = STATUS_OK;
 
     VALIDATE_HEADER(MESSAGE_TYPE_PROCESS, request);
 
-    status = model_run_bench();
+    ZPL_MARK_CODE_SCOPE(model_processing) { status = model_run_bench(); }
 
     CHECK_STATUS_LOG(status, "model_run returned 0x%x (%s)", status, get_status_str(status));
 
@@ -195,6 +217,7 @@ status_t process_callback(protocol_event_t *request, protocol_payload_t *resp_pa
  *
  * @returns error status of the callback
  */
+ZPL_CODE_SCOPE_DEFINE(model_output_retrieval, TRACE_MODEL);
 status_t output_callback(protocol_event_t *request, protocol_payload_t *resp_payload)
 {
     status_t status = STATUS_OK;
@@ -202,7 +225,10 @@ status_t output_callback(protocol_event_t *request, protocol_payload_t *resp_pay
 
     VALIDATE_HEADER(MESSAGE_TYPE_OUTPUT, request);
 
-    status = model_get_output(CONFIG_KENNING_RESPONSE_PAYLOAD_SIZE, resp_payload->raw_bytes, &model_output_size);
+    ZPL_MARK_CODE_SCOPE(model_output_retrieval)
+    {
+        status = model_get_output(CONFIG_KENNING_RESPONSE_PAYLOAD_SIZE, resp_payload->raw_bytes, &model_output_size);
+    }
 
     CHECK_STATUS_LOG(status, "model_get_output returned 0x%x (%s)", status, get_status_str(status));
 
@@ -218,6 +244,7 @@ status_t output_callback(protocol_event_t *request, protocol_payload_t *resp_pay
  *
  * @returns error status of the callback
  */
+ZPL_CODE_SCOPE_DEFINE(model_stats_retrieval, TRACE_MODEL);
 status_t stats_callback(protocol_event_t *request, protocol_payload_t *resp_payload)
 {
     status_t status = STATUS_OK;
@@ -225,7 +252,11 @@ status_t stats_callback(protocol_event_t *request, protocol_payload_t *resp_payl
 
     VALIDATE_HEADER(MESSAGE_TYPE_STATS, request);
 
-    status = model_get_statistics(CONFIG_KENNING_RESPONSE_PAYLOAD_SIZE, resp_payload->raw_bytes, &statistics_length);
+    ZPL_MARK_CODE_SCOPE(model_stats_retrieval)
+    {
+        status =
+            model_get_statistics(CONFIG_KENNING_RESPONSE_PAYLOAD_SIZE, resp_payload->raw_bytes, &statistics_length);
+    }
 
     CHECK_STATUS_LOG(status, "model_get_statistics returned 0x%x (%s)", status, get_status_str(status));
 
@@ -241,13 +272,14 @@ status_t stats_callback(protocol_event_t *request, protocol_payload_t *resp_payl
  *
  * @returns error status of the callback
  */
+ZPL_CODE_SCOPE_DEFINE(model_specification_loading, TRACE_MODEL);
 status_t iospec_callback(protocol_event_t *request, protocol_payload_t *resp_payload)
 {
     status_t status = STATUS_OK;
 
     VALIDATE_HEADER(MESSAGE_TYPE_IOSPEC, request);
 
-    status = model_load_struct_from_loader();
+    ZPL_MARK_CODE_SCOPE(model_specification_loading) { status = model_load_struct_from_loader(); }
 
     CHECK_STATUS_LOG(status, "model_load_struct returned 0x%x (%s)", status, get_status_str(status));
 

@@ -20,6 +20,12 @@ LOG_MODULE_REGISTER(model, CONFIG_MODEL_LOG_LEVEL);
 
 GENERATE_MODULE_STATUSES_STR(MODEL);
 
+#ifdef CONFIG_KENNING_ZEPHELIN_TRACE_RUNTIME
+#define TRACE_RUNTIME true
+#else
+#define TRACE_RUNTIME false
+#endif
+
 /*
  * Struct storing the metadata for the loaded Machine Learning model's inputs and outputs (definition in
  * runtime_wrapper.h) - loaded and validated in this file, used by runtimes.
@@ -110,11 +116,12 @@ status_t prepare_iospec_loader()
     return STATUS_OK;
 }
 
+ZPL_CODE_SCOPE_DEFINE(runtime_initialization, TRACE_RUNTIME);
 status_t model_init()
 {
     status_t status = STATUS_OK;
 
-    status = runtime_init();
+    ZPL_MARK_CODE_SCOPE(runtime_initialization) { status = runtime_init(); }
     RETURN_ON_ERROR(status, status);
 
     if (STATUS_OK == status)
@@ -167,6 +174,7 @@ status_t model_load_struct_from_loader()
     return status;
 }
 
+ZPL_CODE_SCOPE_DEFINE(runtime_weights_init, TRACE_RUNTIME);
 status_t model_load_weights_from_loader()
 {
     status_t status = STATUS_OK;
@@ -175,8 +183,7 @@ status_t model_load_weights_from_loader()
     {
         return MODEL_STATUS_INV_STATE;
     }
-
-    status = runtime_init_weights();
+    ZPL_MARK_CODE_SCOPE(runtime_weights_init) { status = runtime_init_weights(); }
     RETURN_ON_ERROR(status, status);
 
     LOG_DBG("Initialized model weights");
@@ -210,6 +217,7 @@ status_t model_get_input_size(size_t *model_input_size)
     return status;
 }
 
+ZPL_CODE_SCOPE_DEFINE(runtime_input_init, TRACE_RUNTIME);
 status_t model_load_input_from_loader(const size_t expected_size)
 {
     status_t status = STATUS_OK;
@@ -229,7 +237,7 @@ status_t model_load_input_from_loader(const size_t expected_size)
         return MODEL_STATUS_INV_ARG;
     }
 
-    status = runtime_init_input();
+    ZPL_MARK_CODE_SCOPE(runtime_input_init) { status = runtime_init_input(); }
 
     RETURN_ON_ERROR(status, status);
 
@@ -285,6 +293,7 @@ status_t model_load_input(const uint8_t *model_input, const size_t model_input_s
     return model_load_input_from_loader(model_input_size);
 }
 
+ZPL_CODE_SCOPE_DEFINE(runtime_run, TRACE_RUNTIME);
 status_t model_run()
 {
     status_t status = STATUS_OK;
@@ -295,7 +304,7 @@ status_t model_run()
     }
 
     // perform inference
-    status = runtime_run_model();
+    ZPL_MARK_CODE_SCOPE(runtime_run) { status = runtime_run_model(); }
     RETURN_ON_ERROR(status, status);
 
     LOG_DBG("Model inference done");
@@ -315,7 +324,7 @@ status_t model_run_bench()
     }
 
     // perform inference
-    status = runtime_run_model_bench();
+    ZPL_MARK_CODE_SCOPE(runtime_run) { status = runtime_run_model_bench(); }
     RETURN_ON_ERROR(status, status);
 
     LOG_DBG("Model inference with a benchmark done");
@@ -349,6 +358,7 @@ status_t model_get_output_size(size_t *model_output_size)
     return status;
 }
 
+ZPL_CODE_SCOPE_DEFINE(runtime_get_output, TRACE_RUNTIME);
 status_t model_get_output(const size_t buffer_size, uint8_t *model_output, size_t *model_output_size)
 {
     status_t status = STATUS_OK;
@@ -375,7 +385,7 @@ status_t model_get_output(const size_t buffer_size, uint8_t *model_output, size_
         *model_output_size = output_size;
     }
 
-    status = runtime_get_model_output(model_output);
+    ZPL_MARK_CODE_SCOPE(runtime_get_output) { status = runtime_get_model_output(model_output); }
     RETURN_ON_ERROR(status, status);
 
     LOG_DBG("Model output retrieved");
@@ -383,6 +393,7 @@ status_t model_get_output(const size_t buffer_size, uint8_t *model_output, size_
     return status;
 }
 
+ZPL_CODE_SCOPE_DEFINE(runtime_get_stats, TRACE_RUNTIME);
 status_t model_get_statistics(const size_t statistics_buffer_size, uint8_t *statistics_buffer, size_t *statistics_size)
 {
     status_t status = STATUS_OK;
@@ -395,7 +406,10 @@ status_t model_get_statistics(const size_t statistics_buffer_size, uint8_t *stat
         return MODEL_STATUS_INV_STATE;
     }
 
-    status = runtime_get_statistics(statistics_buffer_size, statistics_buffer, statistics_size);
+    ZPL_MARK_CODE_SCOPE(runtime_get_stats)
+    {
+        status = runtime_get_statistics(statistics_buffer_size, statistics_buffer, statistics_size);
+    }
     RETURN_ON_ERROR(status, status);
 
     LOG_DBG("Model statistics retrieved");

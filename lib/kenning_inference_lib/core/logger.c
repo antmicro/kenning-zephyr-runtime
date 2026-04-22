@@ -15,6 +15,12 @@ LOG_MODULE_REGISTER(logger, CONFIG_LOGGER_LOG_LEVEL);
 
 GENERATE_MODULE_STATUSES_STR(LOGGER);
 
+#ifdef CONFIG_KENNING_ZEPHELIN_TRACE_LOGGING
+#define TRACE_LOGGING true
+#else
+#define TRACE_LOGGING false
+#endif
+
 /*
  Array with bytes, ready to send to the client (Kenning).
  Format:
@@ -55,23 +61,28 @@ int render_character(uint8_t *data, size_t length, void *ctx)
 
 LOG_OUTPUT_DEFINE(out, render_character, NULL, 0);
 
+ZPL_CODE_SCOPE_DEFINE(send_pending_logs, TRACE_LOGGING);
 void send_all_messages()
 {
-    protocol_event_t transmission;
-    transmission.message_type = MESSAGE_TYPE_LOGS;
-    transmission.flags.raw_bytes = 0;
-    transmission.flags.general_purpose_flags.is_zephyr = 1;
-    transmission.payload.raw_bytes = msg_buffer;
-    transmission.payload.size = msg_buffer_len;
-    status_t status = protocol_transmit(&transmission);
-
-    // Erase the buffer, if the transmission succeeded.
-    if (status == STATUS_OK)
+    ZPL_MARK_CODE_SCOPE(send_pending_logs)
     {
-        msg_buffer_len = 0;
+        protocol_event_t transmission;
+        transmission.message_type = MESSAGE_TYPE_LOGS;
+        transmission.flags.raw_bytes = 0;
+        transmission.flags.general_purpose_flags.is_zephyr = 1;
+        transmission.payload.raw_bytes = msg_buffer;
+        transmission.payload.size = msg_buffer_len;
+        status_t status = protocol_transmit(&transmission);
+
+        // Erase the buffer, if the transmission succeeded.
+        if (status == STATUS_OK)
+        {
+            msg_buffer_len = 0;
+        }
     }
 }
 
+ZPL_CODE_SCOPE_DEFINE(process_log, TRACE_LOGGING);
 void process(const struct log_backend *const backend, union log_msg_generic *msg)
 {
     // We are not processing a log message, generated while processing another log message.
@@ -81,16 +92,19 @@ void process(const struct log_backend *const backend, union log_msg_generic *msg
     }
     sending_logs = true;
     // Adding the current log message to the buffer.
-    curr_msg_len = 0;
-    log_output_msg_process(&out, &msg->log, log_backend_std_get_flags());
-    // We insert message size in front of the message in the buffer.
-    msg_buffer[msg_buffer_len] = curr_msg_len - 1; // We are subtracting 1 from 'curr_msg_len', because we are
-                                                   // ignoring the last character of the message, since it's always a
-                                                   // Line Feed, which we don't need.
-    msg_buffer_len += curr_msg_len; // Normally we should add here 'curr_msg_len + 1' (to account for that 1 byte size
-                                    // field). However in this case we want to deliberately ignore the last character
-                                    // of the message (Line Feed)
-    send_all_messages();
+    ZPL_MARK_CODE_SCOPE(process_log)
+    {
+        curr_msg_len = 0;
+        log_output_msg_process(&out, &msg->log, log_backend_std_get_flags());
+        // We insert message size in front of the message in the buffer.
+        msg_buffer[msg_buffer_len] = curr_msg_len - 1; // We are subtracting 1 from 'curr_msg_len', because we are
+                                                       // ignoring the last character of the message, since it's always
+                                                       // a Line Feed, which we don't need.
+        msg_buffer_len += curr_msg_len; // Normally we should add here 'curr_msg_len + 1' (to account for that 1 byte
+                                        // size field). However in this case we want to deliberately ignore the last
+                                        // character of the message (Line Feed)
+        send_all_messages();
+    }
     sending_logs = false;
 }
 

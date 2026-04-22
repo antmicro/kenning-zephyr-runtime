@@ -311,6 +311,62 @@ config ZPL_TRACE_BACKEND_KENNING_PROTOCOL_BUFFER_SIZE
         default 1024
         depends on ZPL_TRACE_BACKEND_KENNING_PROTOCOL
 
+config KENNING_ZEPHELIN_TRACE_RUNTIME
+        bool
+        prompt "Trace calls to runtime_wrapper.h functions"
+        depends on ZPL_SCOPE_MARKING
+        default false
+
+config KENNING_ZEPHELIN_TRACE_MODEL
+        bool
+        prompt "Trace model operations"
+        depends on ZPL_SCOPE_MARKING
+        default false
+
+config KENNING_ZEPHELIN_TRACE_PROTOCOL
+        bool
+        prompt "Trace protocol events (transmissions, listens)"
+        depends on ZPL_SCOPE_MARKING
+        depends on ZPL_TRACE_BACKEND_KENNING_PROTOCOL=n
+        default false
+
+config KENNING_ZEPHELIN_TRACE_MESSAGES
+        bool
+        prompt "Trace sending and receiving of individual protocol messages"
+        depends on ZPL_SCOPE_MARKING
+        depends on ZPL_TRACE_BACKEND_KENNING_PROTOCOL=n
+        default false
+
+config KENNING_ZEPHELIN_TRACE_REQUESTS
+        bool
+        prompt "Trace client requests"
+        depends on ZPL_SCOPE_MARKING
+        default false
+
+config KENNING_ZEPHELIN_TRACE_SERVER
+        bool
+        prompt "Trace receiving, handling and responding of requests (separately)"
+        depends on ZPL_SCOPE_MARKING
+        default false
+
+config KENNING_ZEPHELIN_TRACE_INFERENCE_SESSION
+        bool
+        prompt "Trace client inference sessions"
+        depends on ZPL_SCOPE_MARKING
+        default false
+
+config KENNING_ZEPHELIN_TRACE_LOGGING
+        bool
+        prompt "Trace sending of logs through Kenning Protocol"
+        depends on ZPL_SCOPE_MARKING
+        default false
+
+config KENNING_ZEPHELIN_TRACE_FRAMEWORK
+        bool
+        prompt "Trace detailed framework-specific model runtime events"
+        depends on ZPL_SCOPE_MARKING
+        default false
+
 module = CALLBACKS
 module-str = callbacks
 source "subsys/logging/Kconfig.template.log_config"
