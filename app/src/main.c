@@ -5,9 +5,18 @@
  */
 
 #include "kenning_inference_lib/core/inference_server.h"
+#include "kenning_inference_lib/core/utils.h"
 #include <zephyr/logging/log.h>
 
 LOG_MODULE_REGISTER(app, CONFIG_APP_LOG_LEVEL);
+
+ZPL_CODE_SCOPE_DEFINE(client_request,
+#ifdef CONFIG_KENNING_ZEPHELIN_TRACE_REQUESTS
+                      true
+#else
+                      false
+#endif
+);
 
 int main(void)
 {
@@ -19,11 +28,13 @@ int main(void)
     // main runtime loop
     while (1)
     {
-        protocol_event_t event;
-
-        if (STATUS_OK == wait_for_protocol_event(&event))
+        ZPL_MARK_CODE_SCOPE(client_request)
         {
-            handle_protocol_event(&event);
+            protocol_event_t event;
+            if (STATUS_OK == wait_for_protocol_event(&event))
+            {
+                handle_protocol_event(&event);
+            }
         }
     }
     return 0;
