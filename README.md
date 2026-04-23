@@ -344,7 +344,7 @@ You can set this variable in `prj.conf` or add it to `west build` as follows (re
 ```bash
 west build -p always -b stm32f746g_disco app -- \
     -DEXTRA_CONF_FILE=tvm.conf \
-    -DCONFIG_KENNING_MODEL_PATH=\"https://dl.antmicro.com/kenning/models/classification/magic_wand.h5\"
+    -DCONFIG_KENNING_MODEL_PATH=\"https://dl.antmicro.com/kenning/models/classification/magic_wand.pth\"
 west build -t board-repl
 ```
 
@@ -536,7 +536,7 @@ To do it, you need to provide model input in `demo_app/src/input_data.h` and mod
 ```bash
 west build -p always -b stm32f746g_disco demo_app -- \
     -DEXTRA_CONF_FILE=tvm_gen.conf \
-    -DCONFIG_KENNING_MODEL_PATH=\"https://dl.antmicro.com/kenning/models/classification/magic_wand.h5\"
+    -DCONFIG_KENNING_MODEL_PATH=\"https://dl.antmicro.com/kenning/models/classification/magic_wand.pth\"
 ```
 
 ## Adding support for more boards
