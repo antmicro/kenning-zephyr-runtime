@@ -76,7 +76,7 @@ typedef enum
 
 GENERATE_MODULE_STATUSES(KENNING_PROTOCOL);
 
-typedef uint8_t message_type_t;
+typedef uint64_t message_type_t;
 typedef uint8_t flow_control_flags_t;
 typedef uint8_t checksum_t;
 typedef uint32_t payload_size_t;
@@ -120,7 +120,7 @@ typedef union
  */
 typedef struct __attribute__((packed))
 {
-    message_type_t message_type : 6;
+    message_type_t message_type : 38;
     flow_control_flags_t flow_control_flags : 2;
     checksum_t checksum;
     flags_t flags;
