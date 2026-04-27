@@ -70,7 +70,7 @@ status_t unsupported_callback(protocol_event_t *request, protocol_payload_t *res
 {
     status_t status = STATUS_OK;
 
-    LOG_WRN("Unsupported message received: %d (%s)", request->message_type, MESSAGE_TYPE_STR[request->message_type]);
+    LOG_WRN("Unsupported message received: %lld (%s)", request->message_type, MESSAGE_TYPE_STR[request->message_type]);
 
     RETURN_ON_ERROR(status, status);
 

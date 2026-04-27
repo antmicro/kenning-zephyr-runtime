@@ -251,7 +251,7 @@ status_t protocol_listen(protocol_event_t *event, struct msg_loader *(*loader_ca
 
     if (header.message_type >= NUM_MESSAGE_TYPES)
     {
-        LOG_ERR("Invalid message type: %u", header.message_type);
+        LOG_ERR("Invalid message type: %llu", (message_type_t)header.message_type);
         protocol_read_data(NULL, header.payload_size);
 #ifdef CONFIG_ZPL_SCOPE_MARKING
         zpl_code_scope_exit(kenning_protocol_listen);

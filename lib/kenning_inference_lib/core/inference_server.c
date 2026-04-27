@@ -200,7 +200,7 @@ status_t wait_for_protocol_event(protocol_event_t *event)
     const char *message_type_str =
         event->message_type < NUM_MESSAGE_TYPES ? MESSAGE_TYPE_STR[event->message_type] : "UNKNOWN";
 
-    LOG_DBG("Received event. Size: %d, type: %d (%s), flags: 0x%04x", event->payload.size, event->message_type,
+    LOG_DBG("Received event. Size: %d, type: %lld (%s), flags: 0x%04x", event->payload.size, event->message_type,
             message_type_str, event->flags.raw_bytes);
 #ifdef CONFIG_ZPL_SCOPE_MARKING
     zpl_code_scope_exit(server_wait_for_request);
@@ -241,7 +241,7 @@ status_t handle_protocol_event(protocol_event_t *event)
         {
             const char *message_type_str =
                 resp.message_type < NUM_MESSAGE_TYPES ? MESSAGE_TYPE_STR[resp.message_type] : "UNKNOWN";
-            LOG_DBG("Sending response. Size: %d, type: %d (%s), flags: 0x%04x", resp.payload.size, resp.message_type,
+            LOG_DBG("Sending response. Size: %d, type: %lld (%s), flags: 0x%04x", resp.payload.size, resp.message_type,
                     message_type_str, resp.flags.raw_bytes);
 
             status = protocol_transmit(&resp);
