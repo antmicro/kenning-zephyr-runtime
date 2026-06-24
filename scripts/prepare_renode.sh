@@ -4,7 +4,7 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-RENODE_VERSION=${1:-1.16.1+20260524gitbcbf1b6ab}
+RENODE_VERSION=${1:-latest}
 
 if [ -d renode_latest ] ; then
   echo "Renode already downloaded."
