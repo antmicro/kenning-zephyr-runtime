@@ -1,104 +1,36 @@
-# Zephyr runtime for Kenning
+# Kenning Zephyr Runtime
 
 Copyright (c) 2023-2026 [Antmicro](https://www.antmicro.com)
 
-This project provides a Zephyr library for the [Kenning](https://github.com/antmicro/kenning) runtime API, along with an application for model evaluation.
-Its aim is to simplify adoption and switching between existing runtime implementations.
+This is a set of tools for running and evaluating ML models on various inference frameworks (runtimes), such as [IREE](https://iree.dev/) or [microTVM](https://tvm.apache.org/), on boards that support Zephyr RTOS.
+It provides a unified runtime-agnostic API, wrapping the runtimes and allowing to easily switch between them without rewriting any code.
+
+This project is an integral part of the [Kenning](https://github.com/antmicro/kenning) ecosystem - it can be used in tandem with Kenning for model optimization, deployment and benchmarking (see [Model evaluation with Kenning](https://github.com/antmicro/kenning-zephyr-runtime/tree/main#using-microtvm)).
+For detailed documentation, see the [Kenning Zephyr Runtime chapter of the general Kenning docs](https://antmicro.github.io/kenning/kenning-zephyr-runtime.html).
+
+[Website](https://antmicro.com/kenning/) | [Kenning Documentation](https://antmicro.github.io/kenning/) | [Zephyr Runtime chapter of the Documentation](https://antmicro.github.io/kenning/kenning-zephyr-runtime.html) | [Kenning tutorials](https://antmicro.github.io/kenning/kenning-gallery.html)
 
 ## Overview
 
 This repository provides:
 
-* `kenning_inference_lib` - a Zephyr library providing generic wrapper methods for loading models and running inference, regardless of their underlying implementation.
-* `kenning-zephyr-runtime` app - a Zephyr application used by [Kenning](https://github.com/antmicro/kenning) for evaluating models and runtimes on devices.
-* demo application (`demo_app`) - a Zephyr application that uses `kenning_inference_lib` to run gesture recognition on sample data.
+* `kenning_inference_lib` - a Zephyr library providing a unified `model` API, allowing for executing ML models with the following runtimes:
+  * [TFLite Micro](https://github.com/tensorflow/tflite-micro)
+  * [microTVM](https://tvm.apache.org/)
+  * [IREE](https://iree.dev/)
+  * [emlearn](https://github.com/emlearn/emlearn)
+  * [ExecuTorch](https://docs.pytorch.org/executorch/stable/index.html)
+  * [AI8X](https://github.com/analogdevicesinc/ai8x-synthesis) for Analog Devices MAX78xxx platforms
+* `app` - a Zephyr application used with [Kenning](https://github.com/antmicro/kenning) for evaluating models and runtimes on devices. For more information on available evaluation features, see the [Model evaluation with Kenning section of this document](https://github.com/antmicro/kenning-zephyr-runtime/tree/main#using-microtvm).
+* demo application (`demo_app`) - a Zephyr application that uses `kenning_inference_lib` to run gesture recognition on sample data. It is meant to showcase the usage of `kenning_inference_lib` as a standalone production solution, without communication with Kenning.
 
-## Quickstart
+## Quickstart (`demo_app`)
 
-This is the minimal set of steps to build the runtime and run demo application or Kenning inference server.
+This is the minimal list of steps to build and run the `demo_app`.
 
-The easiest way to obtain environment with all dependences is to [use prepared Docker image](#using-the-docker-environment)
+### Preparing the environment
 
-```
-mkdir zephyr-workspace && cd zephyr-workspace
-docker run --rm -it -v $(pwd):$(pwd) -w $(pwd) ghcr.io/antmicro/kenning-zephyr-runtime:latest /bin/bash
-```
-
-Now clone this repository and install the latest Zephyr SDK
-
-```
-git clone https://github.com/antmicro/kenning-zephyr-runtime
-cd kenning-zephyr-runtime/
-./scripts/prepare_zephyr_env.sh
-source .venv/bin/activate
-./scripts/prepare_modules.sh
-```
-
-To simulate with Renode, install the latest Renode release, with the script:
-
-```
-source ./scripts/prepare_renode.sh
-```
-
-**NOTE** The script creates environmental variables, that allow Kenning to find Renode. It has to be ran every time a new shell is used.
-
-### Building and running demo app
-
-At this point you should be able to build the demo app and run it
-
-```
-west build -p always -b stm32f746g_disco demo_app -- -DEXTRA_CONF_FILE=tvm.conf
-west build -t board-repl
-python ./scripts/run_renode.py
-```
-
-The output should look similar as in [demo app section](#demo-application-using-Kenning-inference-library).
-
-### Building inference server app and benchmarking with Kenning
-
-To build Kenning inference server app run
-
-```
-west build -p always -b stm32f746g_disco app -- -DEXTRA_CONF_FILE=tvm.conf
-west build -t board-repl
-```
-
-And then execute Kenning to compile the model, run benchmark and generate report
-
-```
-kenning optimize test report \
-    --cfg ./kenning-scenarios/magic-wand-inference/tvm/renode-stm32f746g.yml \
-    --measurements ./results-tvm.json \
-    --report-path ./report-tvm.md \
-    --report-types performance classification renode_stats \
-    --to-html \
-    --verbosity INFO
-```
-
-The report will be saved as `report-tvm/report-tvm.html`.
-
-## Building the project
-
-This section contains instructions for preparing Zephyr and building the runtime.
-
-### Using the Docker environment
-
-The Docker environment with all the necessary components is available in [Dockerfile](./Dockerfile).
-The built image can be pulled with:
-
-```
-docker pull ghcr.io/antmicro/kenning-zephyr-runtime:latest
-```
-
-or you can build the image with
-
-```
-docker build -t kenning-zephyr-runtime:local .
-```
-
-### Installing the dependencies in the system
-
-To be able to build and use the project, you need the folowing dependencies:
+To be able to build and use the project, you need the following dependencies:
 
 * [Zephyr dependencies](https://docs.zephyrproject.org/latest/develop/getting_started/index.html#install-dependencies)
 * `jq`
@@ -107,7 +39,14 @@ To be able to build and use the project, you need the folowing dependencies:
 * `patch`
 * `CMake`
 
-On Debian-based Linux distributions, install the dependencies as follows:
+The easiest way to obtain an environment with all dependencies is to [use the prepared Docker image](#using-the-docker-environment):
+
+```
+mkdir zephyr-workspace && cd zephyr-workspace
+docker run --rm -it -v $(pwd):$(pwd) -w $(pwd) ghcr.io/antmicro/kenning-zephyr-runtime:latest /bin/bash
+```
+
+Alternatively, on Debian-based Linux distributions, you may instead install the dependencies as follows:
 
 ```bash
 sudo apt update
@@ -115,404 +54,62 @@ sudo apt update
 sudo apt install -y --no-install-recommends ccache curl device-tree-compiler dfu-util file \
   g++-multilib gcc gcc-multilib git jq libmagic1 libsdl2-dev make ninja-build \
   python3-dev python3-pip python3-setuptools python3-tk python3-wheel python3-venv \
-  mono-complete wget xxd xz-utils patch
+  mono-complete wget xxd xz-utils patch cmake npm
 ```
 
-### Cloning the project and preparing the environment
+Now clone this repository:
 
-First off, create a workspace directory and clone the repository:
-
-```bash skip
-mkdir zephyr-workspace && cd zephyr-workspace
-git clone https://github.com/antmicro/kenning-zephyr-runtime.git
-cd kenning-zephyr-runtime
+```
+git clone https://github.com/antmicro/kenning-zephyr-runtime
+cd kenning-zephyr-runtime/
 ```
 
-After entering the project's directory, initialize a Zephyr workspace with:
+It is recommended to use the [`uv`](https://docs.astral.sh/uv/) package manager instead of `pip`, whenever using Kenning.
+You can install `uv` on Linux or macOS with:
 
-```bash skip
+```bash
+curl -LsSf https://astral.sh/uv/install.sh | sh
+```
+
+To make `uv` available in PATH, restart the shell or run:
+
+```bash
+source $HOME/.local/bin/env
+```
+
+And install Python dependencies, additional Zephyr modules, and Zephyr SDK:
+
+```bash
 ./scripts/prepare_zephyr_env.sh
 source .venv/bin/activate
-```
-
-This will:
-
-* Create a Python virtual environment and install dependencies.
-* Initialize a west workspace and download modules.
-* Download and install Zephyr SDK in the home directory.
-* Download necessary Zephyr toolchains (x86_64-zephyr-elf, arm-zephyr-eabi, riscv64-zephyr-elf) and host tools.
-
-This can be reused to load the necessary environment before launching commands mentioned later in this README.
-
-Alternatively, for example if you need to install another set of toolchains, you can set up the environment manually:
-
-```bash
-python3 -m venv .venv --system-site-packages
-source .venv/bin/activate
-pip install pip setuptools west --upgrade
-west init -l .
-west update
-pip install -r requirements.txt -r ../zephyr/scripts/requirements-base.txt
-west zephyr-export
-west sdk install --toolchains x86_64-zephyr-elf arm-zephyr-eabi riscv64-zephyr-elf aarch64-zephyr-elf --version 0.17.4
-```
-
-If you hit GitHub API rate limits when running the `west sdk install`, you can either provide a GitHub authentication token:
-
-```bash
-west sdk install --toolchains x86_64-zephyr-elf arm-zephyr-eabi riscv64-zephyr-elf aarch64-zephyr-elf --version 0.17.4 --personal-access-token <YOUR TOKEN HERE>
-```
-
-or use the commands from `scripts/prepare_zephyrf-env.sh`, which download the release directly.
-
-Now, prepare additional modules:
-
-```bash
 ./scripts/prepare_modules.sh
 ```
 
-### Building the Kenning runtime tester application
-
-To build the Kenning Zephyr runtime, select a supported machine learning runtime and a board.
-
-```bash skip
-west build --board <board> app -- -DEXTRA_CONF_FILE=<runtime>.conf
-west build -t board-repl
-```
-
-You can provide one of the following runtimes in `<runtime>`:
-
-* [tvm](https://tvm.apache.org/docs/topic/microtvm/index.html)
-* [tflite](https://github.com/tensorflow/tflite-micro)
-
-The project was tested on the following boards:
-
-* [stm32f746g_disco](https://renodepedia.renode.io/boards/stm32f746g_disco/)
-* [nrf52840dongle](https://renodepedia.renode.io/boards/nrf52840dongle_nrf52840)
-* [nrf52840dk/nrf52840](https://renodepedia.renode.io/boards/nrf52840dk_nrf52840)
-* [hifive_unleashed](https://renodepedia.renode.io/boards/hifive_unleashed)
-
-Check the [Adding support for more boards section](#adding-support-for-more-boards) for information on whow to add a new target device.
-
-The binary built after executing `west build` can be found in `build/zephyr/zephyr.elf`.
-
-### Installing Kenning with Renode
-
-Use `pip` to install [Kenning](https://github.com/antmicro/kenning) with Renode support enabled:
-
-```bash skip
-pip install --upgrade pip
-pip install "kenning[tvm,tensorflow,reports,renode] @ git+https://github.com/antmicro/kenning.git"
-```
-
-The [pyrenode3](https://github.com/antmicro/pyrenode3/) module requires installing Renode to work.
-
-The easiest way is to use a script, that will install the latest Renode release, store its location in `PYRENODE_BIN`, as well as temporarily
-add its directory to `PATH` and select a runtime (stored in `PYRENODE_RUNTIME` environmenal variable).
+If you're going to be using Renode for simulations, install Renode with:
 
 ```bash
 source ./scripts/prepare_renode.sh
 ```
 
-This script needs to be run every time a new terminal session is started.
+**NOTE** The `prepare_renode.sh` script creates environmental variables, that allow Kenning to find Renode. It has to be ran every time a new shell is used.
 
-For other configuration options check [pyrenode3 README.md](https://github.com/antmicro/pyrenode3/blob/main/README.md).
+### Building and running
 
-## Evaluating the model in Kenning
-
-[Kenning](https://github.com/antmicro/kenning) provides:
-
-* Model optimization and compilation
-* Evaluation of a model on target device:
-    * Sending the model to the device using UART communication (e.g. execution graph or TFLite Flatbuffer)
-    * Sending input data for running inference on the model
-    * Collecting output data from the model, and evaluating the quality and performance of the model on target device with selected runtime
-* Report rendering, including comparison reports that allow to compare various runtimes, boards, models and applied optimizations.
-
-With Kenning, we can also evaluate the runtime by simulating the device in Renode.
-This allows us to:
-
-* Verify model behavior without the need for physical hardware
-* Check model and runtime performance and correctness in Continuous Integration pipelines without the actual device in the loop
-* Check model and runtime performance on platforms under development
-* Obtain more detailed metrics regarding device usage, e.g. histogram of instructions
-
-The switch between Renode and actual hardware is seamless - both communicate with Kenning using UART.
-
-### Building the project and evaluating models in Renode
-
-![TFLite Micro scenario with Renode simulation](img/renode-scenario-example.png)
-
-This section will demonstrate how to build the project and evaluate a model for recognizing gestures on `stm32f746g_disco`.
-
-#### Using TFLite Micro runtime
-
-First off, build the `kenning-zephyr-runtime` app for `stm32f746g_disco` and the TFLite Micro configuration:
+At this point you should be able to build the demo app.
+In this example, we're building the app for the `stm32f746g_disco` board.
 
 ```bash
-west build -p always -b stm32f746g_disco app -- -DEXTRA_CONF_FILE=tflite.conf
+west build -p always -b stm32f746g_disco demo_app -- -DEXTRA_CONF_FILE=tflite.conf
+```
+
+Then run the Renode simulation (before that we also need to generate a [REPL configuration file for Renode](https://renode.readthedocs.io/en/latest/host-integration/arduino.html#configuring-renode))
+
+```bash
 west build -t board-repl
-```
-
-Then, evaluate the model in Renode using a sample scenario located in `kenning-scenarios/magic-wand-inference/tflite/renode-stm32f746g.yml` and generate a report with performance and quality metrics:
-
-```bash
-kenning optimize test report \
-    --cfg kenning-scenarios/magic-wand-inference/tflite/renode-stm32f746g.yml \
-    --measurements results.json --verbosity INFO \
-    --report-path reports/stm32-renode-tflite-magic-wand/report.md \
-    --to-html \
-    --verbosity INFO
-```
-
-The model performance report in Markdown will be available under `reports/stm32-renode-tflite-magic-wand/report.md`.
-The HTML version of the report will be accessible from `reports/stm32-renode-tflite-magic-wand/report/report.html`.
-
-The above two steps (`west build` and `kenning ...`) can be also performed by Kenning automatically using `ZephyrRuntimeBuilder` block, e.g. as in the scenario located in `kenning-scenarios/renode-zephyr-auto-tflite-magic-wand-inference.yml`:
-
-```bash
-kenning optimize test report \
-    --cfg kenning-scenarios/magic-wand-inference/tflite/renode-auto-stm32f746g.yml \
-    --measurements results.json --verbosity INFO \
-    --report-path reports/stm32-renode-auto-tflite-magic-wand/report.md \
-    --to-html \
-    --verbosity INFO
-```
-
-##### Adding supported layer types to TFLite Micro resolver
-
-By default, only a minimal set of layer types is enabled in the TFLite Micro runtime - `Conv2D`, `FullyConnected`, `MaxPool2D`, `Reshape` and `Softmax`.
-
-There are two possible ways to change this list of enabled ops in the global `tflite::MicroMutableOpResolver`:
-
-* Providing an actual/reference TFLite model via `CONFIG_KENNING_MODEL_PATH`:
-  ```bash
-  west build -p always -b stm32f746g_disco app -- \
-      -DEXTRA_CONF_FILE=tflite.conf \
-      -DCONFIG_KENNING_MODEL_PATH=\"https://dl.antmicro.com/kenning/models/classification/magic_wand.h5\"
-  west build -t board-repl
-  ```
-* Providing list of ops manually in a comma-separated format in `CONFIG_TFLITE_MICRO_OPS`:
-  ```bash
-  west build -p always -b stm32f746g_disco app -- \
-      -DEXTRA_CONF_FILE=tflite.conf \
-      -DCONFIG_KENNING_TFLITE_OPS=\"Conv2D,FullyConnected,MaxPool2D,Reshape,Softmax\"
-  west build -t board-repl
-  ```
-
-#### Using microTVM
-
-To build the `kenning-zephyr-runtime` app to work with microTVM runtime, set `-DEXTRA_CONF_FILE` to `tvm.conf`, e.g. by executing:
-
-```bash
-west build -p always -b stm32f746g_disco app -- -DEXTRA_CONF_FILE=tvm.conf
-west build -t board-repl
-```
-
-Evaluate the model using the sample scenario located in `kenning-scenarios/magic-wand-inference/tvm/renode-stm32f746g.yml`:
-
-```bash
-kenning optimize test report \
-    --cfg kenning-scenarios/magic-wand-inference/tvm/renode-stm32f746g.yml \
-    --measurements results.json --verbosity INFO \
-    --report-path reports/stm32-renode-tvm-magic-wand/report.md \
-    --to-html \
-    --verbosity INFO
-```
-
-The above two steps (`west build` and `kenning ...`) can be also performed by Kenning automatically using `ZephyrRuntimeBuilder` block:
-
-```bash
-kenning optimize test report \
-    --cfg kenning-scenarios/magic-wand-inference/tvm/renode-auto-stm32f746g.yml \
-    --measurements results.json --verbosity INFO \
-    --report-path reports/stm32-renode-auto-tvm-magic-wand/report.md \
-    --to-html \
-    --verbosity INFO
-```
-
-##### Building runtime with microTVM backend using custom model
-
-This step requires Kenning to be installed.
-Follow the steps in [Installing Kenning with Renode](installing-kenning-with-renode) to install it.
-
-The microTVM backend requires having TVM ops used by model to be compiled with the runtime.
-By default, it is compiled with Magic Wand model ops, but it is possible to use ops from any model.
-To do so, provide additional config variable `CONFIG_KENNING_MODEL_PATH` which should contain path to the model.
-This path can be either path to the file or URL to any model hosted online, for example at https://dl.antmicro.com/kenning/ (i.e. https://dl.antmicro.com/kenning/models/classification/magic_wand.h5).
-The supported model formats are:
-* ONNX (.onnx),
-* Keras (.h5),
-* PyTorch (.pt, .pth),
-* TFLite (.tflite).
-
-You can set this variable in `prj.conf` or add it to `west build` as follows (remember to wrap path in `\"`):
-```bash
-west build -p always -b stm32f746g_disco app -- \
-    -DEXTRA_CONF_FILE=tvm.conf \
-    -DCONFIG_KENNING_MODEL_PATH=\"https://dl.antmicro.com/kenning/models/classification/magic_wand.pth\"
-west build -t board-repl
-```
-
-### Building the project with LLEXT runtime and evaluating models in Renode
-Kenning Zephyr Runtime uses LLEXT to support hot-swapping ML runtimes.
-The runtime can be built separately from the project and loaded into an already running KZR.
-
-#### Using LLEXT microTVM
-
-Build `kenning-zephyr-runtime` with LLEXT support using:
-```bash
-west build -p always -b stm32f746g_disco app -- -DEXTRA_CONF_FILE=llext.conf
-west build -t board-repl
-```
-then build the TVM extension:
-```bash
-west build app -t llext-tvm -- -DEXTRA_CONF_FILE="llext.conf;llext_tvm.conf"
-west build -t board-repl
-```
-
-Evaluate the model using scenario located in `kenning-scenarios/magic-wand-inference/tvm/renode-llext-stm32f746g.yml`:
-```bash
-kenning optimize test report \
-    --cfg kenning-scenarios/magic-wand-inference/tvm/renode-llext-stm32f746g.yml \
-    --measurements results.json --verbosity INFO \
-    --report-path reports/stm32-renode-tvm-llext-magic-wand/report.md \
-    --to-html \
-    --verbosity INFO
-```
-
-The above two steps (`west build` and `kenning ...`) can be also performed by Kenning automatically using `ZephyrRuntimeBuilder`:
-
-```bash
-kenning optimize test report \
-    --cfg kenning-scenarios/magic-wand-inference/tvm/renode-auto-llext-stm32f746g.yml \
-    --measurements results.json --verbosity INFO \
-    --report-path reports/stm32-renode-auto-tvm-llext-magic-wand/report.md \
-    --to-html \
-    --verbosity INFO
-```
-
-### Increasing simulated board memory for evaluation of larger models
-
-In some cases we would like to evaluate a model that won't fit in the board memory together with the evaluation app, i.e. when target application is smaller than the evaluation app.
-For such cases, there is a target called `increase-memory`.
-You can use it if the build fails for selected board due to memory limitations.
-
-For example, if you run following build, it should fail
-```bash skip
-west build -p always -b 96b_nitrogen demo_app -- -DEXTRA_CONF_FILE=tvm.conf
-```
-After that, run
-```bash skip
-west build -t increase-memory -- -DCONFIG_KENNING_INCREASE_MEMORY_SIZE=2048
-```
-where `CONFIG_KENNING_INCREASE_MEMORY_SIZE` specifies desired memory size in kilobytes.
-This will generate board overlay with increased memory and save it in `<app>/boards/<board_name>_increased_memory.overlay`.
-Example overlay looks like this:
-```
-&sram0 {
-    reg = <0x20000000 0x200000>;
-};
-```
-
-Then run build again with `CONFIG_KENNING_INCREASE_MEMORY=y` as follows:
-```bash skip
-west build -p always -b 96b_nitrogen demo_app -- -DEXTRA_CONF_FILE=tvm.conf -DCONFIG_KENNING_INCREASE_MEMORY=y
-west build -t board-repl
-```
-This time, the build should succeed and you should be able to run the simulation.
-```bash skip
 python ./scripts/run_renode.py
 ```
 
-**NOTE** Memory increase works only in Renode simulation. It should not be used with actual hardware.
-
-## Evaluating a model in Kenning using actual hardware
-
-Kenning can evaluate the runtime running on a physical device.
-To do so, we need to flash the device and replace `RenodeRuntime` in evaluation scenarios for Kenning with proper runtimes.
-
-### Running evaluation on NRF52840 dongle
-
-![TFLite Micro scenario running on hardware](img/device-scenario-example.png)
-
-Build the runtime for `nrf52840dongle` (let's use TFLite Micro in this example):
-
-```bash skip
-west build -p always -b nrf52840dongle app -- -DEXTRA_CONF_FILE=tflite.conf
-west build -t board-repl
-```
-
-Flash Kenning runtime on the device by following [instructions](https://docs.zephyrproject.org/latest/boards/nordic/nrf52840dongle/doc/index.html#option-1-using-the-built-in-bootloader-only) in the Zephyr documenation.
-
-Finally, evaluate the model and generate a report with performance and quality metrics:
-
-```bash skip
-kenning optimize test report \
-    --cfg kenning-scenarios/magic-wand-inference/tflite/stm32f746g.yml \
-    --measurements results.json --verbosity INFO \
-    --report-types performance classification \
-    --report-path reports/nrf-tflite-magic-wand/report.md \
-    --to-html \
-    --verbosity INFO
-```
-
-### Running evaluation on STM32F746
-
-Build the runtime for `stm32f746g_disco` (let's use TFLite Micro in this example):
-
-```bash skip
-west build -p always -b stm32f746g_disco app -- -DEXTRA_CONF_FILE=tvm.conf
-```
-
-Flash the connected device with the `kenning-zephyr-runtime` app:
-
-```bash skip
-west flash
-```
-
-Evaluate the model and generate a report with performance and quality metrics:
-
-```bash skip
-kenning optimize test report \
-    --cfg kenning-scenarios/magic-wand-inference/tvm/stm32f746g.yml \
-    --measurements results.json --verbosity INFO \
-    --report-types performance classification \
-    --report-path reports/stm32-tvm-magic-wand/report.md \
-    --to-html \
-    --verbosity INFO
-```
-
-## Demo application using Kenning inference library
-
-The Kenning inference library present in this repository can be also used in actual applications, not only in the evaluation process in Kenning.
-
-The application present in `demo_app` demonstrates how to use Kenning Zephyr Runtime in actual, simple use case, where we take a model recognizing gestures (`wing`, `ring`, `slope` and `negative`, trained with Magic Wand dataset) and compile it with picked runtime.
-It goes through delivered inputs, runs inference and prints the output.
-
-With the build environment configured as described in the [Cloning the project and preparing the environment](#cloning-the-project-and-preparing-the-environment), you can build the `demo_app` as follows:
-
-* using the microTVM runtime:
-
-```bash
-west build -p always -b hifive_unleashed/fu540/e51 demo_app -- -DEXTRA_CONF_FILE=tvm.conf
-west build -t board-repl
-```
-
-* using the TFLite Micro runtime:
-
-```bash
-west build -p always -b hifive_unleashed/fu540/e51 demo_app -- -DEXTRA_CONF_FILE=tflite.conf
-west build -t board-repl
-```
-
-After building the application with a board specified, we can either flash the hardware with it, or simulate it in Renode.
-
-To simulate it in Renode, run the demo with:
-
-```bash
-python ./scripts/run_renode.py
-```
+Alternatively, you may run the demo on a physical board, using the `west flash` command.
 
 The output should look like this:
 
@@ -535,36 +132,224 @@ I:      peak_allocated: 16288
 I: inference finished successfully
 ```
 
-### Building demo using different model
+## Model evaluation with Kenning
 
-It is also possible to build `demo_app` using some custom model.
-To do it, you need to provide model input in `demo_app/src/input_data.h` and model path using `CONFIG_KENNING_MODEL_PATH` config variable (similarly as in [Building runtime with microTVM backend using custom model](#Building-runtime-with-microTVM-backend-using-custom-model)):
+[Kenning](https://github.com/antmicro/kenning), along with its ecosystem of useful tools and applications, is meant to support ML engineers in every step of the model development and deployment process.
+
+It includes a model benchmarking functionality, that makes it easy to asses performance of models across various ML inference frameworks, and generate comprehensive reports from those evaluations.
+
+A fragment of such report can be seen below:
+
+![Inference time section of a Kenning evaluation report](img/example-model-performance-graph.png)
+
+Kenning, however, is primarily a Linux CLI application.
+
+Kenning Zephyr Runtime brings the evaluation functionality to devices running Zephyr RTOS.
+
+### Kenning remote inference flow for Zephyr devices
+
+The user runs Kenning commands on a PC, which communicates over UART with Kenning Zephyr Runtime running on an edge device (such as the `stm32f746g_disco` board).
+
+Kenning compiles the model locally, using the [Optimizer](https://antmicro.github.io/kenning/kenning-api.html#optimizer-api) appropriate for the chosen ML framework (runtime) - like [TVMCompiler](https://github.com/antmicro/kenning/blob/main/kenning/optimizers/tvm.py) for the [microTVM](https://tvm.apache.org/) runtime.
+
+Model weights, test data, and other information is then sent to the `inference_server` (which contains partial support for the [Kenning Protocol](https://antmicro.github.io/kenning/kenning-protocols.html#kenning-protocol), working over UART, in order to facilitate that), running as part of the `app`.
+
+Model output is sent back, along with inference measurements (such as time and memory usage - the exact details depend on the runtime).
+If the evaluation is being run in a Renode simulation - additional statistics are extracted from Renode.
+
+All of that data is then used by Kenning to generate a report.
+
+Kenning reports from Kenning Zephyr Runtime evaluations include details such as inference time, memory usage, and instruction counters - but also quality metrics, that can be used to assess whether the model's quality has degraded due to possible quantization or numerical instability.
+
+### Dynamic runtime switching with LLEXT
+
+Dynamic switching of the ML framework being used is supported through [LLEXT](https://docs.zephyrproject.org/latest/services/llext/index.html).
+
+Entire runtimes can be compiled as LLEXT extensions, sent over the Kenning Protocol, and linked dynamically into the `kenning_inference_lib`.
+
+This way the user can change the runtime, that is currently in use, without restarting the board or re-compiling the entire `app`.
+
+Detailed information about this feature is available in a [dedicated section of the Kenning documentation](https://antmicro.github.io/kenning/kenning-zephyr-runtime.html#using-linkable-loadable-extensions-for-switching-entire-ai-runtimes-in-running-app).
+
+### Detailed (per layer) model performance analysis through tracing
+
+Thanks to the integration of [Zephelin tracing tool](https://antmicro.github.io/zephelin/) into Kenning, it is also possible to look inside your model - examine its performance layer-by-layer, and fine-tune it to your device of choice.
+
+A sample interactive tracing report is available [here](https://antmicro.github.io/kenning/sample-zephyr-tracing-report.html).
+A fragment of the report can be seen below:
+
+![Zephelin tracing report fragment, showing inference time comparison between layers](img/sample-zephelin-tracing-report-fragment.png)
+
+### Working with AutoML and other Kenning features
+
+All of the aforementioned evaluation capabilities are fully integrated with other Kenning functionalities, such as the [automated fine-tuning of model optimizers](https://antmicro.github.io/kenning/pipeline-optimizer.html#choosing-optimal-optimization-pipeline), or the [AutoML support](https://antmicro.github.io/kenning/gallery/anomaly-detection-automl.html).
+
+In one of our examples, we use Kenning's AutoML functionality to generate and train several model architectures, while taking into account memory constraints of the intended deployment environment.
+Then we automatically test and compare the performance of top five created models.
+
+Fragment of the report from that example, showing inference time statistics, can be seen below, full interactive report is available [here](https://antmicro.github.io/kenning/sample-automl-report.html).
+
+![AutoML report fragment](img/sample-automl-report-inference-time.png)
+
+### Example - creating a model with AutoML and evaluating a model
+
+In this example, we will use Kenning's AutoML support to create a VAE anomaly detection model.
+Then we will optimize it for TFLite, evaluate it with Kenning Zephyr Runtime, and generate:
+
+ * A full AutoML report, detailing the search process and comparing quality and performance of top 5 models generated during the process.
+ * An evaluation report for the best model, including detailed Zephelin trace.
+
+We will be using the [`kenning-scenarios/renode-auto-tflite-automl-vae-max32690.yml` configuration file](https://github.com/antmicro/kenning-zephyr-runtime/blob/main/kenning-scenarios/renode-auto-tflite-automl-vae-max32690.yml)
+
+We define an `AutoPyTorchML` block as our AutoML engine, and set the search parameters:
+
+```yaml
+automl:
+  # Implementation of the AutoML flow using AutoPyTorch
+  type: AutoPyTorchML
+  parameters:
+    # Time limit for AutoML task (in minutes)
+    time_limit: 5
+    # List of model architectures used for AutoML,
+    # represented by ModelWrapper (has to implement AutoMLModel class)
+    use_models:
+      - PyTorchAnomalyDetectionVAE
+    output_directory: ./workspace/automl-results
+    # Maximum number of models returned by the flow
+    n_best_models: 5
+    optimize_metric: f1
+    # Type of budget for training models, either epochs or time limit
+    budget_type: epochs
+    # Lower and upper limit of the budget
+    min_budget: 1
+    max_budget: 5
+    # Size of the application that will use generated models
+    application_size: 85
+```
+
+Parameter `application_size` is the size, in kilobytes, of the application that is going to run the resulting model on the device.
+
+For example; If you're building an intelligent sensor that reports detected anomalies over a network, then this is the size of the entire application (sensor drivers, network stack, data preprocessing) except of the model itself.
+
+Then we define the target platform:
+
+```yaml
+# Chooses the platform to run
+platform:
+  type: ZephyrPlatform
+  parameters:
+    # Chooses MAX32690 Evaluation Kit
+    name: max32690evkit/max32690/m4
+    # Use Renode to simulate the platform
+    simulated: True
+```
+
+Kenning has a set of platforms defined in [an extendable YAML file](https://github.com/antmicro/kenning/blob/main/kenning/resources/platforms/platforms.yml).
+
+I will take the available memory of the platform, subtract the provided application size, and use the result as a maximum size constraint for the autogenerated model.
+
+Setting `simulated: True` means, that the evaluation will be performed in a Renode simulation.
+
+We also need to define a `runtime_builder` - a Kenning block, that will be automatically building the Kenning Zephyr Runtime evaluation `app` for each model that needs to be evaluated.
+
+```yaml
+runtime_builder:
+  type: ZephyrRuntimeBuilder
+  parameters:
+    workspace: ./kenning-zephyr-runtime
+    venv_dir: ../.venv
+    output_path: ./workspace/kzr_build
+    run_west_update: false
+    extra_targets: [board-repl]
+```
+
+The `board-repl` extra target is only needed for simulations, since it generates a Renode configuration file for the selected board.
+
+Finally, we need a `dataset` for training and the `TFLiteCompiler` for optimizing and deploying the best models:
+
+```yaml
+dataset:
+  type: AnomalyDetectionDataset
+  parameters:
+    dataset_root: ./workspace/CATS
+    csv_file: kenning:///datasets/anomaly_detection/cats_nano.csv
+    split_fraction_test: 0.1
+    split_seed: 12345
+    inference_batch_size: 1
+
+optimizers:
+- type: TFLiteCompiler
+  parameters:
+    target: default
+    compiled_model_path: ./workspace/automl-results/vae.tflite
+    inference_input_type: float32
+    inference_output_type: float32
+```
+
+The AutoML run will generate multiple models. The best one will be saved at `./workspace/automl-results/vae.0.tflite`.
+Other ones will be saved under `vae.1.tflite`, `vae.2.tflite`, and so on.
+
+Now we can run Kenning.
+Since the `renode-auto-tflite-automl-vae-max32690.yml` config file has been written to be ran from outside the Kenning Zephyr Runtime root directory, we need to override `workspace` parameter of the `ZephyrRuntimeBuilder` block with a `--workspace .` flag:
+
 ```bash
-west build -p always -b stm32f746g_disco demo_app -- \
-    -DEXTRA_CONF_FILE=tvm_gen.conf \
-    -DCONFIG_KENNING_MODEL_PATH=\"https://dl.antmicro.com/kenning/models/classification/magic_wand.pth\"
+kenning automl optimize test report \
+   --cfg ./kenning-scenarios/renode-auto-tflite-automl-vae-max32690.yml \
+   --report-path ./workspace/automl-report/report.md \
+   --allow-failures --to-html \
+   --verbosity INFO   --skip-general-information \
+   --workspace .
 ```
 
-## Adding support for more boards
+Kenning will perform a search for optimal model architecture, with a 5 minute time limit, discard models that are too large for the chosen board, and then test performance of the models.
 
-Adapting `kenning-zephyr-runtime` for new boards is straightforward.
-As long as the underlying runtime implementation supports a given board without additional configuration, the process of adapting the application for new board boils down to picking an UART for communication with the Kenning application running on host.
-Such UART is expected to be aliased `kcomms` in the application.
+Models that crash during training, or fail to deploy, will be discarded without interrupting the run.
 
-The alias can be set in the overlay file under `app/boards/<board_name>.overlay`, where `<board_name>` is the name of the board in Zephyr, passed in `--board` flag in `west build`:
+At the end generated models will be placed under `./workspace/automl-results`, and the HTML report page at `workspace/automl-report/report/report.html`.
 
-```dts
-/ {
-    aliases {
-        kcomms = &uart0;
-    };
-};
+Now we will run an evaluation of the best-quality model, and generate a more detailed report.
+
+First we need to install Zephelin dependencies, for the report to render correctly:
+
+```bash
+uv pip install -r ../zephelin/requirements.txt
 ```
 
-It is crucial that the selected UART isn't used anywhere else (e.g. as `zephyr,console`).
+Then run:
 
-Some boards may also require additional configuration.
-Those should be placed at `app/boards/<board_name>.conf`.
+```bash
+kenning test report \
+  --cfg ./kenning-scenarios/renode-auto-tflite-automl-vae-max32690.yml \
+  --report-path ./report-vae/report.md --measurements results.json \
+  --to-html --verbosity INFO --workspace . --skip-general-information \
+  --compiled-model-path ./workspace/automl-results/vae.0.tflite \
+  --modelwrapper-cls PyTorchAnomalyDetectionVAE --model-path _ \
+  --enable-zephelin \
+  --report-types \
+      classification \
+      performance \
+      renode_stats \
+      zephyr_traces
+```
+
+Kenning can infer needed report types from context, but doesn't include `renode_stats` by default - so we use `--report-types` to override it.
+
+We also need to add a `ModelWrapper` with `--modelwrapper-cls` flag, since is not in the configuration file (it was not needed for the AutoML process).
+
+HTML report is saved at `report-vae/report/report.html`.
+
+The process can be easily reproduced for another problem, by writing a `Dataset` class for another dataset.
+More detailed instructions are available in the [Kenning documentation](https://antmicro.github.io/kenning).
+
+### Further reading - tutorials and examples
+
+For more information on how to configure and run these workflows, see:
+
+* [The relevant section of the documentation](https://antmicro.github.io/kenning/kenning-zephyr-runtime.html#model-evaluation-with-kenning-using-app), which is a comprehensive guide on using Kenning Zephyr Runtime for model evaluation.
+* [Example of generating a comparison report](https://antmicro.github.io/kenning/gallery/kenning-zephyr-runtime.html), comparing two ML execution frameworks (microTVM and TFLite).
+* [Example of using AutoML to create an anomaly detection model and test it on the MAX32690 Evaluation Kit](https://antmicro.github.io/kenning/gallery/anomaly-detection-automl.html).
+* [Example of evaluating a model on a physical board](https://antmicro.github.io/kenning/gallery/anomaly-detection-on-mcu.html).
+
 
 ## Useful cmake functions provided by Kenning Zephyr Runtime
 
@@ -573,8 +358,8 @@ These functions are used by `demo_app` and can be used by any application using 
 
 ### Automatically generating .repl files for Renode
 
-CMake function `kenning_add_board_repl_target` will add a target `board-repl`.
-This target will use [`dts2repl`](https://github.com/antmicro/dts2repl) tool, to generate a [.repl file](https://renode.readthedocs.io/en/latest/basic/describing_platforms.html#describing-platforms) (this file format is used by [Renode emulator](https://renode.io/) to describe simulated devices).
+CMake function `kenning_add_board_repl_target` will add a CMake target `board-repl`.
+This target will use the [`dts2repl`](https://github.com/antmicro/dts2repl) tool, to generate a [.repl file](https://renode.readthedocs.io/en/latest/basic/describing_platforms.html#describing-platforms) (this file format is used by the [Renode emulator](https://renode.io/) to describe simulated devices).
 
 This function is used in the [`demo_app` CMake file](https://github.com/antmicro/kenning-zephyr-runtime/blob/main/demo_app/CMakeLists.txt#L21C1-L21C32).
 
@@ -592,124 +377,8 @@ For example `build/stm32f746g_disco.repl` for the `stm32f746g_disco` board.
 Function `kenning_increase_board_memory` will add a target `increase-memory`.
 
 This target creates an `.overlay` file for the board, with increased memory size.
-Thus Zephyr will allow build requiring more memory, which can be then ran in a simulation (this will not work on hardware).
+Thus Zephyr will allow a build requiring more memory, which can be then ran in a simulation (this will not work on hardware).
 
 Adding it to a Zephyr application will allow to increase memory size of a simulated board, in a way that was described in [this section of the README](#increasing-simulated-board-memory-for-evaluation-of-larger-models).
 
-This function is used both in `demo_app` and [`app` CMake files](https://github.com/antmicro/kenning-zephyr-runtime/blob/main/app/CMakeLists.txt#L8).
-
-## Collecting traces with Zephelin
-
-[Zephelin](https://antmicro.github.io/zephelin) is a library for profiling Zephyr applications.
-It can be used to collect runtime traces containing statistics about model execution.
-
-To use it, first install its Python dependencies.
-
-```bash
-pip install -r ../zephelin/requirements.txt
-```
-
-Next, build the app with additional configuration files enabling tracing with Zephelin.
-Pass the files as a semicolon separated list in a value of `-DEXTRA_CONF_FILE` flag.
-Currently, two ways of collecting traces are supported: via GDB server and with UART port (selected with `zephyr,tracing-uart`).
-
-For capturing traces with a GDB server:
-
-```bash
-west build -p -b stm32f746g_disco app -- -DEXTRA_CONF_FILE="tvm.conf;$(realpath ./zpl.conf);zpl_gdb.conf"
-```
-
-For capturing traces with UART:
-
-```bash skip
-west build -p -b stm32f746g_disco app -- -DEXTRA_CONF_FILE="tvm.conf;$(realpath ./zpl.conf);zpl_uart.conf"
-```
-
-After that, the built platform can be run on an actual hardware, or tested in Renode.
-To run in Renode, prepare a `.repl` file for the simulation:
-
-```bash
-west build -t board-repl
-```
-
-Then, you can use Kenning to run Renode simulation, automatically capturing the traces:
-
-```bash
-kenning optimize test report \
-    --json-cfg  kenning-scenarios/magic-wand-inference/tvm/renode-zephelin-gdb-stm32f746g.yml  \
-    --measurements ./results.json \
-    --report-path ./report.md \
-    --report-name report \
-    --verbosity INFO \
-    --to-html  report-html
-```
-
-**NOTE** It is also possible to run a standalone Renode simulation and have Kenning connect to it:
-
-```bash skip
-python3 ./scripts/run_renode.py --debug
-```
-
-**NOTE** `--debug` runs a GDB server - it is required for GDB backend.
-
-**NOTE** To be able to wait for pressing ENTER key, append `--no-immediate-start` to the last command above.
-
-or
-
-```bash skip
-python3 ./scripts/run_renode.py --no-log-uart
-```
-
-**NOTE** `--no-log-uart` disables logging traces to standard output.
-
-Then, run a sample scenario that automatically captures the trace using GDB, then converts it and generates a report:
-
-```bash skip
-kenning optimize test report \
-    --json-cfg  kenning-scenarios/magic-wand-inference/tvm/zephelin-gdb-stm32f746g.yml  \
-    --measurements ./results.json \
-    --report-path ./report.md \
-    --report-name report \
-    --verbosity INFO \
-    --to-html  report-html
-```
-
-The command above would produce multiple files - the file named `results.trace.json` contains traces prepared to be loaded into [Zephelin Trace Viewer](https://antmicro.github.io/zephelin-trace-viewer/).
-
-**NOTE** Kenning's automatic mode for traces gathering requires that a scenario being run has `enable_zephelin` parameter set to `true`.
-
-## Manual capture of traces
-
-Traces can be also collected manually - after running a scenario with `enable_zephelin` set to `false`, invoke the following commands:
-
-```bash skip
-west zpl-gdb-capture traces.txt \
-    --no-debug-server \
-    --gdb=gdb-multiarch \
-    --gdb-port=3333 \
-    --buffer-full
-```
-
-if using a GDB capture, or
-
-```bash skip
-west zpl-uart-capture /tmp/uart-log 115200 traces.txt
-```
-
-for UART capture.
-
-**NOTE** Since UART continuously sends traces, the command needs to be run before running the Kenning scenario in case of debugging with UART.
-
-After capturing the traces, convert them to TEF JSON format with:
-
-```bash skip
-west zpl-prepare-trace -o traces.json traces.txt
-```
-
-**NOTE** Optional flags `--tvm-model-paths` and `--tflm-model-paths`, when provided to `west zpl-prepare-trace`, can supply additional model metadata to traces.
-
-**NOTE** Right now, UART debugging would produce two files, `traces.txt` and `traces_0.txt` - the first one contains traces from before the marker representing the start of the application, and the second contains the appropriate runtime traces - the latter should be used as an input to `west zpl-prepare-trace` command.
-
-**NOTE** For more information about running Zephelin extension commands manually, check official [Zephelin documentation](https://antmicro.github.io/zephelin/library.html)
-
-The `traces.json` file can be loaded into [Zephelin Trace Viewer](https://antmicro.github.io/zephelin-trace-viewer/).
+This function is used in both the `demo_app` and [`app` CMake files](https://github.com/antmicro/kenning-zephyr-runtime/blob/main/app/CMakeLists.txt#L8).
