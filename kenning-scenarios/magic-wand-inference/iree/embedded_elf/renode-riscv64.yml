@@ -4,6 +4,12 @@ platform:
     name: hifive_unmatched/fu740/u74
     simulated: true
     zephyr_build_path: ./build
+    # HiFive boards have very noisy UART handlers in RENODE, and in Kenning
+    # Zephyr Runtime we run the kcomms UART in polling mode, therefore the
+    # amount of Renode logs generated would overwhelm Kenning. For that reason
+    # we suppress UART-related warnings for that port.
+    post_start_commands:
+      - "logLevel 3 sysbus.uart1"
 dataset:
   type: MagicWandDataset
   parameters:
