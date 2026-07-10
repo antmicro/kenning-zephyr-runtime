@@ -6,6 +6,7 @@ platform:
     enable_zephelin_gdb: true
     zpl_use_debug_server: false
     uart_port: /tmp/uart
+    zephyr_build_path: ./build/
 
 model_wrapper:
   type: PyTorchMagicWandModelWrapper
