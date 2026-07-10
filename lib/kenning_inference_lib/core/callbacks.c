@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2025 Antmicro <www.antmicro.com>
+ * Copyright (c) 2023-2026 Antmicro <www.antmicro.com>
  *
  * SPDX-License-Identifier: Apache-2.0
  */
@@ -128,7 +128,7 @@ status_t ping_callback(protocol_event_t *request, protocol_payload_t *resp_paylo
 // If we are using Zephelin to collect traces and it's collecting traces through debugger (GDB)
 // we reset the GDB buffer used for collecting the traces.
 // We also allow for the resetting to be turned off in the config.
-#if defined(CONFIG_ZPL_TRACE_BACKEND_DEBUGGER) && defined(KENNING_ZEPHELIN_DEBUGGER_TRACING_BUFFER_RESET)
+#if defined(CONFIG_ZPL_TRACE_BACKEND_DEBUGGER) && defined(CONFIG_KENNING_ZEPHELIN_DEBUGGER_TRACING_BUFFER_RESET)
             LOG_INF("Resetting Zephelin trace buffer...");
             struct tracing_backend *working_backend = tracing_backend_get(CONFIG_TRACING_BACKEND_NAME);
             tracing_backend_init(working_backend);
