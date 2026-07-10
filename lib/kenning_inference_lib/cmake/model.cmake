@@ -217,14 +217,28 @@ macro(kenning_gen_tflite_model_sources runtime_src)
   include_directories(${CMAKE_CURRENT_BINARY_DIR}/runtimes/tflite/)
 endmacro(kenning_gen_tflite_model_sources)
 
+# Adds emlearn sources to provided list.
+#
+# @param runtime_src List with runtime sources to which model sources will be
+#                    added.
 macro(kenning_gen_emlearn_model_sources runtime_src)
     add_custom_command(
       OUTPUT
         runtimes/emlearn/generated/model.c
+        runtimes/emlearn/generated/model.c.data
+        runtimes/emlearn/generated/model.c.json
       DEPENDS
         ${CONFIG_KENNING_MODEL_PATH}
       COMMAND
         cp ${CONFIG_KENNING_MODEL_PATH} runtimes/emlearn/generated/model.c
+      COMMAND
+        cp ${CONFIG_KENNING_MODEL_PATH}.json runtimes/emlearn/generated/model.c.json
+      COMMAND
+        # The emlearn model, along with all its parameters, is included in the
+        # C file, which has to be linked. There is no additional model weights,
+        # but `kenning_gen_model_data` macro (below) expects a data file, so we
+        # are giving it a dummy file (making it small so as to not waste memory).
+        echo \"[EMPTY] (emlearn models do not need additional data)\" > runtimes/emlearn/generated/model.c.data
     )
     list(APPEND ${runtime_src} "runtimes/emlearn/generated/model.c")
 endmacro(kenning_gen_emlearn_model_sources)
@@ -363,8 +377,8 @@ macro(kenning_gen_model_data)
     set(model_data_path runtimes/executorch/generated/model.pte)
     set(model_json_path runtimes/executorch/generated/model.pte.json)
   elseif(${CONFIG_KENNING_ML_RUNTIME_EMLEARN})
-    set(model_data_path runtimes/executorch/generated/model.c)
-    set(model_json_path runtimes/executorch/generated/model.c.json)
+    set(model_data_path runtimes/emlearn/generated/model.c.data)
+    set(model_json_path runtimes/emlearn/generated/model.c.json)
   endif()
 
   add_custom_command(
