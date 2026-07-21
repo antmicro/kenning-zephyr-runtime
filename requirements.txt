@@ -1,4 +1,4 @@
-cmake
+cmake<4.3
 importlib_metadata
 kenning[anomaly_detection,iree,tvm,tensorflow,tflite,reports,renode,uart,sklearn,emlearn] @ git+https://github.com/antmicro/kenning.git
 pyelftools
