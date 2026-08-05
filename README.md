@@ -106,7 +106,7 @@ At this point you should be able to build the demo app.
 In this example, we're building the app for the `stm32f746g_disco` board.
 
 ```bash
-west build -p always -b stm32f746g_disco demo_app -- -DEXTRA_CONF_FILE=tflite.conf
+west build -p always -b stm32f746g_disco demo_app -- -DEXTRA_CONF_FILE=litert.conf
 ```
 
 Then run the Renode simulation (before that we also need to generate a [REPL configuration file for Renode](https://renode.readthedocs.io/en/latest/host-integration/arduino.html#configuring-renode))
@@ -346,7 +346,7 @@ runtime_builder:
 
 The `board-repl` extra target is only needed for simulations, since it generates a Renode configuration file for the selected board.
 
-Finally, we need a `dataset` for training and the `TFLiteCompiler` for optimizing and deploying the best models:
+Finally, we need a `dataset` for training and the `LiteRTCompiler` for optimizing and deploying the best models:
 
 ```yaml
 dataset:
@@ -359,7 +359,7 @@ dataset:
     inference_batch_size: 1
 
 optimizers:
-- type: TFLiteCompiler
+- type: LiteRTCompiler
   parameters:
     target: default
     compiled_model_path: ./workspace/automl-results/vae.tflite

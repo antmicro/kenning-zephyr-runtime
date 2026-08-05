@@ -3,7 +3,7 @@
 set -e
 
 west build -p always -b max32690evkit/max32690/m4 app -- \
-    -DEXTRA_CONF_FILE=tflite.conf \
+    -DEXTRA_CONF_FILE=litert.conf \
     -DCONFIG_KENNING_TFLITE_OPS=\"Add,FullyConnected,Mul,Reshape,Tanh,Sub,Div,StridedSlice,Exp,Cast,Less,Log,Sum,Sqrt,ReduceMax,Cos,Logistic\"
 
 west build -t board-repl

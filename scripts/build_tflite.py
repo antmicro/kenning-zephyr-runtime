@@ -12,7 +12,7 @@ import argparse
 from pathlib import Path
 
 from kenning.utils.resource_manager import ResourceURI
-from kenning.optimizers.tflite import TFLiteCompiler
+from kenning.optimizers.litert import LiteRTCompiler
 
 
 def main():
@@ -48,7 +48,7 @@ def main():
             print("If --model-path is provided, --output-model-path is a mandatory argument.")  # noqa: E501
             return 1
         if args.model_path.suffix != ".tflite":
-            compiler = TFLiteCompiler(
+            compiler = LiteRTCompiler(
                 dataset=None,
                 compiled_model_path=args.output_model_path,
                 model_framework="any",
@@ -59,7 +59,7 @@ def main():
         if args.output_resolver_path:
             with args.model_path.open("rb") as modelfd:
                 modeldata = modelfd.read()
-                TFLiteCompiler.create_resolver_file_from_model(
+                LiteRTCompiler.create_resolver_file_from_model(
                     modeldata=modeldata,
                     additional_ops=args.ops_list.split(',') if args.ops_list else None,  # noqa: E501
                     output_path=args.output_resolver_path,
@@ -72,7 +72,7 @@ def main():
         )
         return 0
     if args.ops_list:
-        TFLiteCompiler.create_resolver_file_from_ops_list(
+        LiteRTCompiler.create_resolver_file_from_ops_list(
             opcode_names=args.ops_list.split(','),
             output_path=args.output_resolver_path,
         )

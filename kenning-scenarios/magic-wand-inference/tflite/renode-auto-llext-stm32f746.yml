@@ -20,7 +20,7 @@ runtime_builder:
     output_path: ./output
     extra_targets: [board-repl]
 optimizers:
-- type: TFLiteCompiler
+- type: LiteRTCompiler
   parameters:
     compiled_model_path: ./output/magic-wand.tflite
     inference_input_type: float32

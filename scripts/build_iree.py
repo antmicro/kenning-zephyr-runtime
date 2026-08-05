@@ -14,6 +14,7 @@ from pathlib import Path
 import os
 import onnx
 from kenning.optimizers.iree import IREECompiler
+from kenning.converters.litert_converter import LiteRTConverter
 
 def main():
     parser = argparse.ArgumentParser(__doc__)

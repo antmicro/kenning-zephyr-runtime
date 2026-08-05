@@ -14,7 +14,7 @@ model_wrapper:
   parameters:
     model_path: kenning:///models/classification/magic_wand.h5
 optimizers:
-- type: TFLiteCompiler
+- type: LiteRTCompiler
   parameters:
     compiled_model_path: ./output/magic-wand.tflite
     inference_input_type: float32

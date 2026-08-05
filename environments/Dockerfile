@@ -78,4 +78,4 @@ RUN $PIPINST \
     pyelftools
 
 RUN $PIPINST \
-    "kenning[anomaly_detection,iree,tvm,tensorflow,tflite,torch,reports,renode,uart,auto_pytorch] @ git+https://github.com/antmicro/kenning.git"
+    "kenning[anomaly_detection,iree,tvm,tensorflow,litert,torch,reports,renode,uart,auto_pytorch] @ git+https://github.com/antmicro/kenning.git"

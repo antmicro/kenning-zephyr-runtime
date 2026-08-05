@@ -50,7 +50,7 @@ dataset:
 # Optimizers used on selected models for final evaluation
 # In here TFLite Micro will be used for on-target inference
 optimizers:
-- type: TFLiteCompiler
+- type: LiteRTCompiler
   parameters:
     target: default
     compiled_model_path: ./workspace/automl-results/vae.tflite
