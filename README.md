@@ -154,10 +154,16 @@ west init -l .
 west update
 pip install -r requirements.txt -r ../zephyr/scripts/requirements-base.txt
 west zephyr-export
-west sdk install --toolchains x86_64-zephyr-elf arm-zephyr-eabi riscv64-zephyr-elf
+west sdk install --toolchains x86_64-zephyr-elf arm-zephyr-eabi riscv64-zephyr-elf aarch64-zephyr-elf --version 0.17.4
 ```
 
+If you hit GitHub API rate limits when running the `west sdk install`, you can either provide a GitHub authentication token:
 
+```bash
+west sdk install --toolchains x86_64-zephyr-elf arm-zephyr-eabi riscv64-zephyr-elf aarch64-zephyr-elf --version 0.17.4 --personal-access-token <YOUR TOKEN HERE>
+```
+
+or use the commands from `scripts/prepare_zephyrf-env.sh`, which download the release directly.
 
 Now, prepare additional modules:
 
