@@ -127,6 +127,10 @@ static iree_vm_instance_t *gp_instance = NULL;
  */
 static iree_hal_device_t *gp_device = NULL;
 /**
+ * IREE device group
+ */
+static iree_hal_device_group_t *gp_device_group = NULL;
+/**
  * IREE execution context where modules are loaded
  */
 static iree_vm_context_t *gp_context = NULL;
@@ -202,15 +206,15 @@ status_t create_context(const uint8_t *model_data, const size_t model_data_size)
         iree_allocator_t host_allocator = iree_allocator_zephyr();
 
         // create hal_module
-        iree_status = iree_hal_module_create(gp_instance, iree_hal_module_device_policy_default(), 1, &gp_device,
+        iree_status = iree_hal_module_create(gp_instance, iree_hal_module_device_policy_default(), gp_device_group,
                                              IREE_HAL_MODULE_FLAG_SYNCHRONOUS, iree_hal_module_debug_sink_null(),
                                              host_allocator, &hal_module);
         BREAK_ON_IREE_ERROR(iree_status);
 
         // create bytecode module
-        iree_status =
-            iree_vm_bytecode_module_create(gp_instance, iree_make_const_byte_span(model_data, model_data_size),
-                                           iree_allocator_null(), host_allocator, &module);
+        iree_status = iree_vm_bytecode_module_create(gp_instance, IREE_VM_BYTECODE_MODULE_FLAG_NONE,
+                                                     iree_make_const_byte_span(model_data, model_data_size),
+                                                     iree_allocator_null(), host_allocator, &module);
         BREAK_ON_IREE_ERROR(iree_status);
 
         iree_vm_module_t *modules[] = {hal_module, module};
@@ -367,7 +371,12 @@ status_t runtime_init()
     if (IS_VALID_POINTER(gp_device))
     {
         iree_hal_device_release(gp_device);
-        gp_instance = NULL;
+        gp_device = NULL;
+    }
+    if (IS_VALID_POINTER(gp_device_group))
+    {
+        iree_hal_device_group_release(gp_device_group);
+        gp_device_group = NULL;
     }
     do
     {
@@ -379,7 +388,7 @@ status_t runtime_init()
         BREAK_ON_IREE_ERROR(iree_status);
 
         // create device
-        iree_status = create_device(gp_instance, host_allocator, &gp_device);
+        iree_status = create_device(gp_instance, host_allocator, &gp_device, &gp_device_group);
         BREAK_ON_IREE_ERROR(iree_status);
         runtime_initialized = true;
     } while (0);

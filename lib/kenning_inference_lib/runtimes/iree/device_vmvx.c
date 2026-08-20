@@ -14,7 +14,7 @@
 LOG_MODULE_REGISTER(iree_runtime_vmvx, CONFIG_RUNTIME_WRAPPER_LOG_LEVEL);
 
 iree_status_t create_device(iree_vm_instance_t *instance, iree_allocator_t host_allocator,
-                            iree_hal_device_t **out_device)
+                            iree_hal_device_t **out_device, iree_hal_device_group_t **out_device_group)
 {
     iree_status_t iree_status = iree_ok_status();
     iree_hal_executable_loader_t *loader = NULL;
@@ -39,6 +39,10 @@ iree_status_t create_device(iree_vm_instance_t *instance, iree_allocator_t host_
         // create device
         iree_status = iree_hal_sync_device_create(identifier, &params, /*loader_count=*/1, &loader, device_allocator,
                                                   host_allocator, out_device);
+        BREAK_ON_IREE_ERROR(iree_status);
+
+        // create device group
+        iree_status = iree_hal_device_group_create_from_device(*out_device, host_allocator, out_device_group);
     } while (0);
 
     // cleanup

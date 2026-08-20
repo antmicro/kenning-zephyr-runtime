@@ -50,9 +50,10 @@ manifest:
 
     - name: iree
       remote: iree-org
-      revision: v3.6.0
+      revision: v3.11.0
       submodules:
         - path: third_party/flatcc
+        - path: third_party/printf
 
     - name: executorch
       remote: pytorch

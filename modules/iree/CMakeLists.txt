@@ -7,6 +7,8 @@ if(CONFIG_ZEPHYR_IREE_MODULE)
   set(IREE_SRC_DIR "${IREE_DIR}/runtime/src/")
   set(FLATCC_DIR "${IREE_DIR}/third_party/flatcc/")
   set(FLATCC_SRC_DIR "${FLATCC_DIR}/src/")
+  set(PRINTF_DIR "${IREE_DIR}/third_party/printf/")
+  set(PRINTF_SRC_DIR "${PRINTF_DIR}/src/")
 
   # build flatcc
   add_subdirectory(flatcc)
@@ -60,6 +62,8 @@ if(CONFIG_ZEPHYR_IREE_MODULE)
       -Wno-int-to-pointer-cast
       -Wno-address-of-packed-member
       -Wno-char-subscripts
+      -Wno-comment
+      -Wno-shift-count-overflow
   )
   zephyr_library_compile_options(
       -Wno-unused-function
@@ -97,6 +101,7 @@ if(CONFIG_ZEPHYR_IREE_MODULE)
     ${IREE_SRC_DIR}
     ${CMAKE_CURRENT_BINARY_DIR}
     "${IREE_DIR}/third_party/flatcc/include"
+    "${PRINTF_SRC_DIR}"
   )
   zephyr_library_add_dependencies(
     "flatcc_dummy"
@@ -125,6 +130,12 @@ if(CONFIG_ZEPHYR_IREE_MODULE)
     )
   endforeach()
 
+  set(printf_src "")
+
+  list(APPEND printf_src "${PRINTF_SRC_DIR}/printf/printf.c")
+
+  zephyr_library_sources(${printf_src})
+
   set(iree_src "")
 
   list(APPEND iree_src "${IREE_SRC_DIR}/iree/base/allocator.c")
@@ -134,9 +145,10 @@ if(CONFIG_ZEPHYR_IREE_MODULE)
   list(APPEND iree_src "${IREE_SRC_DIR}/iree/base/internal/cpu.c")
   list(APPEND iree_src "${IREE_SRC_DIR}/iree/base/internal/time.c")
   list(APPEND iree_src "${IREE_SRC_DIR}/iree/base/internal/memory.c")
-  list(APPEND iree_src "${IREE_SRC_DIR}/iree/base/internal/flags.c")
+  list(APPEND iree_src "${IREE_SRC_DIR}/iree/base/tooling/flags.c")
   list(APPEND iree_src "${IREE_SRC_DIR}/iree/base/internal/fpu_state.c")
-  list(APPEND iree_src "${IREE_SRC_DIR}/iree/base/internal/synchronization.c")
+  list(APPEND iree_src "${IREE_SRC_DIR}/iree/base/threading/mutex.c")
+  list(APPEND iree_src "${IREE_SRC_DIR}/iree/base/threading/notification.c")
   list(APPEND iree_src "${IREE_SRC_DIR}/iree/base/loop.c")
   list(APPEND iree_src "${IREE_SRC_DIR}/iree/base/loop_inline.c")
   list(APPEND iree_src "${IREE_SRC_DIR}/iree/base/status.c")
@@ -145,6 +157,7 @@ if(CONFIG_ZEPHYR_IREE_MODULE)
   list(APPEND iree_src "${IREE_SRC_DIR}/iree/base/string_view.c")
   list(APPEND iree_src "${IREE_SRC_DIR}/iree/base/wait_source.c")
   list(APPEND iree_src "${IREE_SRC_DIR}/iree/base/time.c")
+  list(APPEND iree_src "${IREE_SRC_DIR}/iree/base/printf.c")
   list(APPEND iree_src "${IREE_SRC_DIR}/iree/hal/allocator.c")
   list(APPEND iree_src "${IREE_SRC_DIR}/iree/hal/allocator_heap.c")
   list(APPEND iree_src "${IREE_SRC_DIR}/iree/hal/buffer.c")
@@ -156,9 +169,12 @@ if(CONFIG_ZEPHYR_IREE_MODULE)
   list(APPEND iree_src "${IREE_SRC_DIR}/iree/hal/channel.c")
   list(APPEND iree_src "${IREE_SRC_DIR}/iree/hal/channel_provider.c")
   list(APPEND iree_src "${IREE_SRC_DIR}/iree/hal/device.c")
+  list(APPEND iree_src "${IREE_SRC_DIR}/iree/hal/topology_builder.c")
   list(APPEND iree_src "${IREE_SRC_DIR}/iree/hal/drivers/local_sync/sync_device.c")
   list(APPEND iree_src "${IREE_SRC_DIR}/iree/hal/drivers/local_sync/sync_event.c")
   list(APPEND iree_src "${IREE_SRC_DIR}/iree/hal/drivers/local_sync/sync_semaphore.c")
+  list(APPEND iree_src "${IREE_SRC_DIR}/iree/hal/local/executable_format.c")
+  list(APPEND iree_src "${IREE_SRC_DIR}/iree/hal/utils/platform_topology.c")
   list(APPEND iree_src "${IREE_SRC_DIR}/iree/hal/event.c")
   list(APPEND iree_src "${IREE_SRC_DIR}/iree/hal/executable.c")
   list(APPEND iree_src "${IREE_SRC_DIR}/iree/hal/executable_cache.c")
@@ -178,12 +194,15 @@ if(CONFIG_ZEPHYR_IREE_MODULE)
   list(APPEND iree_src "${IREE_SRC_DIR}/iree/hal/local/loaders/vmvx_module_loader.c")
   list(APPEND iree_src "${IREE_SRC_DIR}/iree/hal/semaphore.c")
   list(APPEND iree_src "${IREE_SRC_DIR}/iree/hal/string_util.c")
+  list(APPEND iree_src "${IREE_SRC_DIR}/iree/hal/device_group.c")
   list(APPEND iree_src "${IREE_SRC_DIR}/iree/hal/buffer_transfer.c")
   list(APPEND iree_src "${IREE_SRC_DIR}/iree/hal/utils/deferred_command_buffer.c")
   list(APPEND iree_src "${IREE_SRC_DIR}/iree/hal/utils/file_transfer.c")
   list(APPEND iree_src "${IREE_SRC_DIR}/iree/hal/utils/memory_file.c")
   list(APPEND iree_src "${IREE_SRC_DIR}/iree/hal/utils/resource_set.c")
   list(APPEND iree_src "${IREE_SRC_DIR}/iree/hal/utils/semaphore_base.c")
+  list(APPEND iree_src "${IREE_SRC_DIR}/iree/hal/utils/queue_emulation.c")
+  list(APPEND iree_src "${IREE_SRC_DIR}/iree/hal/utils/platform_topology_fallback.c")
   list(APPEND iree_src "${IREE_SRC_DIR}/iree/io/file_handle.c")
   list(APPEND iree_src "${IREE_SRC_DIR}/iree/modules/hal/debugging.c")
   list(APPEND iree_src "${IREE_SRC_DIR}/iree/modules/hal/module.c")

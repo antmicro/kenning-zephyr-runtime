@@ -10,6 +10,7 @@
 #include <iree/base/status.h>
 #include <iree/hal/allocator.h>
 #include <iree/hal/device.h>
+#include <iree/hal/device_group.h>
 #include <iree/vm/instance.h>
 
 #include <zephyr/logging/log.h>
@@ -43,7 +44,7 @@
  * @returns error status
  */
 iree_status_t create_device(iree_vm_instance_t *instance, iree_allocator_t host_allocator,
-                            iree_hal_device_t **out_device);
+                            iree_hal_device_t **out_device, iree_hal_device_group_t **out_device_group);
 
 status_t iree_allocator_reset_stats();
 
