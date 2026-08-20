@@ -10,19 +10,18 @@
 #include <tvm/runtime/crt/module.h>
 #include <tvm/runtime/crt/packed_func.h>
 
-#define TVMGEN_FUNCTIONS(FUNC)                      \
-    FUNC(tvmgen_fused_nn_batch_flatten)             \
-    FUNC(tvmgen_fused_nn_conv2d_add_nn_relu)        \
-    FUNC(tvmgen_fused_nn_conv2d_add_nn_relu_1)      \
-    FUNC(tvmgen_fused_nn_dense_add)                 \
-    FUNC(tvmgen_fused_nn_dense_add_1)               \
-    FUNC(tvmgen_fused_nn_dense_add_nn_relu_nn_relu) \
-    FUNC(tvmgen_fused_nn_max_pool2d)                \
-    FUNC(tvmgen_fused_nn_max_pool2d_1)              \
-    FUNC(tvmgen_fused_nn_pad)                       \
+#define TVMGEN_FUNCTIONS(FUNC)                 \
+    FUNC(tvmgen_fused_nn_batch_flatten)        \
+    FUNC(tvmgen_fused_nn_conv2d_add_nn_relu)   \
+    FUNC(tvmgen_fused_nn_conv2d_add_nn_relu_1) \
+    FUNC(tvmgen_fused_nn_dense_add)            \
+    FUNC(tvmgen_fused_nn_dense_add_nn_relu)    \
+    FUNC(tvmgen_fused_nn_max_pool2d)           \
+    FUNC(tvmgen_fused_nn_max_pool2d_1)         \
+    FUNC(tvmgen_fused_nn_pad)                  \
     FUNC(tvmgen_fused_nn_pad_1)
 
-#define TVMGEN_FUNCTIONS_COUNT "\x0a"
+#define TVMGEN_FUNCTIONS_COUNT "\x09"
 
 #define TVMGEN_DECLARE(func_name)                                                                      \
     extern int32_t func_name(void *args, int32_t *arg_type_ids, int32_t num_args, void *out_ret_value, \

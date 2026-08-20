@@ -29,14 +29,9 @@ extern "C"
 #ifdef __cplusplus
 extern "C"
 #endif
-    TVM_DLL int32_t tvmgen_fused_nn_dense_add_1(void *args, int32_t *arg_type_ids, int32_t num_args,
-                                                void *out_ret_value, int32_t *out_ret_tcode, void *resource_handle);
-#ifdef __cplusplus
-extern "C"
-#endif
-    TVM_DLL int32_t tvmgen_fused_nn_dense_add_nn_relu_nn_relu(void *args, int32_t *arg_type_ids, int32_t num_args,
-                                                              void *out_ret_value, int32_t *out_ret_tcode,
-                                                              void *resource_handle);
+    TVM_DLL int32_t tvmgen_fused_nn_dense_add_nn_relu(void *args, int32_t *arg_type_ids, int32_t num_args,
+                                                      void *out_ret_value, int32_t *out_ret_tcode,
+                                                      void *resource_handle);
 #ifdef __cplusplus
 extern "C"
 #endif
@@ -67,13 +62,13 @@ extern "C"
     int32_t tensor_code = arg_type_ids[1];
     void *p0 = (((TVMValue *)args)[0].v_handle);
     void *tensor = (((TVMValue *)args)[1].v_handle);
-    void *p0_1 = (((DLTensor *)p0)[0].data);
     void *tvmgen_fused_nn_batch_flatten_p0_shape = (((DLTensor *)p0)[0].shape);
     void *tvmgen_fused_nn_batch_flatten_p0_strides = (((DLTensor *)p0)[0].strides);
     int32_t dev_id = (((DLTensor *)p0)[0].device.device_id);
-    void *tensor_1 = (((DLTensor *)tensor)[0].data);
+    void *p0_1 = (((DLTensor *)p0)[0].data);
     void *tvmgen_fused_nn_batch_flatten_tensor_shape = (((DLTensor *)tensor)[0].shape);
     void *tvmgen_fused_nn_batch_flatten_tensor_strides = (((DLTensor *)tensor)[0].strides);
+    void *tensor_1 = (((DLTensor *)tensor)[0].data);
     if (!(tvmgen_fused_nn_batch_flatten_p0_strides == NULL))
     {
     }
@@ -106,19 +101,19 @@ extern "C"
     void *p1 = (((TVMValue *)args)[1].v_handle);
     void *p2 = (((TVMValue *)args)[2].v_handle);
     void *T_relu = (((TVMValue *)args)[3].v_handle);
-    void *p0_1 = (((DLTensor *)p0)[0].data);
     void *tvmgen_fused_nn_conv2d_add_nn_relu_p0_shape = (((DLTensor *)p0)[0].shape);
     void *tvmgen_fused_nn_conv2d_add_nn_relu_p0_strides = (((DLTensor *)p0)[0].strides);
     int32_t dev_id = (((DLTensor *)p0)[0].device.device_id);
-    void *p1_1 = (((DLTensor *)p1)[0].data);
+    void *p0_1 = (((DLTensor *)p0)[0].data);
     void *tvmgen_fused_nn_conv2d_add_nn_relu_p1_shape = (((DLTensor *)p1)[0].shape);
     void *tvmgen_fused_nn_conv2d_add_nn_relu_p1_strides = (((DLTensor *)p1)[0].strides);
-    void *p2_1 = (((DLTensor *)p2)[0].data);
+    void *p1_1 = (((DLTensor *)p1)[0].data);
     void *tvmgen_fused_nn_conv2d_add_nn_relu_p2_shape = (((DLTensor *)p2)[0].shape);
     void *tvmgen_fused_nn_conv2d_add_nn_relu_p2_strides = (((DLTensor *)p2)[0].strides);
-    void *T_relu_1 = (((DLTensor *)T_relu)[0].data);
+    void *p2_1 = (((DLTensor *)p2)[0].data);
     void *tvmgen_fused_nn_conv2d_add_nn_relu_T_relu_shape = (((DLTensor *)T_relu)[0].shape);
     void *tvmgen_fused_nn_conv2d_add_nn_relu_T_relu_strides = (((DLTensor *)T_relu)[0].strides);
+    void *T_relu_1 = (((DLTensor *)T_relu)[0].data);
     if (!(tvmgen_fused_nn_conv2d_add_nn_relu_p0_strides == NULL))
     {
     }
@@ -316,19 +311,19 @@ extern "C"
     void *p1 = (((TVMValue *)args)[1].v_handle);
     void *p2 = (((TVMValue *)args)[2].v_handle);
     void *T_relu = (((TVMValue *)args)[3].v_handle);
-    void *p0_1 = (((DLTensor *)p0)[0].data);
     void *tvmgen_fused_nn_conv2d_add_nn_relu_1_p0_shape = (((DLTensor *)p0)[0].shape);
     void *tvmgen_fused_nn_conv2d_add_nn_relu_1_p0_strides = (((DLTensor *)p0)[0].strides);
     int32_t dev_id = (((DLTensor *)p0)[0].device.device_id);
-    void *p1_1 = (((DLTensor *)p1)[0].data);
+    void *p0_1 = (((DLTensor *)p0)[0].data);
     void *tvmgen_fused_nn_conv2d_add_nn_relu_1_p1_shape = (((DLTensor *)p1)[0].shape);
     void *tvmgen_fused_nn_conv2d_add_nn_relu_1_p1_strides = (((DLTensor *)p1)[0].strides);
-    void *p2_1 = (((DLTensor *)p2)[0].data);
+    void *p1_1 = (((DLTensor *)p1)[0].data);
     void *tvmgen_fused_nn_conv2d_add_nn_relu_1_p2_shape = (((DLTensor *)p2)[0].shape);
     void *tvmgen_fused_nn_conv2d_add_nn_relu_1_p2_strides = (((DLTensor *)p2)[0].strides);
-    void *T_relu_1 = (((DLTensor *)T_relu)[0].data);
+    void *p2_1 = (((DLTensor *)p2)[0].data);
     void *tvmgen_fused_nn_conv2d_add_nn_relu_1_T_relu_shape = (((DLTensor *)T_relu)[0].shape);
     void *tvmgen_fused_nn_conv2d_add_nn_relu_1_T_relu_strides = (((DLTensor *)T_relu)[0].strides);
+    void *T_relu_1 = (((DLTensor *)T_relu)[0].data);
     if (!(tvmgen_fused_nn_conv2d_add_nn_relu_1_p0_strides == NULL))
     {
     }
@@ -467,19 +462,19 @@ extern "C"
     void *p1 = (((TVMValue *)args)[1].v_handle);
     void *p2 = (((TVMValue *)args)[2].v_handle);
     void *T_add = (((TVMValue *)args)[3].v_handle);
-    void *p0_1 = (((DLTensor *)p0)[0].data);
     void *tvmgen_fused_nn_dense_add_p0_shape = (((DLTensor *)p0)[0].shape);
     void *tvmgen_fused_nn_dense_add_p0_strides = (((DLTensor *)p0)[0].strides);
     int32_t dev_id = (((DLTensor *)p0)[0].device.device_id);
-    void *p1_1 = (((DLTensor *)p1)[0].data);
+    void *p0_1 = (((DLTensor *)p0)[0].data);
     void *tvmgen_fused_nn_dense_add_p1_shape = (((DLTensor *)p1)[0].shape);
     void *tvmgen_fused_nn_dense_add_p1_strides = (((DLTensor *)p1)[0].strides);
-    void *p2_1 = (((DLTensor *)p2)[0].data);
+    void *p1_1 = (((DLTensor *)p1)[0].data);
     void *tvmgen_fused_nn_dense_add_p2_shape = (((DLTensor *)p2)[0].shape);
     void *tvmgen_fused_nn_dense_add_p2_strides = (((DLTensor *)p2)[0].strides);
-    void *T_add_1 = (((DLTensor *)T_add)[0].data);
+    void *p2_1 = (((DLTensor *)p2)[0].data);
     void *tvmgen_fused_nn_dense_add_T_add_shape = (((DLTensor *)T_add)[0].shape);
     void *tvmgen_fused_nn_dense_add_T_add_strides = (((DLTensor *)T_add)[0].strides);
+    void *T_add_1 = (((DLTensor *)T_add)[0].data);
     if (!(tvmgen_fused_nn_dense_add_p0_strides == NULL))
     {
     }
@@ -523,76 +518,9 @@ extern "C"
 #ifdef __cplusplus
 extern "C"
 #endif
-    TVM_DLL int32_t tvmgen_fused_nn_dense_add_1(void *args, int32_t *arg_type_ids, int32_t num_args,
-                                                void *out_ret_value, int32_t *out_ret_tcode, void *resource_handle)
-{
-    int32_t p0_code = arg_type_ids[0];
-    int32_t p1_code = arg_type_ids[1];
-    int32_t p2_code = arg_type_ids[2];
-    int32_t T_add_code = arg_type_ids[3];
-    void *p0 = (((TVMValue *)args)[0].v_handle);
-    void *p1 = (((TVMValue *)args)[1].v_handle);
-    void *p2 = (((TVMValue *)args)[2].v_handle);
-    void *T_add = (((TVMValue *)args)[3].v_handle);
-    void *p0_1 = (((DLTensor *)p0)[0].data);
-    void *tvmgen_fused_nn_dense_add_1_p0_shape = (((DLTensor *)p0)[0].shape);
-    void *tvmgen_fused_nn_dense_add_1_p0_strides = (((DLTensor *)p0)[0].strides);
-    int32_t dev_id = (((DLTensor *)p0)[0].device.device_id);
-    void *p1_1 = (((DLTensor *)p1)[0].data);
-    void *tvmgen_fused_nn_dense_add_1_p1_shape = (((DLTensor *)p1)[0].shape);
-    void *tvmgen_fused_nn_dense_add_1_p1_strides = (((DLTensor *)p1)[0].strides);
-    void *p2_1 = (((DLTensor *)p2)[0].data);
-    void *tvmgen_fused_nn_dense_add_1_p2_shape = (((DLTensor *)p2)[0].shape);
-    void *tvmgen_fused_nn_dense_add_1_p2_strides = (((DLTensor *)p2)[0].strides);
-    void *T_add_1 = (((DLTensor *)T_add)[0].data);
-    void *tvmgen_fused_nn_dense_add_1_T_add_shape = (((DLTensor *)T_add)[0].shape);
-    void *tvmgen_fused_nn_dense_add_1_T_add_strides = (((DLTensor *)T_add)[0].strides);
-    if (!(tvmgen_fused_nn_dense_add_1_p0_strides == NULL))
-    {
-    }
-    if (!(tvmgen_fused_nn_dense_add_1_p1_strides == NULL))
-    {
-    }
-    if (!(tvmgen_fused_nn_dense_add_1_p2_strides == NULL))
-    {
-    }
-    if (!(tvmgen_fused_nn_dense_add_1_T_add_strides == NULL))
-    {
-    }
-    float packed_weight[16];
-    float compute_global[4];
-    for (int32_t y = 0; y < 4; ++y)
-    {
-        for (int32_t x = 0; x < 4; ++x)
-        {
-            packed_weight[((y * 4) + x)] = ((float *)p1_1)[((x * 4) + y)];
-        }
-    }
-    for (int32_t x_c_init = 0; x_c_init < 4; ++x_c_init)
-    {
-        compute_global[x_c_init] = 0.000000e+00f;
-    }
-    for (int32_t k_outer = 0; k_outer < 4; ++k_outer)
-    {
-        for (int32_t x_c = 0; x_c < 4; ++x_c)
-        {
-            compute_global[x_c] =
-                (compute_global[x_c] + (((float *)p0_1)[k_outer] * packed_weight[((k_outer * 4) + x_c)]));
-        }
-    }
-    for (int32_t ax1_inner_inner = 0; ax1_inner_inner < 4; ++ax1_inner_inner)
-    {
-        ((float *)T_add_1)[ax1_inner_inner] = (compute_global[ax1_inner_inner] + ((float *)p2_1)[ax1_inner_inner]);
-    }
-    return 0;
-}
-
-#ifdef __cplusplus
-extern "C"
-#endif
-    TVM_DLL int32_t tvmgen_fused_nn_dense_add_nn_relu_nn_relu(void *args, int32_t *arg_type_ids, int32_t num_args,
-                                                              void *out_ret_value, int32_t *out_ret_tcode,
-                                                              void *resource_handle)
+    TVM_DLL int32_t tvmgen_fused_nn_dense_add_nn_relu(void *args, int32_t *arg_type_ids, int32_t num_args,
+                                                      void *out_ret_value, int32_t *out_ret_tcode,
+                                                      void *resource_handle)
 {
     int32_t p0_code = arg_type_ids[0];
     int32_t p1_code = arg_type_ids[1];
@@ -602,29 +530,29 @@ extern "C"
     void *p1 = (((TVMValue *)args)[1].v_handle);
     void *p2 = (((TVMValue *)args)[2].v_handle);
     void *T_relu = (((TVMValue *)args)[3].v_handle);
-    void *p0_1 = (((DLTensor *)p0)[0].data);
-    void *tvmgen_fused_nn_dense_add_nn_relu_nn_relu_p0_shape = (((DLTensor *)p0)[0].shape);
-    void *tvmgen_fused_nn_dense_add_nn_relu_nn_relu_p0_strides = (((DLTensor *)p0)[0].strides);
+    void *tvmgen_fused_nn_dense_add_nn_relu_p0_shape = (((DLTensor *)p0)[0].shape);
+    void *tvmgen_fused_nn_dense_add_nn_relu_p0_strides = (((DLTensor *)p0)[0].strides);
     int32_t dev_id = (((DLTensor *)p0)[0].device.device_id);
+    void *p0_1 = (((DLTensor *)p0)[0].data);
+    void *tvmgen_fused_nn_dense_add_nn_relu_p1_shape = (((DLTensor *)p1)[0].shape);
+    void *tvmgen_fused_nn_dense_add_nn_relu_p1_strides = (((DLTensor *)p1)[0].strides);
     void *p1_1 = (((DLTensor *)p1)[0].data);
-    void *tvmgen_fused_nn_dense_add_nn_relu_nn_relu_p1_shape = (((DLTensor *)p1)[0].shape);
-    void *tvmgen_fused_nn_dense_add_nn_relu_nn_relu_p1_strides = (((DLTensor *)p1)[0].strides);
+    void *tvmgen_fused_nn_dense_add_nn_relu_p2_shape = (((DLTensor *)p2)[0].shape);
+    void *tvmgen_fused_nn_dense_add_nn_relu_p2_strides = (((DLTensor *)p2)[0].strides);
     void *p2_1 = (((DLTensor *)p2)[0].data);
-    void *tvmgen_fused_nn_dense_add_nn_relu_nn_relu_p2_shape = (((DLTensor *)p2)[0].shape);
-    void *tvmgen_fused_nn_dense_add_nn_relu_nn_relu_p2_strides = (((DLTensor *)p2)[0].strides);
+    void *tvmgen_fused_nn_dense_add_nn_relu_T_relu_shape = (((DLTensor *)T_relu)[0].shape);
+    void *tvmgen_fused_nn_dense_add_nn_relu_T_relu_strides = (((DLTensor *)T_relu)[0].strides);
     void *T_relu_1 = (((DLTensor *)T_relu)[0].data);
-    void *tvmgen_fused_nn_dense_add_nn_relu_nn_relu_T_relu_shape = (((DLTensor *)T_relu)[0].shape);
-    void *tvmgen_fused_nn_dense_add_nn_relu_nn_relu_T_relu_strides = (((DLTensor *)T_relu)[0].strides);
-    if (!(tvmgen_fused_nn_dense_add_nn_relu_nn_relu_p0_strides == NULL))
+    if (!(tvmgen_fused_nn_dense_add_nn_relu_p0_strides == NULL))
     {
     }
-    if (!(tvmgen_fused_nn_dense_add_nn_relu_nn_relu_p1_strides == NULL))
+    if (!(tvmgen_fused_nn_dense_add_nn_relu_p1_strides == NULL))
     {
     }
-    if (!(tvmgen_fused_nn_dense_add_nn_relu_nn_relu_p2_strides == NULL))
+    if (!(tvmgen_fused_nn_dense_add_nn_relu_p2_strides == NULL))
     {
     }
-    if (!(tvmgen_fused_nn_dense_add_nn_relu_nn_relu_T_relu_strides == NULL))
+    if (!(tvmgen_fused_nn_dense_add_nn_relu_T_relu_strides == NULL))
     {
     }
     void *packed_weight = TVMBackendAllocWorkspace(1, dev_id, (uint64_t)14336, 2, 32);
@@ -664,8 +592,7 @@ extern "C"
         {
             int32_t cse_var_2 = ((ax1_outer_ax0_outer_fused * 8) + ax1_inner_inner);
             float v_ = compute_global[ax1_inner_inner] + ((float *)p2_1)[cse_var_2];
-            float v__1 = (v_) > (0.000000e+00f) ? (v_) : (0.000000e+00f);
-            ((float *)T_relu_1)[cse_var_2] = ((v__1) > (0.000000e+00f) ? (v__1) : (0.000000e+00f));
+            ((float *)T_relu_1)[cse_var_2] = ((v_) > (0.000000e+00f) ? (v_) : (0.000000e+00f));
         }
     }
     if (TVMBackendFreeWorkspace(1, dev_id, packed_weight) != 0)
@@ -685,13 +612,13 @@ extern "C"
     int32_t pool_max_code = arg_type_ids[1];
     void *p0 = (((TVMValue *)args)[0].v_handle);
     void *pool_max = (((TVMValue *)args)[1].v_handle);
-    void *p0_1 = (((DLTensor *)p0)[0].data);
     void *tvmgen_fused_nn_max_pool2d_p0_shape = (((DLTensor *)p0)[0].shape);
     void *tvmgen_fused_nn_max_pool2d_p0_strides = (((DLTensor *)p0)[0].strides);
     int32_t dev_id = (((DLTensor *)p0)[0].device.device_id);
-    void *pool_max_1 = (((DLTensor *)pool_max)[0].data);
+    void *p0_1 = (((DLTensor *)p0)[0].data);
     void *tvmgen_fused_nn_max_pool2d_pool_max_shape = (((DLTensor *)pool_max)[0].shape);
     void *tvmgen_fused_nn_max_pool2d_pool_max_strides = (((DLTensor *)pool_max)[0].strides);
+    void *pool_max_1 = (((DLTensor *)pool_max)[0].data);
     if (!(tvmgen_fused_nn_max_pool2d_p0_strides == NULL))
     {
     }
@@ -728,13 +655,13 @@ extern "C"
     int32_t pool_max_code = arg_type_ids[1];
     void *p0 = (((TVMValue *)args)[0].v_handle);
     void *pool_max = (((TVMValue *)args)[1].v_handle);
-    void *p0_1 = (((DLTensor *)p0)[0].data);
     void *tvmgen_fused_nn_max_pool2d_1_p0_shape = (((DLTensor *)p0)[0].shape);
     void *tvmgen_fused_nn_max_pool2d_1_p0_strides = (((DLTensor *)p0)[0].strides);
     int32_t dev_id = (((DLTensor *)p0)[0].device.device_id);
-    void *pool_max_1 = (((DLTensor *)pool_max)[0].data);
+    void *p0_1 = (((DLTensor *)p0)[0].data);
     void *tvmgen_fused_nn_max_pool2d_1_pool_max_shape = (((DLTensor *)pool_max)[0].shape);
     void *tvmgen_fused_nn_max_pool2d_1_pool_max_strides = (((DLTensor *)pool_max)[0].strides);
+    void *pool_max_1 = (((DLTensor *)pool_max)[0].data);
     if (!(tvmgen_fused_nn_max_pool2d_1_p0_strides == NULL))
     {
     }
@@ -768,13 +695,13 @@ extern "C"
     int32_t T_pad_code = arg_type_ids[1];
     void *p0 = (((TVMValue *)args)[0].v_handle);
     void *T_pad = (((TVMValue *)args)[1].v_handle);
-    void *p0_1 = (((DLTensor *)p0)[0].data);
     void *tvmgen_fused_nn_pad_p0_shape = (((DLTensor *)p0)[0].shape);
     void *tvmgen_fused_nn_pad_p0_strides = (((DLTensor *)p0)[0].strides);
     int32_t dev_id = (((DLTensor *)p0)[0].device.device_id);
-    void *T_pad_1 = (((DLTensor *)T_pad)[0].data);
+    void *p0_1 = (((DLTensor *)p0)[0].data);
     void *tvmgen_fused_nn_pad_T_pad_shape = (((DLTensor *)T_pad)[0].shape);
     void *tvmgen_fused_nn_pad_T_pad_strides = (((DLTensor *)T_pad)[0].strides);
+    void *T_pad_1 = (((DLTensor *)T_pad)[0].data);
     if (!(tvmgen_fused_nn_pad_p0_strides == NULL))
     {
     }
@@ -790,12 +717,18 @@ extern "C"
                 if (((ax3_outer * 4) + ax3_inner) < 5)
                 {
                     int32_t cse_var_1 = (ax3_outer * 4);
-                    ((float *)T_pad_1)[(((ax0_ax1_fused_ax2_fused * 5) + cse_var_1) + ax3_inner)] =
-                        (((((1 <= ax0_ax1_fused_ax2_fused) && (ax0_ax1_fused_ax2_fused < 129)) &&
-                           (1 <= (cse_var_1 + ax3_inner))) &&
-                          (ax3_outer < 1))
-                             ? ((float *)p0_1)[(((cse_var_1 + (ax0_ax1_fused_ax2_fused * 3)) + ax3_inner) - 4)]
-                             : 0.000000e+00f);
+                    float condval;
+                    if (((((1 <= ax0_ax1_fused_ax2_fused) && (ax0_ax1_fused_ax2_fused < 129)) &&
+                          (1 <= (cse_var_1 + ax3_inner))) &&
+                         (ax3_outer < 1)))
+                    {
+                        condval = ((float *)p0_1)[(((cse_var_1 + (ax0_ax1_fused_ax2_fused * 3)) + ax3_inner) - 4)];
+                    }
+                    else
+                    {
+                        condval = 0.000000e+00f;
+                    }
+                    ((float *)T_pad_1)[(((ax0_ax1_fused_ax2_fused * 5) + cse_var_1) + ax3_inner)] = condval;
                 }
             }
         }
@@ -813,13 +746,13 @@ extern "C"
     int32_t T_pad_code = arg_type_ids[1];
     void *p0 = (((TVMValue *)args)[0].v_handle);
     void *T_pad = (((TVMValue *)args)[1].v_handle);
-    void *p0_1 = (((DLTensor *)p0)[0].data);
     void *tvmgen_fused_nn_pad_1_p0_shape = (((DLTensor *)p0)[0].shape);
     void *tvmgen_fused_nn_pad_1_p0_strides = (((DLTensor *)p0)[0].strides);
     int32_t dev_id = (((DLTensor *)p0)[0].device.device_id);
-    void *T_pad_1 = (((DLTensor *)T_pad)[0].data);
+    void *p0_1 = (((DLTensor *)p0)[0].data);
     void *tvmgen_fused_nn_pad_1_T_pad_shape = (((DLTensor *)T_pad)[0].shape);
     void *tvmgen_fused_nn_pad_1_T_pad_strides = (((DLTensor *)T_pad)[0].strides);
+    void *T_pad_1 = (((DLTensor *)T_pad)[0].data);
     if (!(tvmgen_fused_nn_pad_1_p0_strides == NULL))
     {
     }
@@ -829,10 +762,16 @@ extern "C"
     for (int32_t ax0_ax1_fused_ax2_fused = 0; ax0_ax1_fused_ax2_fused < 360; ++ax0_ax1_fused_ax2_fused)
     {
         int32_t cse_var_1 = (ax0_ax1_fused_ax2_fused % 45);
-        ((float *)T_pad_1)[ax0_ax1_fused_ax2_fused] =
-            (((1 <= cse_var_1) && (cse_var_1 < 43))
-                 ? ((float *)p0_1)[((((ax0_ax1_fused_ax2_fused / 45) * 42) + cse_var_1) - 1)]
-                 : 0.000000e+00f);
+        float condval;
+        if (((1 <= cse_var_1) && (cse_var_1 < 43)))
+        {
+            condval = ((float *)p0_1)[((((ax0_ax1_fused_ax2_fused / 45) * 42) + cse_var_1) - 1)];
+        }
+        else
+        {
+            condval = 0.000000e+00f;
+        }
+        ((float *)T_pad_1)[ax0_ax1_fused_ax2_fused] = condval;
     }
     return 0;
 }
