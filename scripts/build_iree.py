@@ -13,7 +13,7 @@ from typing import List
 from pathlib import Path
 import os
 import onnx
-from kenning.converters.tflite_converter import TFLiteConverter
+from kenning.optimizers.iree import IREECompiler
 
 def main():
     parser = argparse.ArgumentParser(__doc__)
@@ -57,32 +57,10 @@ def main():
 
     args = parser.parse_args()
 
-    model = None
-
-    with open(args.input_model_path.with_suffix(args.input_model_path.suffix + '.json')) as original_iospec:
-        io_spec = json.load(original_iospec)
-        try:
-            output_names = [spec["name"] for spec in io_spec["output"]]
-        except KeyError:
-            output_names = None
-
-        if args.input_model_path.suffix == ".tflite":
-            model = TFLiteConverter(args.input_model_path).to_onnx()
-            io_spec["entry_func"] = "module." + model.graph.name
-            onnx_path = args.output_model_path.with_suffix(".tmp.onnx")
-            onnx.save(model, onnx_path)
-        else:
-            onnx_path = args.input_model_path
-
-        with open(args.output_model_path.with_suffix(args.output_model_path.suffix + '.json'), "w") as new_iospec:
-            json.dump(io_spec, new_iospec)
-
-        mlir_path = args.output_model_path.with_suffix(".tmp.mlir")
-
-        os.system(f"iree-import-onnx {onnx_path.resolve()} -o {mlir_path.resolve()}")
+    compiler_args = []
 
     if args.iree_backend == "vmvx":
-        os.system(f"iree-compile {mlir_path.resolve()} --iree-hal-target-backends=vmvx -o {args.output_model_path.resolve()}")
+        backend_name = "vmvx"
     elif args.iree_backend == "elf":
         if not args.target_cpu:
             print("User needs to provide target cpu for the elf backend: --target-cpu")
@@ -93,20 +71,33 @@ def main():
         if not args.target_cpu_features:
                 args.target_cpu_features = ""
 
-        os.system(f"""iree-compile {mlir_path.resolve()} \
-            --iree-hal-target-backends=llvm-cpu \
-            --iree-vm-bytecode-module-strip-source-map=true \
-            --iree-opt-level=O3  \
-            --iree-llvmcpu-link-embedded=true \
-            --iree-vm-emit-polyglot-zip=true   \
-            --iree-llvmcpu-debug-symbols=false  \
-            --iree-llvmcpu-target-triple="{args.target_triple}" \
-            --iree-llvmcpu-target-cpu="{args.target_cpu}"   \
-            --iree-llvmcpu-target-cpu-features="{args.target_cpu_features}" \
-            -o {args.output_model_path.resolve()}""")
+        backend_name = "llvm-cpu"
+
+        compiler_args = [
+            "iree-vm-bytecode-module-strip-source-map=true",
+            "iree-opt-level=O3",
+            "iree-llvmcpu-link-embedded=true",
+            "iree-vm-emit-polyglot-zip=true",
+            "iree-llvmcpu-debug-symbols=false",
+            f"iree-llvmcpu-target-triple={args.target_triple}",
+            f"iree-llvmcpu-target-cpu={args.target_cpu}",
+            f"iree-llvmcpu-target-cpu-features={args.target_cpu_features}",
+        ]
     else:
         print(f"Iree backend: {args.iree_backend} not recognized. Backends supported: vmvx, elf.")
         return 1
+
+    compiler = IREECompiler(
+        dataset=None,
+        compiled_model_path=args.output_model_path,
+        backend=backend_name,
+        compiler_args=compiler_args,
+    )
+
+    with open(args.input_model_path.with_suffix(args.input_model_path.suffix + '.json')) as original_iospec:
+        io_spec = json.load(original_iospec)
+
+        compiler.compile(args.input_model_path, io_spec)
 
     return 0
 
