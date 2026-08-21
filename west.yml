@@ -1,4 +1,4 @@
-# Copyright (c) 2023-2025 Antmicro <www.antmicro.com>
+# Copyright (c) 2023-2026 Antmicro <www.antmicro.com>
 #
 # SPDX-License-Identifier: Apache-2.0
 
@@ -35,7 +35,8 @@ manifest:
           - modules/hal/*
           - modules/lib/*
           - modules/tee/tf-m/*
-
+          - bootloader/mcuboot
+          - modules/crypto/*
     - name: tflite-micro
       remote: zephyrproject-rtos
       revision: zephyr-v4.1.0

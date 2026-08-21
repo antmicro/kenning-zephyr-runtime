@@ -1,8 +1,13 @@
-# Copyright (c) 2023-2025 Antmicro <www.antmicro.com>
+# Copyright (c) 2023-2026 Antmicro <www.antmicro.com>
 #
 # SPDX-License-Identifier: Apache-2.0
 
 zephyr_library_named(kenning_inference_lib)
+
+if (NOT CONFIG_KENNING_INFERENCE_LIB)
+    message(WARNING "Kenning Inference Lib is disabled for project: ${PROJECT_NAME}")
+    return()
+endif()
 
 set(KENNING_LIB_DIR "${CMAKE_CURRENT_LIST_DIR}/../../")
 
