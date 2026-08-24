@@ -12,7 +12,6 @@ import json
 from typing import List
 from pathlib import Path
 import os
-from kenning.utils.resource_manager import ResourceURI
 import onnx
 from kenning.converters.tflite_converter import TFLiteConverter
 
@@ -66,20 +65,21 @@ def main():
             output_names = [spec["name"] for spec in io_spec["output"]]
         except KeyError:
             output_names = None
-        model = TFLiteConverter(args.input_model_path).to_onnx()
 
-        # Conversion from tflite to onnx changes name of the entry function.
-        io_spec["entry_func"] = "module." + model.graph.name
+        if args.input_model_path.suffix == ".tflite":
+            model = TFLiteConverter(args.input_model_path).to_onnx()
+            io_spec["entry_func"] = "module." + model.graph.name
+            onnx_path = args.output_model_path.with_suffix(".tmp.onnx")
+            onnx.save(model, onnx_path)
+        else:
+            onnx_path = args.input_model_path
 
         with open(args.output_model_path.with_suffix(args.output_model_path.suffix + '.json'), "w") as new_iospec:
             json.dump(io_spec, new_iospec)
 
-    onnx_path = args.output_model_path.with_suffix(".tmp.onnx")
-    mlir_path = args.output_model_path.with_suffix(".tmp.mlir")
+        mlir_path = args.output_model_path.with_suffix(".tmp.mlir")
 
-    onnx.save(model, onnx_path)
-
-    os.system(f"iree-import-onnx {onnx_path.resolve()} -o {mlir_path.resolve()}")
+        os.system(f"iree-import-onnx {onnx_path.resolve()} -o {mlir_path.resolve()}")
 
     if args.iree_backend == "vmvx":
         os.system(f"iree-compile {mlir_path.resolve()} --iree-hal-target-backends=vmvx -o {args.output_model_path.resolve()}")
