@@ -35,6 +35,12 @@ extern "C"
 #ifdef __cplusplus
 extern "C"
 #endif
+    TVM_DLL int32_t tvmgen_fused_nn_dense_add_nn_relu_1(void *args, int32_t *arg_type_ids, int32_t num_args,
+                                                        void *out_ret_value, int32_t *out_ret_tcode,
+                                                        void *resource_handle);
+#ifdef __cplusplus
+extern "C"
+#endif
     TVM_DLL int32_t tvmgen_fused_nn_max_pool2d(void *args, int32_t *arg_type_ids, int32_t num_args, void *out_ret_value,
                                                int32_t *out_ret_tcode, void *resource_handle);
 #ifdef __cplusplus
@@ -586,6 +592,93 @@ extern "C"
                     (compute_global[x_c] +
                      (((float *)p0_1)[k_outer] *
                       ((float *)packed_weight)[(((ax1_outer_ax0_outer_fused * 1792) + (k_outer * 8)) + x_c)]));
+            }
+        }
+        for (int32_t ax1_inner_inner = 0; ax1_inner_inner < 8; ++ax1_inner_inner)
+        {
+            int32_t cse_var_2 = ((ax1_outer_ax0_outer_fused * 8) + ax1_inner_inner);
+            float v_ = compute_global[ax1_inner_inner] + ((float *)p2_1)[cse_var_2];
+            ((float *)T_relu_1)[cse_var_2] = ((v_) > (0.000000e+00f) ? (v_) : (0.000000e+00f));
+        }
+    }
+    if (TVMBackendFreeWorkspace(1, dev_id, packed_weight) != 0)
+    {
+        return -1;
+    }
+    return 0;
+}
+
+#ifdef __cplusplus
+extern "C"
+#endif
+    TVM_DLL int32_t tvmgen_fused_nn_dense_add_nn_relu_1(void *args, int32_t *arg_type_ids, int32_t num_args,
+                                                        void *out_ret_value, int32_t *out_ret_tcode,
+                                                        void *resource_handle)
+{
+    int32_t p0_code = arg_type_ids[0];
+    int32_t p1_code = arg_type_ids[1];
+    int32_t p2_code = arg_type_ids[2];
+    int32_t T_relu_code = arg_type_ids[3];
+    void *p0 = (((TVMValue *)args)[0].v_handle);
+    void *p1 = (((TVMValue *)args)[1].v_handle);
+    void *p2 = (((TVMValue *)args)[2].v_handle);
+    void *T_relu = (((TVMValue *)args)[3].v_handle);
+    void *tvmgen_fused_nn_dense_add_nn_relu_1_p0_shape = (((DLTensor *)p0)[0].shape);
+    void *tvmgen_fused_nn_dense_add_nn_relu_1_p0_strides = (((DLTensor *)p0)[0].strides);
+    int32_t dev_id = (((DLTensor *)p0)[0].device.device_id);
+    void *p0_1 = (((DLTensor *)p0)[0].data);
+    void *tvmgen_fused_nn_dense_add_nn_relu_1_p1_shape = (((DLTensor *)p1)[0].shape);
+    void *tvmgen_fused_nn_dense_add_nn_relu_1_p1_strides = (((DLTensor *)p1)[0].strides);
+    void *p1_1 = (((DLTensor *)p1)[0].data);
+    void *tvmgen_fused_nn_dense_add_nn_relu_1_p2_shape = (((DLTensor *)p2)[0].shape);
+    void *tvmgen_fused_nn_dense_add_nn_relu_1_p2_strides = (((DLTensor *)p2)[0].strides);
+    void *p2_1 = (((DLTensor *)p2)[0].data);
+    void *tvmgen_fused_nn_dense_add_nn_relu_1_T_relu_shape = (((DLTensor *)T_relu)[0].shape);
+    void *tvmgen_fused_nn_dense_add_nn_relu_1_T_relu_strides = (((DLTensor *)T_relu)[0].strides);
+    void *T_relu_1 = (((DLTensor *)T_relu)[0].data);
+    if (!(tvmgen_fused_nn_dense_add_nn_relu_1_p0_strides == NULL))
+    {
+    }
+    if (!(tvmgen_fused_nn_dense_add_nn_relu_1_p1_strides == NULL))
+    {
+    }
+    if (!(tvmgen_fused_nn_dense_add_nn_relu_1_p2_strides == NULL))
+    {
+    }
+    if (!(tvmgen_fused_nn_dense_add_nn_relu_1_T_relu_strides == NULL))
+    {
+    }
+    void *packed_weight = TVMBackendAllocWorkspace(1, dev_id, (uint64_t)1024, 2, 32);
+    if (packed_weight == NULL)
+    {
+        return -1;
+    }
+    for (int32_t z = 0; z < 2; ++z)
+    {
+        for (int32_t y = 0; y < 16; ++y)
+        {
+            for (int32_t x = 0; x < 8; ++x)
+            {
+                int32_t cse_var_1 = (z * 128);
+                ((float *)packed_weight)[((cse_var_1 + (y * 8)) + x)] = ((float *)p1_1)[((cse_var_1 + (x * 16)) + y)];
+            }
+        }
+    }
+    for (int32_t ax1_outer_ax0_outer_fused = 0; ax1_outer_ax0_outer_fused < 2; ++ax1_outer_ax0_outer_fused)
+    {
+        float compute_global[8];
+        for (int32_t x_c_init = 0; x_c_init < 8; ++x_c_init)
+        {
+            compute_global[x_c_init] = 0.000000e+00f;
+        }
+        for (int32_t k_outer = 0; k_outer < 16; ++k_outer)
+        {
+            for (int32_t x_c = 0; x_c < 8; ++x_c)
+            {
+                compute_global[x_c] =
+                    (compute_global[x_c] +
+                     (((float *)p0_1)[k_outer] *
+                      ((float *)packed_weight)[(((ax1_outer_ax0_outer_fused * 128) + (k_outer * 8)) + x_c)]));
             }
         }
         for (int32_t ax1_inner_inner = 0; ax1_inner_inner < 8; ++ax1_inner_inner)
