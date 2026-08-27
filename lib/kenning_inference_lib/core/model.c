@@ -1,8 +1,13 @@
 /*
- * Copyright (c) 2023-2025 Antmicro <www.antmicro.com>
+ * Copyright (c) 2023-2026 Antmicro <www.antmicro.com>
  *
  * SPDX-License-Identifier: Apache-2.0
  */
+
+/* Remove conflicting zephyr-injected macros before CMSIS headers */
+#undef __SMLAD
+#undef __SSUB8
+#undef __SEL
 
 #include "kenning_inference_lib/core/model.h"
 #include "kenning_inference_lib/core/loaders.h"

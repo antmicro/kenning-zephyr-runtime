@@ -1,8 +1,13 @@
 /*
- * Copyright (c) 2023-2025 Antmicro <www.antmicro.com>
+ * Copyright (c) 2023-2026 Antmicro <www.antmicro.com>
  *
  * SPDX-License-Identifier: Apache-2.0
  */
+
+/* Remove conflicting zephyr-injected macros before CMSIS headers */
+#undef __SMLAD
+#undef __SSUB8
+#undef __SEL
 
 extern "C"
 {
@@ -10,13 +15,30 @@ extern "C"
 #include "kenning_inference_lib/core/runtime_wrapper.h"
 }
 
-#include <zephyr/kernel.h>
-#include <zephyr/logging/log.h>
-
 #include <tensorflow/lite/micro/micro_interpreter.h>
 #include <tensorflow/lite/micro/micro_mutable_op_resolver.h>
 #include <tensorflow/lite/micro/system_setup.h>
 #include <tensorflow/lite/schema/schema_generated.h>
+
+/* Workaround for global namespace collission between TFLite Micro and NXP S32.
+   This temporarily renames NXP types during the include to prevent a compiler
+   redeclaration error */
+#if defined(CONFIG_SOC_FAMILY_NXP_S32) || __has_include(<Platform_Types.h>)
+#define uint8 nxp_uint8
+#define uint16 nxp_uint16
+#define uint32 nxp_uint32
+#define uint64 nxp_uint64
+#endif
+
+#include <zephyr/kernel.h>
+#include <zephyr/logging/log.h>
+
+#if defined(CONFIG_SOC_FAMILY_NXP_S32) || __has_include(<Platform_Types.h>)
+#undef uint8
+#undef uint16
+#undef uint32
+#undef uint64
+#endif
 
 #include "generated/ops_resolver.h"
 

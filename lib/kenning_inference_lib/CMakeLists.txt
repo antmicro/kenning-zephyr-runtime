@@ -4,6 +4,8 @@
 
 zephyr_library_named(kenning_inference_lib)
 
+# Prevent compilation errors during zephyr Multi-image builds where
+# CONFIG_KENNING_INFERENCE_LIB is not defined in some images.
 if (NOT CONFIG_KENNING_INFERENCE_LIB)
     message(WARNING "Kenning Inference Lib is disabled for project: ${PROJECT_NAME}")
     return()
