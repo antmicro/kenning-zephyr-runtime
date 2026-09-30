@@ -2,27 +2,33 @@
 
 Copyright (c) 2023-2026 [Antmicro](https://www.antmicro.com)
 
-This is a set of tools for running and evaluating ML models on various inference frameworks (runtimes), such as [IREE](https://iree.dev/) or [microTVM](https://tvm.apache.org/), on boards that support Zephyr RTOS.
-It provides a unified runtime-agnostic API, wrapping the runtimes and allowing to easily switch between them without rewriting any code.
-
-This project is an integral part of the [Kenning](https://github.com/antmicro/kenning) ecosystem - it can be used in tandem with Kenning for model optimization, deployment and benchmarking (see [Model evaluation with Kenning](https://github.com/antmicro/kenning-zephyr-runtime/tree/main#using-microtvm)).
-For detailed documentation, see the [Kenning Zephyr Runtime chapter of the general Kenning docs](https://antmicro.github.io/kenning/kenning-zephyr-runtime.html).
+This project provides a set of tools and libraries for running and evaluating ML models on boards running Zephyr RTOS, providing a unified API for different inference frameworks such as LiteRT, microTVM or IREE.
 
 [Website](https://antmicro.com/kenning/) | [Kenning Documentation](https://antmicro.github.io/kenning/) | [Zephyr Runtime chapter of the Documentation](https://antmicro.github.io/kenning/kenning-zephyr-runtime.html) | [Kenning tutorials](https://antmicro.github.io/kenning/kenning-gallery.html)
+
+This project is an integral part of the [Kenning](https://antmicro.com/kenning) framework for optimizing, deploying and evaluating ML models on target devices.
+It provides a runtime-agnostic unified API that allows seamless switching between runtimes without making any changes in code except for minor configuration adjustments.
+It can be used separately for running provided models in production, or used in tandem with Kenning for model optimization, deployment and benchmarking (see [Model evaluation with Kenning](https://github.com/antmicro/kenning-zephyr-runtime/tree/main#model-evaluation-with-kenning)).
+
+For detailed documentation, see the [Kenning Zephyr Runtime chapter of the general Kenning documentation](https://antmicro.github.io/kenning/kenning-zephyr-runtime.html).
+
+For a list of supported boards, check Kenning demos in [Renode Zephyr Dashboard](https://zephyr-dashboard.renode.io/).
 
 ## Overview
 
 This repository provides:
 
-* `kenning_inference_lib` - a Zephyr library providing a unified `model` API, allowing for executing ML models with the following runtimes:
+* `kenning_inference_lib` - a [Zephyr RTOS](https://www.zephyrproject.org/) library providing a unified `model` API, allowing for executing ML models with the following runtimes:
   * [TFLite Micro](https://github.com/tensorflow/tflite-micro)
   * [microTVM](https://tvm.apache.org/)
   * [IREE](https://iree.dev/)
   * [emlearn](https://github.com/emlearn/emlearn)
   * [ExecuTorch](https://docs.pytorch.org/executorch/stable/index.html)
   * [AI8X](https://github.com/analogdevicesinc/ai8x-synthesis) for Analog Devices MAX78xxx platforms
-* `app` - a Zephyr application used with [Kenning](https://github.com/antmicro/kenning) for evaluating models and runtimes on devices. For more information on available evaluation features, see the [Model evaluation with Kenning section of this document](https://github.com/antmicro/kenning-zephyr-runtime/tree/main#using-microtvm).
-* demo application (`demo_app`) - a Zephyr application that uses `kenning_inference_lib` to run gesture recognition on sample data. It is meant to showcase the usage of `kenning_inference_lib` as a standalone production solution, without communication with Kenning.
+* `app` - a Zephyr application used with [Kenning](https://github.com/antmicro/kenning) for evaluating models and runtimes on devices.
+  For more information on available evaluation features, see the [Model evaluation with Kenning section of this document](https://github.com/antmicro/kenning-zephyr-runtime/tree/main#model-evaluation-with-kenning).
+* demo application (`demo_app`) - a Zephyr application that uses `kenning_inference_lib` to run gesture recognition on sample data.
+  It is meant to showcase the usage of `kenning_inference_lib` as a standalone production solution, without communication with Kenning.
 
 ## Quickstart (`demo_app`)
 
@@ -91,7 +97,8 @@ If you're going to be using Renode for simulations, install Renode with:
 source ./scripts/prepare_renode.sh
 ```
 
-**NOTE** The `prepare_renode.sh` script creates environmental variables, that allow Kenning to find Renode. It has to be ran every time a new shell is used.
+**NOTE** The `prepare_renode.sh` script provides environmental variables, that allow Kenning to find Renode.
+It has to be ran every time a new shell is used.
 
 ### Building and running
 
@@ -135,7 +142,6 @@ I: inference finished successfully
 ## Model evaluation with Kenning
 
 [Kenning](https://github.com/antmicro/kenning), along with its ecosystem of useful tools and applications, is meant to support ML engineers in every step of the model development and deployment process.
-
 It includes a model benchmarking functionality, that makes it easy to asses performance of models across various ML inference frameworks, and generate comprehensive reports from those evaluations.
 
 A fragment of such report can be seen below:
@@ -148,34 +154,32 @@ Kenning Zephyr Runtime brings the evaluation functionality to devices running Ze
 
 ### Kenning remote inference flow for Zephyr devices
 
-The user runs Kenning commands on a PC, which communicates over UART with Kenning Zephyr Runtime running on an edge device (such as the `stm32f746g_disco` board).
+The user runs Kenning commands on a PC, which communicates with Kenning Zephyr Runtime evaluation `app` (e.g. over UART).
+This app is running on an edge device (such as the `stm32f746g_disco` board).
 
-Kenning compiles the model locally, using the [Optimizer](https://antmicro.github.io/kenning/kenning-api.html#optimizer-api) appropriate for the chosen ML framework (runtime) - like [TVMCompiler](https://github.com/antmicro/kenning/blob/main/kenning/optimizers/tvm.py) for the [microTVM](https://tvm.apache.org/) runtime.
-
-Model weights, test data, and other information is then sent to the `inference_server` (which contains partial support for the [Kenning Protocol](https://antmicro.github.io/kenning/kenning-protocols.html#kenning-protocol), working over UART, in order to facilitate that), running as part of the `app`.
+Kenning compiles the model locally, using the [Optimizer](https://antmicro.github.io/kenning/kenning-api.html#optimizer-api) appropriate for the chosen runtime, for example [TVMCompiler](https://github.com/antmicro/kenning/blob/main/kenning/optimizers/tvm.py) for the [microTVM](https://tvm.apache.org/) runtime.
+Model weights, test data, and other information are sent to the `app` using selected [Kenning Protocol](https://antmicro.github.io/kenning/kenning-protocols.html#kenning-protocol), for example `UARTProtocol`.
 
 Model output is sent back, along with inference measurements (such as time and memory usage - the exact details depend on the runtime).
-If the evaluation is being run in a Renode simulation - additional statistics are extracted from Renode.
+If the evaluation is being run in a [Renode](https://renode.io) simulation - additional statistics are extracted from Renode.
 
 All of that data is then used by Kenning to generate a report.
 
-Kenning reports from Kenning Zephyr Runtime evaluations include details such as inference time, memory usage, and instruction counters - but also quality metrics, that can be used to assess whether the model's quality has degraded due to possible quantization or numerical instability.
+Kenning reports from Kenning Zephyr Runtime evaluations include details such as inference time, memory usage, and quality metrics specific to a given model.
 
 ### Dynamic runtime switching with LLEXT
 
-Dynamic switching of the ML framework being used is supported through [LLEXT](https://docs.zephyrproject.org/latest/services/llext/index.html).
-
-Entire runtimes can be compiled as LLEXT extensions, sent over the Kenning Protocol, and linked dynamically into the `kenning_inference_lib`.
-
+Dynamic switching of models and runtimes is supported through [LLEXT](https://docs.zephyrproject.org/latest/services/llext/index.html).
+Entire runtimes can be compiled as LLEXT extensions, sent over Kenning Protocol, and linked dynamically into the `kenning_inference_lib`.
 This way the user can change the runtime, that is currently in use, without restarting the board or re-compiling the entire `app`.
 
 Detailed information about this feature is available in a [dedicated section of the Kenning documentation](https://antmicro.github.io/kenning/kenning-zephyr-runtime.html#using-linkable-loadable-extensions-for-switching-entire-ai-runtimes-in-running-app).
 
 ### Detailed (per layer) model performance analysis through tracing
 
-Thanks to the integration of [Zephelin tracing tool](https://antmicro.github.io/zephelin/) into Kenning, it is also possible to look inside your model - examine its performance layer-by-layer, and fine-tune it to your device of choice.
+Thanks to the integration of [Zephelin library](https://antmicro.github.io/zephelin/) into Kenning, it is also possible to look inside your model - examine its performance layer-by-layer, and fine-tune it to your device of choice.
 
-A sample interactive tracing report is available [here](https://antmicro.github.io/kenning/sample-zephyr-tracing-report.html).
+A sample interactive tracing report is available [here](https://antmicro.github.io/kenning/sample-riscv-zephyr-tracing-report.html).
 A fragment of the report can be seen below:
 
 ![Zephelin tracing report fragment, showing inference time comparison between layers](img/sample-zephelin-tracing-report-fragment.png)
@@ -302,8 +306,7 @@ kenning automl optimize test report \
 ```
 
 Kenning will perform a search for optimal model architecture, with a 5 minute time limit, discard models that are too large for the chosen board, and then test performance of the models.
-
-Models that crash during training, or fail to deploy, will be discarded without interrupting the run.
+Models that crash during training or fail to deploy, will be discarded without interrupting the run.
 
 At the end generated models will be placed under `./workspace/automl-results`, and the HTML report page at `workspace/automl-report/report/report.html`.
 
@@ -351,7 +354,7 @@ For more information on how to configure and run these workflows, see:
 * [Example of evaluating a model on a physical board](https://antmicro.github.io/kenning/gallery/anomaly-detection-on-mcu.html).
 
 
-## Useful cmake functions provided by Kenning Zephyr Runtime
+## Useful CMake functions provided by Kenning Zephyr Runtime
 
 There are several CMake functions, defined in the `cmake` directory.
 These functions are used by `demo_app` and can be used by any application using `kenning_inference_lib`.
