@@ -195,7 +195,84 @@ Fragment of the report from that example, showing inference time statistics, can
 
 ![AutoML report fragment](img/sample-automl-report-inference-time.png)
 
-### Example - creating a model with AutoML and evaluating a model
+### Example - optimizing and benchmarking a model
+
+In this example, we will optimize and evaluate a small CNN classifier on [STM32f746g Discovery kit](https://www.st.com/en/evaluation-tools/32f746gdiscovery.html).
+The model has been previously trained in [TensorFlow](https://www.tensorflow.org/), on the MagicWand dataset (accelerometer data), using Kenning.
+
+We will use the [`kenning-scenarios/magic-wand-inference/tflite/renode-stm32f746g.yml` configuration file](https://github.com/antmicro/kenning-zephyr-runtime/blob/main/kenning-scenarios/magic-wand-inference/tflite/renode-stm32f746g.yml).
+
+Kenning is build out of configurable blocks.
+In this configuration file, in order to facilitate the optimization, we define `dataset`, `model_wrapper` and `optimizer` blocks:
+
+```yaml
+dataset:
+  type: MagicWandDataset
+  parameters:
+    dataset_root: ./output/MagicWandDataset
+model_wrapper:
+  type: MagicWandModelWrapper
+  parameters:
+    model_path: kenning:///models/classification/magic_wand.h5
+optimizers:
+- type: TFLiteCompiler
+  parameters:
+    compiled_model_path: ./output/magic-wand.tflite
+    inference_input_type: float32
+    inference_output_type: float32
+```
+
+We point our `MagicWandModelWrapper` to download the model from Kenning's online repository of samples: `model_path: kenning:///models/classification/magic_wand.h5`.
+
+We also declare a `platform`, describing our target board:
+
+```yaml
+platform:
+  type: ZephyrPlatform
+  parameters:
+    name: stm32f746g_disco
+    simulated: true
+    zephyr_build_path: ./build
+```
+
+Kenning has a set of platforms defined in [an extendable YAML file](https://github.com/antmicro/kenning/blob/main/kenning/resources/platforms/platforms.yml).
+This is, in some instances, used to infer correct settings for the optimizer.
+
+First we optimize the model:
+
+```bash
+kenning optimize --cfg kenning-scenarios/magic-wand-inference/tflite/renode-stm32f746g.yml
+```
+
+Then we build the evaluation `app` with the model:
+
+```bash
+west build -p -b stm32f746g_disco app -- -DEXTRA_CONF_FILE=tflite.conf -DCONFIG_KENNING_MODEL_PATH=\"$(realpath ./output/magic-wand.tflite)\"
+```
+
+By default it will be built into the `./build` directory.
+Therefore in the `platform` we set `zephyr_build_path: ./build`.
+
+Setting `simulated: True` means, that the evaluation will be performed in a Renode simulation.
+For that reason we also need to build a Renode configuration file for the board:
+
+```bash
+west build -t board-repl
+```
+
+Finally, we can run the test and generate the report:
+
+```bash
+kenning test report \
+    --cfg kenning-scenarios/magic-wand-inference/tflite/renode-stm32f746g.yml \
+    --measurements results.json \
+    --report-path reports/stm32-renode-tflite-magic-wand/report.md \
+    --to-html
+```
+
+The report, detailing both quality and performance of the model, will be placed at `reports/stm32-renode-tflite-magic-wand/report/report.html`.
+
+### Example - creating a model with AutoML and evaluating it
 
 In this example, we will use Kenning's AutoML support to create a VAE anomaly detection model.
 Then we will optimize it for TFLite, evaluate it with Kenning Zephyr Runtime, and generate:
