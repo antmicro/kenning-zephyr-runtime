@@ -7,6 +7,10 @@
 set -e
 set -x
 
+if [[ -z "$VIRTUAL_ENV" ]]; then
+    source .venv/bin/activate
+fi
+
 west patch clean
 west patch -sm zephelin clean
 
