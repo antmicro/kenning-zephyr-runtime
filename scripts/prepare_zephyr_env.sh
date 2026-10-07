@@ -19,12 +19,7 @@ fi
 
 # prepare venv for the project
 if [ ! -d ".venv" ]; then
-    if [[ ! -z "$CI" ]] || [[ -f /.dockerenv ]]; then
-        # include global packages when run in CI or docker container
-        $VENV_EXEC .venv --system-site-packages
-    else
-        $VENV_EXEC .venv
-    fi
+    $VENV_EXEC .venv
 fi
 
 # source venv
@@ -40,7 +35,7 @@ if [[ -n "$ZEPHYR_VERSION" ]]; then
 fi
 
 # setup west workspace
-python -m west init -l .
+python -m west init -l . || true
 python -m west update --fetch-opt=--quiet
 python -m west zephyr-export
 
@@ -50,6 +45,8 @@ fi
 
 # install dependencies
 $PIP_EXEC install -r requirements.txt -r ../zephyr/scripts/requirements-base.txt -r ../zephyr/scripts/requirements-build-test.txt -r ../zephyr/scripts/requirements-run-test.txt
+
+python -m west zephyr-export
 
 # setup SDK
 

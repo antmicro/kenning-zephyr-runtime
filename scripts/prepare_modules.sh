@@ -14,6 +14,10 @@ fi
 west patch clean
 west patch -sm zephelin clean
 
+if [[ -f ".env" ]]; then
+    source .env
+fi
+
 if [ "$SKIP_ZEPHELIN" = "1" ]; then
     # only TVM patches will be applied
     west patch -sm zephelin -dm tvm apply
