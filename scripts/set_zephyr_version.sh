@@ -8,7 +8,7 @@
 
 usage()
 {
-    echo "Usage: $0 [west_revision|zephelin_patches] ZEPHYR_REVISION" 1>&2
+    echo "Usage: $0 [west_revision|zephelin_patches|download_sdk] ZEPHYR_REVISION" 1>&2
     echo "    ZEPHYR_REVISION can be one of: v4.3.0, v4.4.1, v4.5.0, v4.5.0-rc1, main" 1>&2
 }
 
@@ -37,14 +37,20 @@ update_zephelin_patches()
     fi
 }
 
-update_both()
+download_sdk()
+{
+    local zephyr_sdk_version="$1"
+    ./scripts/download_zephyr_sdk.sh "$zephyr_sdk_version"
+}
+
+update_all()
 {
     local zephyr_rev="$1"
 }
 
-ACTION="both"
+ACTION="all"
 case "$1" in
-    west_revision|zephelin_patches)
+    west_revision|zephelin_patches|download_sdk)
         ACTION="$1"
         VERSION="$2"
         ;;
@@ -55,17 +61,20 @@ esac
 
 case "$VERSION" in
     v4.3.0)
+        ZEPHYR_SDK_VERSION="0.17.4"
         ZEPHYR_REV="v4.3.0"
         # Not a typo. This compiles correctly with Zephyr 4.3.0
         TFLITE_REV="zephyr-v4.4.0"
         PATCH_REV="v4.3.0"
         ;;
     v4.4.1)
+        ZEPHYR_SDK_VERSION="1.0.1"
         ZEPHYR_REV="v4.4.1"
         TFLITE_REV="zephyr-v4.4.0"
         PATCH_REV="v4.4.1"
         ;;
     v4.5.0|v4.5.0-rc1|main)
+        ZEPHYR_SDK_VERSION="1.0.1"
         ZEPHYR_REV="main"
         TFLITE_REV="zephyr-v4.5.0"
         # Zephelin is not yet supported for the main revision.
@@ -79,14 +88,18 @@ case "$VERSION" in
         ;;
 esac
 
-if [ "$ACTION" = "both" ] || [ "$ACTION" = "west_revision" ]; then
+if [ "$ACTION" = "all" ] || [ "$ACTION" = "west_revision" ]; then
     update_west_revision zephyr "$ZEPHYR_REV"
     update_west_revision tflite-micro "$TFLITE_REV"
 fi
 
-if [ "$ACTION" = "both" ] || [ "$ACTION" = "zephelin_patches" ]; then
+if [ "$ACTION" = "all" ] || [ "$ACTION" = "zephelin_patches" ]; then
     update_zephelin_patches "$PATCH_REV"
     if [ -n "$SKIP_ZEPHELIN" ]; then
         echo "SKIP_ZEPHELIN=1" >> .env
     fi
+fi
+
+if [ "$ACTION" = "all" ] || [ "$ACTION" = "download_sdk" ]; then
+    download_sdk "$ZEPHYR_SDK_VERSION"
 fi
