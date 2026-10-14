@@ -109,7 +109,7 @@ static status_t buf_save_cnn(struct msg_loader *ldr, const uint8_t *src, size_t 
     return status;
 }
 
-static status_t buf_reset_cnn(struct msg_loader *ldr, size_t n)
+static status_t buf_reset_cnn(struct msg_loader *ldr)
 {
     ldr->state = (void *)CNN_LOAD_WEIGHTS_START;
     ldr->addr = NULL;
@@ -135,7 +135,7 @@ static status_t buf_save_one_cnn_input(struct msg_loader *ldr, void *c)
     return buf_save_cnn_input(ldr, c, sizeof(uint32_t));
 }
 
-static status_t buf_reset_cnn_input(struct msg_loader *ldr, size_t n)
+static status_t buf_reset_cnn_input(struct msg_loader *ldr)
 {
     ldr->written = 0;
     return STATUS_OK;
@@ -148,14 +148,14 @@ status_t prepare_ai8x_ldr_table()
         .save_one = buf_save_one_cnn,
         .reset = buf_reset_cnn,
     };
-    buf_reset_cnn(&msg_loader_model, 0);
+    buf_reset_cnn(&msg_loader_model);
 
     static struct msg_loader msg_loader_input = {
         .save = buf_save_cnn_input,
         .save_one = buf_save_one_cnn_input,
         .reset = buf_reset_cnn_input,
     };
-    buf_reset_cnn_input(&msg_loader_input, 0);
+    buf_reset_cnn_input(&msg_loader_input);
 
     memset(&g_ldr_tables[1], 0, NUM_LOADER_TYPES * sizeof(struct msg_loader *));
     g_ldr_tables[1][LOADER_TYPE_MODEL] = &msg_loader_model;
