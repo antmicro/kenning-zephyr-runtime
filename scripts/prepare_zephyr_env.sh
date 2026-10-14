@@ -54,9 +54,16 @@ python -m west zephyr-export
 pushd ~
 
 sdk_version=0.17.4
+sdk_checksum=a7258bf50c892c4669712b2aacdfcd5e303245bcf36cb458a296039a664594f5
+
+if [[ "$ZEPHYR_VERSION" != "v4.3.0" ]]; then
+    sdk_version=1.0.1
+    sdk_checksum=ca9bc0ff66fafca1dac9d592a36d953cf16d096a9d09b1c0357f021cf9f6a7eb
+fi
+
 sdk_dir_name="zephyr-sdk-${sdk_version}"
 sdk_archive_name="zephyr-sdk-${sdk_version}_linux-x86_64_minimal.tar.xz"
-sdk_checksum=a7258bf50c892c4669712b2aacdfcd5e303245bcf36cb458a296039a664594f5
+
 
 if [ -d ${sdk_dir_name} ]; then
     echo "SDK directory already exists, skipping download"
