@@ -83,11 +83,20 @@ To make `uv` available in PATH, restart the shell or run:
 source $HOME/.local/bin/env
 ```
 
-And install Python dependencies, additional Zephyr modules, and Zephyr SDK:
+And install Python dependencies and Zephyr SDK:
 
 ```bash
 ./scripts/prepare_zephyr_env.sh
 source .venv/bin/activate
+```
+
+To use a different Zephyr revision, set `ZEPHYR_VERSION=v4.4.1` prior to running `./scripts/prepare_zephyr_env.sh`.
+This script runs `./scripts/set_zephyr_version.sh` to set the appropriate Zephyr version and compatible dependency versions.
+You can also execute `./scripts/set_zephyr_version.sh` or re-run `./scripts/prepare_zephyr_env.sh`.
+
+Then, to install additional Zephyr modules:
+
+```bash
 ./scripts/prepare_modules.sh
 ```
 
