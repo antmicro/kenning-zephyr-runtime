@@ -2,6 +2,7 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
+import os
 import re
 from pathlib import Path
 
@@ -9,7 +10,8 @@ import numpy as np
 import pytest
 from pyrenode3.wrappers import Emulation, TerminalTester
 
-RUNTIME_BINARIES = [binary for binary in Path("./artifacts/").glob("*.elf")]
+ZEPHYR_VERSION = os.getenv("CI_PARALLEL_NAME")
+RUNTIME_BINARIES = [binary for binary in Path(f"./artifacts/{ZEPHYR_VERSION}").glob("*.elf")]
 RUNTIME_BINARIES.sort()
 FLOAT_RE = r"(?:-?[0-9]+.[0-9]+)|(?:nan)"
 MODEL_OUTPUT_RE = re.compile(
@@ -37,7 +39,7 @@ class TestDemo:
     )
     def test_demo(self, binary: Path):
         *_, board = binary.stem.split("-")
-        repl_path = Path(f"artifacts/{board}.repl")
+        repl_path = Path(f"artifacts/{ZEPHYR_VERSION}/{board}.repl")
 
         if not repl_path.exists():
             pytest.xfail(f"Missing repl for {board}")
