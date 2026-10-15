@@ -8,8 +8,21 @@
 
 usage()
 {
+    supported_zephyr_versions_array=(
+        "v4.3.0"
+        "v4.4.1"
+        "v4.5.0"
+        "v4.5.0-rc1"
+        "main"
+    )
+
+    original_ifs="$IFS"
+    IFS=", "
+    supported_zephyr_versions="${supported_zephyr_versions_array[*]}"
+    IFS="$original_ifs"
+
     echo "Usage: $0 [west_revision|zephelin_patches|download_sdk] ZEPHYR_REVISION" 1>&2
-    echo "    ZEPHYR_REVISION can be one of: v4.3.0, v4.4.1, v4.5.0, v4.5.0-rc1, main" 1>&2
+    echo "    ZEPHYR_REVISION can be one of: $supported_zephyr_versions" 1>&2
 }
 
 update_west_revision()
@@ -73,7 +86,16 @@ case "$VERSION" in
         TFLITE_REV="zephyr-v4.4.0"
         PATCH_REV="v4.4.1"
         ;;
-    v4.5.0|v4.5.0-rc1|main)
+    v4.5.0|v4.5.0-rc1)
+        ZEPHYR_SDK_VERSION="1.0.1"
+        ZEPHYR_REV="v4.5.0-rc1"
+        TFLITE_REV="zephyr-v4.5.0"
+        # Zephelin is not yet supported for the v4.5.0-rc1 revision.
+        # Use the newest version of patches but skip Zephelin.
+        PATCH_REV="v4.4.1"
+        SKIP_ZEPHELIN=1
+        ;;
+    main)
         ZEPHYR_SDK_VERSION="1.0.1"
         ZEPHYR_REV="main"
         TFLITE_REV="zephyr-v4.5.0"
