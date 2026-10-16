@@ -76,8 +76,7 @@ case "$VERSION" in
     v4.3.0)
         ZEPHYR_SDK_VERSION="0.17.4"
         ZEPHYR_REV="v4.3.0"
-        # Not a typo. This compiles correctly with Zephyr 4.3.0
-        TFLITE_REV="zephyr-v4.4.0"
+        TFLITE_REV="zephyr-v4.1.0"
         PATCH_REV="v4.3.0"
         ;;
     v4.4.1)
