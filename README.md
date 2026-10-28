@@ -378,7 +378,7 @@ kenning automl optimize test report \
    --cfg ./kenning-scenarios/renode-auto-tflite-automl-vae-max32690.yml \
    --report-path ./workspace/automl-report/report.md \
    --allow-failures --to-html \
-   --verbosity INFO   --skip-general-information \
+   --verbosity INFO --skip-general-information \
    --workspace .
 ```
 
@@ -402,7 +402,7 @@ kenning test report \
   --cfg ./kenning-scenarios/renode-auto-tflite-automl-vae-max32690.yml \
   --report-path ./report-vae/report.md --measurements results.json \
   --to-html --verbosity INFO --workspace . --skip-general-information \
-  --compiled-model-path ./workspace/automl-results/vae.0.tflite \
+  --MarkdownReport:--compiled-model-path ./workspace/automl-results/vae.0.tflite \
   --modelwrapper-cls PyTorchAnomalyDetectionVAE --model-path _ \
   --enable-zephelin \
   --report-types \
