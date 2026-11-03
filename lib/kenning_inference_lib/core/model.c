@@ -77,14 +77,14 @@ static int validate_tensors(model_spec_t *tensor_struct, uint32_t num_tensors, s
     data_type_t *tensor_data_type = (data_type_t *)((size_t)tensor_struct + tensor_data_type_offset);
     if (num_tensors < 1 || num_tensors > max_num_tensors)
     {
-        LOG_ERR("Wrong number of %s tensors: %d", tensors_name, num_tensors);
+        LOG_ERR("Wrong number of %s tensors: %u", tensors_name, num_tensors);
         tensor_invalid = 1;
     }
     for (int i = 0; i < MIN(num_tensors, max_num_tensors); ++i)
     {
         if (0 == num_tensor_dim[i] || num_tensor_dim[i] > max_tensor_dim)
         {
-            LOG_ERR("Unsupported %s dimension number: %d (tensor: %d)", tensors_name, num_tensor_dim[i], i);
+            LOG_ERR("Unsupported %s dimension number: %u (tensor: %u)", tensors_name, num_tensor_dim[i], i);
             tensor_invalid = 1;
         }
 
