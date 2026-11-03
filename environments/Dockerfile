@@ -1,7 +1,7 @@
 FROM ubuntu:22.04
 
 ENV INST 'apt-get install -y --no-install-recommends'
-ENV PIPINST 'python3 -m pip install --no-cache-dir --upgrade'
+ENV PIPINST 'uv pip install --no-cache --upgrade'
 
 ENV DEBIAN_FRONTEND noninteractive
 
@@ -70,6 +70,12 @@ RUN wget -O /tmp/renode-portable-dotnet.tar.gz https://builds.renode.io/renode-l
 
 ENV PYRENODE_RUNTIME=coreclr
 ENV PYRENODE_BIN=/opt/renode/renode
+
+# Use Python 3.11 from a venv instead of the system Python 3.10
+RUN curl -LsSf https://astral.sh/uv/install.sh | UV_INSTALL_DIR=/usr/local/bin sh && \
+    uv venv /opt/venv --seed --python 3.11
+ENV VIRTUAL_ENV="/opt/venv"
+ENV PATH="/opt/venv/bin:$PATH"
 
 RUN $PIPINST \
     pip \
