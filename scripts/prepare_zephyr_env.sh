@@ -33,7 +33,7 @@ $PIP_EXEC install west
 
 # setup west workspace
 python -m west init -l .
-python -m west update
+python -m west update --fetch-opt=--quiet
 python -m west zephyr-export
 
 
