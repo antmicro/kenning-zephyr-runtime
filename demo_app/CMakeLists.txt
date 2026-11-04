@@ -1,8 +1,8 @@
-# Copyright (c) 2023-2025 Antmicro <www.antmicro.com>
+# Copyright (c) 2023-2026 Antmicro <www.antmicro.com>
 #
 # SPDX-License-Identifier: Apache-2.0
 
-cmake_minimum_required(VERSION 3.13.1)
+cmake_minimum_required(VERSION 3.28.0)
 
 # adds possibility to increase simulated board memory
 include(../cmake/increase_board_memory.cmake)
