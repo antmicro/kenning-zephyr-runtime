@@ -60,7 +60,7 @@ sudo apt update
 sudo apt install -y --no-install-recommends ccache curl device-tree-compiler dfu-util file \
   g++-multilib gcc gcc-multilib git jq libmagic1 libsdl2-dev make ninja-build \
   python3-dev python3-pip python3-setuptools python3-tk python3-wheel python3-venv \
-  mono-complete wget xxd xz-utils patch cmake npm
+  wget xxd xz-utils patch cmake npm
 ```
 
 Now clone this repository:
