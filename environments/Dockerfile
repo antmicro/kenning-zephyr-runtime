@@ -49,12 +49,6 @@ RUN apt-get update && $INST \
     ninja-build \
     patch \
     picocom \
-    python3-dev \
-    python3-pip \
-    python3-setuptools \
-    python3-tk \
-    python3-venv \
-    python3-wheel \
     wget \
     xxd \
     xz-utils \
