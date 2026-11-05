@@ -27,6 +27,13 @@ EXPORT_SYMBOL(_impure_ptr);
 #include <stdio.h>
 #include <string.h>
 
+#if defined(CONFIG_PICOLIBC)
+/* in picolibc, assert() maps to __assert_no_args and stderr is a real symbol */
+extern void __assert_no_args(void);
+EXPORT_SYMBOL(stderr);
+EXPORT_SYMBOL(__assert_no_args);
+#endif
+
 EXPORT_SYMBOL(abort);
 EXPORT_SYMBOL(bsearch);
 EXPORT_SYMBOL(cos);
