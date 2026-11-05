@@ -6,7 +6,7 @@
 
 RENODE_VERSION=${1:-latest}
 
-if [ -d renode_latest ] ; then
+if [ -d renode_portable ] ; then
   echo "Renode already downloaded."
 else
   echo "Downloading Renode..."
