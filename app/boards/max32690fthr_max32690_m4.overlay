@@ -10,4 +10,13 @@
     aliases {
         kcomms = &uart2;
     };
+    /* Starting with Zephyr 4.4.x, a secondary RiscV core
+    is added to the device tree. This causes renode to
+    try running the ARM ELF in a RiscV core. */
+    cpus {
+        cpu@1 {
+            reg = <1>;
+            status = "disabled";
+        };
+    };
 };
