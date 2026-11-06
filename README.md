@@ -19,7 +19,7 @@ For a list of supported boards, check Kenning demos in [Renode Zephyr Dashboard]
 This repository provides:
 
 * `kenning_inference_lib` - a [Zephyr RTOS](https://www.zephyrproject.org/) library providing a unified `model` API, allowing for executing ML models with the following runtimes:
-  * [TFLite Micro](https://github.com/tensorflow/tflite-micro)
+  * [LiteRT/TFLite Micro](https://developers.google.com/edge/litert)
   * [microTVM](https://tvm.apache.org/)
   * [IREE](https://iree.dev/)
   * [emlearn](https://github.com/emlearn/emlearn)
@@ -247,7 +247,7 @@ kenning optimize --cfg kenning-scenarios/magic-wand-inference/tflite/renode-stm3
 Then we build the evaluation `app` with the model:
 
 ```bash
-west build -p -b stm32f746g_disco app -- -DEXTRA_CONF_FILE=tflite.conf -DCONFIG_KENNING_MODEL_PATH=\"$(realpath ./output/magic-wand.tflite)\"
+west build -p -b stm32f746g_disco app -- -DEXTRA_CONF_FILE=litert.conf -DCONFIG_KENNING_MODEL_PATH=\"$(realpath ./output/magic-wand.tflite)\"
 ```
 
 By default it will be built into the `./build` directory.
