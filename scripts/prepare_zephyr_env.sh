@@ -39,7 +39,6 @@ fi
 # setup west workspace
 python -m west init -l . || true
 python -m west update --fetch-opt=--quiet
-python -m west zephyr-export
 
 if [[ -n "$ZEPHYR_VERSION" ]]; then
     $SET_ZEPHYR_VERSION zephelin_patches $ZEPHYR_VERSION

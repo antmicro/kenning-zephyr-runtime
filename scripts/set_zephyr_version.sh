@@ -73,21 +73,21 @@ case "$1" in
 esac
 
 case "$VERSION" in
-    v4.3.0)
+    v4.3.*)
         ZEPHYR_SDK_VERSION="0.17.4"
         ZEPHYR_REV="v4.3.0"
         TFLITE_REV="zephyr-v4.1.0"
         PATCH_REV="v4.3.0"
         ;;
-    v4.4.1)
+    v4.4.*)
         ZEPHYR_SDK_VERSION="1.0.1"
         ZEPHYR_REV="v4.4.1"
         TFLITE_REV="zephyr-v4.4.0"
         PATCH_REV="v4.4.1"
         ;;
-    v4.5.0|v4.5.0-rc1)
+    v4.5.*)
         ZEPHYR_SDK_VERSION="1.0.1"
-        ZEPHYR_REV="v4.5.0-rc1"
+        ZEPHYR_REV="v4.5.0"
         TFLITE_REV="zephyr-v4.5.0"
         # Zephelin is not yet supported for the v4.5.0-rc1 revision.
         # Use the newest version of patches but skip Zephelin.
