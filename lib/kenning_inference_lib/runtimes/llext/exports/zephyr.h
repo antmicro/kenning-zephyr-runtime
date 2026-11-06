@@ -18,6 +18,16 @@ EXPORT_SYMBOL(arch_timing_cycles_to_ns);
 EXPORT_SYMBOL(timing_init);
 EXPORT_SYMBOL(timing_start);
 EXPORT_SYMBOL(timing_stop);
+
+#if __has_include(<zephyr/sys/div64.h>)
+#include <zephyr/sys/div64.h>
+/* div64 library is introduced after v4.5.0
+   so we only export on newer versions */
+EXPORT_SYMBOL(z_div64_shared_div);
+EXPORT_SYMBOL(z_div64_u32_recip);
+EXPORT_SYMBOL(z_div64_recip_cycles);
+EXPORT_SYMBOL(z_div64_recip_ticks);
+#endif
 #endif
 
 #if defined(CONFIG_TEST_RANDOM_GENERATOR)
