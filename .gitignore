@@ -1,5 +1,6 @@
 .cache
 .venv
+/.env
 build
 renode/log
 twister-out
