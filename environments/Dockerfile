@@ -6,6 +6,7 @@ ENV PIPINST 'uv pip install --no-cache --upgrade'
 ENV DEBIAN_FRONTEND noninteractive
 
 RUN apt-get update && $INST \
+    ca-certificates \
     ccache \
     cmake \
     curl \
@@ -54,7 +55,7 @@ RUN apt-get update && $INST \
     xz-utils \
     && apt-get autoremove && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-RUN wget https://packages.microsoft.com/config/debian/12/packages-microsoft-prod.deb -O packages-microsoft-prod.deb && dpkg -i packages-microsoft-prod.deb && rm packages-microsoft-prod.deb
+RUN wget https://packages.microsoft.com/config/ubuntu/22.04/packages-microsoft-prod.deb -O packages-microsoft-prod.deb && dpkg -i packages-microsoft-prod.deb && rm packages-microsoft-prod.deb
 
 RUN apt-get update && $INST dotnet-sdk-9.0 && apt-get autoremove && apt-get clean && rm -rf /var/lib/apt/lists/*
 
