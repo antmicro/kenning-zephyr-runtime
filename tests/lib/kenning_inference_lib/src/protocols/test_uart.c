@@ -27,10 +27,20 @@ DEFINE_FFF_GLOBALS;
 
 #define VOID_MOCKS(MOCK) MOCK(uart_poll_out, const struct device *, unsigned char)
 
+#if __has_include(<zephyr/sleep.h>) // v4.5.0
+#define MOCK_K_SLEEP_TYPE k_ticks_t
+#define MOCK_K_SLEEP k_sleep_ticks
+#define MOCK_K_SLEEP_FAKE k_sleep_ticks_fake
+#else // < Zephyr v4.5.0
+#define MOCK_K_SLEEP_TYPE int32_t
+#define MOCK_K_SLEEP k_sleep
+#define MOCK_K_SLEEP_FAKE k_sleep_fake
+#endif
+
 #define MOCKS(MOCK)                                                 \
     MOCK(bool, device_is_ready, const struct device *)              \
     MOCK(int, uart_poll_in, const struct device *, unsigned char *) \
-    MOCK(int32_t, k_sleep, k_timeout_t)
+    MOCK(MOCK_K_SLEEP_TYPE, MOCK_K_SLEEP, k_timeout_t)
 
 VOID_MOCKS(DECLARE_VOID_MOCK);
 MOCKS(DECLARE_MOCK);
@@ -39,7 +49,7 @@ void uart_poll_out_mock(const struct device *dev, unsigned char out_char);
 
 int uart_poll_in_mock(const struct device *dev, unsigned char *p_char);
 
-int32_t k_sleep_mock(k_timeout_t timeout);
+MOCK_K_SLEEP_TYPE k_sleep_mock(k_timeout_t timeout);
 
 // ========================================================
 // setup
@@ -50,7 +60,7 @@ static void uart_tests_setup_f()
     VOID_MOCKS(RESET_VOID_MOCK);
     MOCKS(RESET_MOCK);
 
-    k_sleep_fake.custom_fake = k_sleep_mock;
+    MOCK_K_SLEEP_FAKE.custom_fake = k_sleep_mock;
 
     g_uart_initialized = false;
     g_ticks = 0;
@@ -333,7 +343,7 @@ int uart_poll_in_mock(const struct device *dev, unsigned char *p_char)
     return -1;
 }
 
-int32_t k_sleep_mock(k_timeout_t timeout)
+MOCK_K_SLEEP_TYPE k_sleep_mock(k_timeout_t timeout)
 {
     g_ticks += timeout.ticks;
     return 0;
